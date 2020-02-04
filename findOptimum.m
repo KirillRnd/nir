@@ -9,7 +9,7 @@ ae = 149597870700;
     )';
 %Определяем tf
 T=2*pi*sqrt((1*ae)^3/mug);
-tf=5*T/6;
+tf=3*T/12;
 optionsInn = odeset('AbsTol',1e-12);
 
 [t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 tf],y0,optionsInn);
