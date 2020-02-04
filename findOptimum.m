@@ -9,7 +9,7 @@ ae = 149597870700;
     )';
 %Определяем tf
 T=2*pi*sqrt((1*ae)^3/mug);
-tf=3*T/12;
+tf=9*T/12;
 optionsInn = odeset('AbsTol',1e-12);
 
 [t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 tf],y0,optionsInn);
@@ -20,8 +20,10 @@ drdz=reshape(y(end,13:30),[3,6]);
 
 dfdz = cat(1,drdz,drdzdt);
 
-rf = [0 1.5*ae 0];
-vf = [-(mug/(1.5*ae))^(1/2) 0 0];
+th_mars = pi / 6;
+
+rf = [1.52*ae*cos(th_mars) 1.52*ae*sin(th_mars) 0];
+vf = [(mug/(1.5*ae))^(1/2)*cos(th_mars+pi/2) (mug/(1.5*ae))^(1/2)*sin(th_mars+pi/2) 0];
 
 b=y(end,1:6)-cat(2,rf,vf);
 %оптимизируем траекторию
