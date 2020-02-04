@@ -1,4 +1,4 @@
-function res = integrateTraectory(t,y,mug)
+function res = integrateTraectory(t,y,mug, gamma,th_mars,v_opt,t_opt,pv0)
 %integrateTraectory интегрирует от начальной 
 %точки до времени tf
 
@@ -33,13 +33,29 @@ dddUdrdrpvdr=mug*reshape([[ conj(pvx)*((6*x)/(abs(x)^2 + abs(y)^2 + abs(z)^2)^(5
  
 %Вычисляем производные
 res(1:3)=V;
-res(4:6)=-mug*r/((norm(r))^3)+pv;
+if norm(pv)==0
+    nap=pv;
+else
+    nap=pv/norm(pv);
+end
+u_dv = 3000*9.81;
+m0 = 1e+5;
+if u_dv*gamma/(m0-gamma*(t_opt+t))<0
+    res(4:6)=-mug*r/((norm(r))^3);
+else
+    res(4:6)=-mug*r/((norm(r))^3)+(nap)*u_dv*gamma/(m0-gamma*(t_opt+t));
+end
+%res(4:6)=-mug*r/((norm(r))^3)+(nap)*u_dv*gamma/(m0-gamma*(1008222+t));
+%res(4:6)=-mug*r/((norm(r))^3)+pv;
 res(7:9)=Pv;
 res(10:12)=ddUdrdr*pv;
 
 res(13:30)=reshape(drdzdt,[18,1]);
-res(49:66)=reshape(ddUdrdr*drdz+dpvdz,[18,1]);
-
+if pv0>0
+    res(49:66)=reshape(ddUdrdr*drdz+dpvdz*(gamma*u_dv/m0)*(2+1/(pv0)),[18,1]);
+else
+    res(49:66)=reshape(ddUdrdr*drdz+dpvdz*(gamma*u_dv/m0)*(2+1/(1e-20)),[18,1]);
+end
 res(31:48)=reshape(dpvdzdt,[18,1]);
 res(67:84)=reshape(dddUdrdrpvdr*drdz+ddUdrdr*dpvdz,[18,1]);
 end
