@@ -14,7 +14,7 @@ vsc=[Vsc*cos(alpha_vsc) Vsc*sin(alpha_vsc) 0];
 %Определяем tf
 T=2*pi*sqrt((1*ae)^3/mug);
 %tf=6*T/6;
-tf=124*3600*24-t_opt;
+tf=(4+124)*3600*24-t_opt;
 optionsInn = odeset('AbsTol',1e-12);
 
 [t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 tf],y0,optionsInn);
@@ -27,8 +27,8 @@ drdz=reshape(y(end,13:30),[3,6]);
 dfdz = cat(1,drdz,drdzdt);
 global th_mars;  
 %th_mars=3*pi/6+pi/15;
-rf = [1.5*ae*cos(th_mars) 1.5*ae*sin(th_mars) 0];
-vf = [(mug/(1.5*ae))^(1/2)*cos(th_mars+pi/2) (mug/(1.5*ae))^(1/2)*sin(th_mars+pi/2) 0];
+rf = [1.52*ae*cos(th_mars) 1.52*ae*sin(th_mars) 0];
+vf = [(mug/(1.52*ae))^(1/2)*cos(th_mars+pi/2) (mug/(1.52*ae))^(1/2)*sin(th_mars+pi/2) 0];
 
 
 b=y(end,1:6)-cat(2,rf,vf);
@@ -53,7 +53,7 @@ th = 0:pi/50:2*pi;
 %орбита Земли
 plot(ae*cos(th),ae*sin(th));
 %орбита Марса
-plot(1.5*ae*cos(th),1.5*ae*sin(th));
+plot(1.52*ae*cos(th),1.52*ae*sin(th));
 %конечная точка траектории
 plot(rf(1),rf(2),'b--o')
 %Земля
