@@ -1,0 +1,25 @@
+function [value, isterminal, direction] = eventIntegrationTraj(tau, y, angle)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+u=y(1:2);
+v=y(3:4);
+h=y(5);
+L = [[u(1) -u(2)];
+    [u(2) u(1)]]; 
+
+r=[(L*u)' 0];
+b=[1 0 0];
+xa = r(1);
+ya = r(2);
+xb = b(1);
+yb = b(2);
+an = pi/2*((1+sgn(xa))*(1-sgn(ya^2))-(1+sgn(xb))*(1-sgn(yb^2)))                   ...+pi/4*((2+sgn(xa))*sgn(ya)-(2+sgn(xb))*sgn(yb))
+                   ...+sgn(xa*ya)*atan((abs(xa)-abs(ya))/(abs(xa)+abs(ya)))
+                   ...-sgn(xb*yb)*atan((abs(xb)-abs(yb))/(abs(xb)+abs(yb)));
+%an = atan2(norm(cross(r,b)), dot(r,b));
+
+value = angle - an
+isterminal = 1;
+direction = 0;
+end
+
