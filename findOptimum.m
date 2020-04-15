@@ -14,19 +14,22 @@ u0(1) = sqrt(norm(r0)-u0(2)^2);
 L = [[u0(1) -u0(2)];
     [u0(2) u0(1)]];  
 v0 = L'*V0/(2*sqrt(-2*h0));
-
-y0 = cat(1, u0, v0, h0)';
+pu0=[0 1e-10]';
+pv0=[0 0]';
+ph0=0';
+t0=0;
+y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0)';
 %Определяем tf
 T=2*pi*sqrt((1*ae)^3/mug);
 %tf=3*T/12;
-tf = 10;
+sf = 1;
 angle = 3*pi/2;
 
 options = odeset('Events', @(t, y) eventIntegrationTraj(t, y, angle));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 
-[t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 tf],y0, options);
+[t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 sf],y0, options);
 u = y(:, 1:2);
 r=zeros(length(u),2);
 for i = 1:length(u)
@@ -35,5 +38,8 @@ for i = 1:length(u)
     [x(2) x(1)]];
     r(i,:)=L*x';
 end
+hold off;
 plot(r(:, 1), r(:, 2))
+hold on;
+
 axis equal
