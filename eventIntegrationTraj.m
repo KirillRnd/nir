@@ -1,4 +1,4 @@
-function [value, isterminal, direction] = eventIntegrationTraj(tau, y, angle)
+function [value, isterminal, direction] = eventIntegrationTraj(s, y, rf)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 u=y(1:2);
@@ -8,7 +8,8 @@ L = [[u(1) -u(2)];
     [u(2) u(1)]]; 
 
 r=[(L*u)' 0];
-b=[cos(angle) sin(angle) 0];
+%b=[cos(angle) sin(angle) 0];
+b=[rf 0];
 xa = r(1);
 ya = r(2);
 xb = b(1);

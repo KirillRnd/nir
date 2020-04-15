@@ -14,9 +14,9 @@ u0(1) = sqrt(norm(r0)-u0(2)^2);
 L = [[u0(1) -u0(2)];
     [u0(2) u0(1)]];  
 v0 = L'*V0/(2*sqrt(-2*h0));
-pu0=[-1 0]'*1e-12;
-pv0=[0 0]'*1e-08;
-ph0=0';
+pu0=[1 1]'*1e-12;
+pv0=[1 1]'*1e-12;
+ph0=1'*1e-15;
 t0=0;
 y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0)';
 %Определяем tf
@@ -24,8 +24,8 @@ T=2*pi*sqrt((1*ae)^3/mug);
 %tf=3*T/12;
 sf = 8;
 angle = 3*pi/2;
-
-options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, angle));
+rf = 1.52*ae*[cos(angle) sin(angle)];
+options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 
