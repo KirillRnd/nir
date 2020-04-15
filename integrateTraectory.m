@@ -3,7 +3,7 @@ function res = integrateTraectory(s, y, mug)
 %точки до времени tf
 %s - фиктивное врем€, tau - временной элемент
 %»звестные значени€
-s
+%s
 u=y(1:2);
 v=y(3:4);
 h=y(5);
@@ -27,8 +27,8 @@ dLvdu=[[v(1) v(2)];[-v(2) v(1)]];
 dLTadu=u2*(-pv*u'/(2*h))+2*(-u2*pv/(4*h)+v*alpha)*u';
 %¬спомогательные производные управлени€
 dadh=((L*pv/4)*u2+L*v*(pv'*v))/(h^2);
-dadv=L*(2*ph-pv'*v/h)+(L*v)*pv'/h;
-dadu=-du2Lpvdu/h+dLvdu*(2*ph-pv'*v/h);
+dadv=L*alpha+(L*v)*pv'/h;
+dadu=-du2Lpvdu/h+dLvdu*alpha;
 %ѕроизводные сопр€женных переменных
 dpuds=a'*dadu-(pv'*(-1/4-u2*dLTadu/(4*h)-LTa'*u/2)+alpha*v'*dLTadu);
 dpvds=-pu'-pv'*(-u2*L'*dadv/(4*h))+pv'*(v'*LTa)-alpha*(v'*L'*dadv+LTa');
