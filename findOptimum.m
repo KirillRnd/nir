@@ -25,11 +25,11 @@ T=2*pi*sqrt((1*ae)^3/mug);
 sf = 1;
 angle = 3*pi/2;
 
-options = odeset('Events', @(t, y) eventIntegrationTraj(t, y, angle));
+options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, angle));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 
-[t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 sf],y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),[0 sf],y0, options);
 u = y(:, 1:2);
 r=zeros(length(u),2);
 for i = 1:length(u)
