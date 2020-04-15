@@ -26,14 +26,14 @@ du2Lpvdu=2*u(1)*u(2)*[[-pv(2) pv(1)];[pv(1) pv(2)]]+...
 dLvdu=[[v(1) v(2)];[-v(2) v(1)]];
 dLTadu=u2*(-pv*u'/(2*h))+2*(-u2*pv/(4*h)+v*alpha)*u';
 %Вспомогательные производные управления
-dadh=((L*pv/4)*u2+L*v*(pv'*v))/(h^2);
+dadh=((u2*L*pv)/4+L*v*(pv'*v))/(h^2);
 dadv=L*alpha+(L*v)*pv'/h;
-dadu=-du2Lpvdu/h+dLvdu*alpha;
+dadu=-du2Lpvdu/(4*h)+dLvdu*alpha;
 %Производные сопряженных переменных
-dpuds=a'*dadu-(pv'*(-1/4-u2*dLTadu/(4*h)-LTa'*u/2)+alpha*v'*dLTadu);
-dpvds=-pu'-pv'*(-u2*L'*dadv/(4*h))+pv'*(v'*LTa)-alpha*(v'*L'*dadv+LTa');
+dpuds=-(-a'*dadu+pv'*(-1/4-u2*dLTadu/(4*h)-LTa'*u/(2*h))+alpha*v'*dLTadu);
+dpvds=-pu'+pv'*(u2*L'*dadv/(4*h)+(v'*LTa)/h)-alpha*(v'*L'*dadv+LTa');
 dphds=-pv'*(u2*LTa/(4*(h^2))-u2*L'*dadh/(4*h))...
-    -(pv'*v/(h^2))*v'*LTa-alpha*v'*L'*dadh;
+    -(pv'*v/(h^2))*v'*LTa-alpha*v'*(L'*dadh);
 %Производная временнОго элемента
 dtauds=(mug+4*u2*dhds+u2*u'*LTa)/((-2*h)^(3/2));
 %Сохрняем провизводные

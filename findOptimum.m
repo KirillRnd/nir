@@ -14,15 +14,15 @@ u0(1) = sqrt(norm(r0)-u0(2)^2);
 L = [[u0(1) -u0(2)];
     [u0(2) u0(1)]];  
 v0 = L'*V0/(2*sqrt(-2*h0));
-pu0=[0 1e-5]';
-pv0=[0 0]';
+pu0=[-1 0]'*1e-12;
+pv0=[0 0]'*1e-08;
 ph0=0';
 t0=0;
 y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0)';
 %Определяем tf
 T=2*pi*sqrt((1*ae)^3/mug);
 %tf=3*T/12;
-sf = 0.1;
+sf = 8;
 angle = 3*pi/2;
 
 options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, angle));
@@ -38,8 +38,10 @@ for i = 1:length(u)
     [x(2) x(1)]];
     r(i,:)=L*x';
 end
-hold off;
-plot(r(:, 1), r(:, 2))
+plot(0, 0,'y--o')
 hold on;
-
+th = 0:pi/50:2*pi;
+plot(ae*cos(th),ae*sin(th),'k');
+plot(r(:, 1), r(:, 2),'b')
 axis equal
+hold off;
