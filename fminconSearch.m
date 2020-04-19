@@ -40,7 +40,7 @@ v0 = L'*V0/(2*sqrt(-2*h0));
 y0 = cat(1, u0, v0, h0, x', t0)';
 
 sf = (n*2*pi+angle)*1.2;
-int_s0sf = linspace(0, sf, n*1e+4);
+int_s0sf = linspace(0, sf, (n+1)*1e+4);
 options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf, n));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
