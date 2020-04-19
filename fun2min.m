@@ -1,4 +1,4 @@
-function dis = fun2min(x, rf, Vf, case_traj)
+function dis = fun2min(x, rf, Vf, case_traj, n, angle)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -29,10 +29,10 @@ y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0)';
 %Определяем tf
 T=2*pi*sqrt((1*ae)^3/mug);
 %tf=3*T/12;
-sf = 8;
+sf = (n*2*pi+angle)*1.2;
 %angle = 3*pi/2;
 
-options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf));
+options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf, n));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 

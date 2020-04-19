@@ -1,4 +1,4 @@
-function [value, isterminal, direction] = eventIntegrationTraj(s, y, rf)
+function [value, isterminal, direction] = eventIntegrationTraj(s, y, rf, n)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 u=y(1:2);
@@ -20,7 +20,8 @@ an = pi/2*((1+sign(xa))*(1-sign(ya^2))-(1+sign(xb))*(1-sign(yb^2)))...
     -sign(xb*yb)*atan((abs(xb)-abs(yb))/(abs(xb)+abs(yb)));
 %an = atan2(norm(cross(r,b)), dot(r,b));
 
-value = an;
+n_curr = floor(s/(2*pi));
+value = (n - n_curr)*2*pi + an;
 isterminal = 1;
 direction = 0;
 end

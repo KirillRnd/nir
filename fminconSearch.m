@@ -1,8 +1,11 @@
 clear;
 clc;
 %условия на fmincon
-%ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА следования case_traj=2;
-case_traj=2;
+%ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
+case_traj=1;
+%Количество витков
+n = 1;
+%Начальные условия
 x0=[0 0 0 0 0];
 A = [];
 b = [];
@@ -10,7 +13,7 @@ Aeq = [];
 beq = [];
 ae = 149597870700;
 mug = 132712.43994*(10^6)*(10^(3*3));
-angle = 9*pi/6;
+angle = 6*pi/6;
 rf = 1.52*ae*[cos(angle) sin(angle)];
 Vf = ((mug/(1.52*ae))^(1/2))*[cos(angle+pi/2) sin(angle+pi/2)];
 lb = -[1, 1, 1, 1, 1e-4]*20;
@@ -18,7 +21,7 @@ ub = [1, 1, 1, 1, 1e-4]*20;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 
-fun=@(x)fun2min(x*1e-12, rf, Vf, case_traj);
+fun=@(x)fun2min(x*1e-12, rf, Vf, case_traj, n, angle);
 x = fmincon(fun,x0,A,b,Aeq,beq,lb,ub)*1e-12;
 %задаем начальные условия
 r0 = [1*ae 0 ]';
@@ -36,9 +39,9 @@ L = [[u0(1) -u0(2)];
 v0 = L'*V0/(2*sqrt(-2*h0));
 y0 = cat(1, u0, v0, h0, x', t0)';
 
-sf = 8;
+sf = (n*2*pi+angle)*1.2;
 
-options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf));
+options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf, n));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
@@ -59,6 +62,7 @@ th = 0:pi/50:2*pi;
 plot(ae*cos(th),ae*sin(th),'k');
 plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
 plot(r(:, 1), r(:, 2),'b')
+plot(r(end, 1), r(end, 2),'bO')
 axis equal
 hold off;
 
