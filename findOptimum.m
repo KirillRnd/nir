@@ -29,8 +29,8 @@ n = 1;
 options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf, n));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
-
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),[0 sf],y0, options);
+int_s0sf = linspace(0, sf, n*1e+4);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),int_s0sf,y0, options);
 u = y(:, 1:2);
 r=zeros(length(u),2);
 for i = 1:length(u)

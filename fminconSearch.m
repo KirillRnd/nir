@@ -2,9 +2,9 @@ clear;
 clc;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=1;
+case_traj=2;
 %Количество витков
-n = 1;
+n = 10;
 %Начальные условия
 x0=[0 0 0 0 0];
 A = [];
@@ -40,12 +40,13 @@ v0 = L'*V0/(2*sqrt(-2*h0));
 y0 = cat(1, u0, v0, h0, x', t0)';
 
 sf = (n*2*pi+angle)*1.2;
-
+int_s0sf = linspace(0, sf, n*1e+4);
 options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf, n));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),[0 sf],y0, options);
+
+[s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),int_s0sf,y0, options);
 u = y(:, 1:2);
 r=zeros(length(u),2);
 for i = 1:length(u)
