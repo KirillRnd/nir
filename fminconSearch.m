@@ -4,7 +4,8 @@ clc;
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
 %Количество витков
-n = 10;
+n = 1;
+angle = 6*pi/6;
 %Начальные условия
 x0=[0 0 0 0 0];
 A = [];
@@ -13,7 +14,7 @@ Aeq = [];
 beq = [];
 ae = 149597870700;
 mug = 132712.43994*(10^6)*(10^(3*3));
-angle = 6*pi/6;
+
 rf = 1.52*ae*[cos(angle) sin(angle)];
 Vf = ((mug/(1.52*ae))^(1/2))*[cos(angle+pi/2) sin(angle+pi/2)];
 lb = -[1, 1, 1, 1, 1e-4]*20;
@@ -39,9 +40,9 @@ L = [[u0(1) -u0(2)];
 v0 = L'*V0/(2*sqrt(-2*h0));
 y0 = cat(1, u0, v0, h0, x', t0)';
 
-sf = (n*2*pi+angle)*1.2;
+sf = (n*2*pi+angle)*1.5;
 int_s0sf = linspace(0, sf, (n+1)*1e+4);
-options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, rf, n));
+options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, angle, n));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
@@ -64,6 +65,7 @@ plot(ae*cos(th),ae*sin(th),'k');
 plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
 plot(r(:, 1), r(:, 2),'b')
 plot(r(end, 1), r(end, 2),'bO')
+plot(1.52*ae*cos(angle), 1.52*ae*sin(angle),'rO')
 axis equal
 hold off;
 
