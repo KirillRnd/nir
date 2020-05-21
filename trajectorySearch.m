@@ -1,11 +1,14 @@
-clear;
-clc;
+function [functional, dis, s, y] = trajectorySearch(n,angle,case_traj)
+%UNTITLED3 Summary of this function goes here
+%   Detailed explanation goes here
+%clear;
+%clc;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=2;
+%case_traj=2;
 %Количество витков
-n = 4;
-angle = 6*pi/6;
+%n = 4;
+%angle = 6*pi/6;
 %Начальные условия
 x0=[0 0 0 0 0];
 A = [];
@@ -21,9 +24,9 @@ lb = -[1, 1, 1, 1, 1e-4]*1000;
 ub = [1, 1, 1, 1, 1e-4]*1000;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
-
+options = optimoptions ('fmincon','Display', 'none');
 fun=@(x)fun2min(x*1e-12, rf, Vf, case_traj, n, angle);
-x = fmincon(fun,x0,A,b,Aeq,beq,lb,ub)*1e-12;
+x = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,[],options)*1e-12;
 %задаем начальные условия
 r0 = [1*ae 0 ]';
 V0 = [0 (mug/(1*ae))^(1/2) ]';
@@ -48,7 +51,7 @@ options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
 
 [s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),int_s0sf,y0, options);
-functional = integrateFunctional(s, y)
+functional = integrateFunctional(s, y);
 
 u = y(:, 1:2);
 r=zeros(length(u),2);
@@ -59,17 +62,6 @@ for i = 1:length(u)
     r(i,:)=L*rr';
 end
 
-%Проверка "на глаз"
-plot(0, 0,'y--o')
-hold on;
-th = 0:pi/50:2*pi;
-plot(ae*cos(th),ae*sin(th),'k');
-plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
-plot(r(:, 1), r(:, 2),'b')
-plot(r(end, 1), r(end, 2),'bO')
-plot(1.52*ae*cos(angle), 1.52*ae*sin(angle),'rO')
-axis equal
-hold off;
 
 %Сумма квадратов невязок для задачи пролёта
 if case_traj == 1
@@ -84,3 +76,5 @@ elseif case_traj == 2
     r_end=r(end,:);
     dis = norm((rf-r_end)/norm(r0))^2 + (norm((V'-Vf)/norm(V0))^2);
 end
+end
+
