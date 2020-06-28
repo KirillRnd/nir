@@ -1,27 +1,30 @@
 clc;
 clear;
-warning('off');
+%warning('off');
 angle = 6*pi/6;
 case_traj=2;
 [functional, dis, s, y] = trajectorySearch(0,angle,case_traj);
 n = 0;
 for i = 1:10
     [functional_tmp, dis_tmp, s_tmp, y_tmp] = trajectorySearch(i,angle,case_traj);
+    i
     if (functional_tmp < functional) && (dis_tmp <= dis*100)
         functional = functional_tmp
         dis = dis_tmp;
         s = s_tmp;
         y = y_tmp;
-        n = i;
+        n = i
     end
 end
 
-u = y(:, 1:2);
-r=zeros(length(u),2);
+u = y(:, 1:4);
+r=zeros(length(u),4);
 for i = 1:length(u)
     rr = u(i,:);
-    L = [[rr(1) -rr(2)];
-    [rr(2) rr(1)]];
+    L = [[rr(1) -rr(2) -rr(3) rr(4)];
+    [rr(2) rr(1) -rr(4) -rr(3)];
+    [rr(3) rr(4) rr(1) rr(2)];
+    [rr(4) -rr(3) rr(2) -rr(1)]];
     r(i,:)=L*rr';
 end
 

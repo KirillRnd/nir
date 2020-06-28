@@ -9,7 +9,7 @@ ph0=x(9);
 mug = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
 
-r0 = [1*ae 0 0 0]';
+r0 = [1*ae 0 0]';
 V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
 
 u0 = [0 0 0 0]';
@@ -66,7 +66,7 @@ elseif case_traj == 2
     [u(end, 4) -u(end, 3) u(end, 2) -u(end, 1)]];
     V = 2*sqrt(-2*h)*Lend*v/(norm(u(end,:))^2);
     r_end=r(end,:);
-    dis = norm((rf-r_end)/norm(r0))^2 + (norm((V'-Vf)/norm(V0))^2);
+    dis = norm((rf-r_end())/norm(r0))^2 + (norm((V'-Vf)/norm(V0))^2);
 end
 end
 
