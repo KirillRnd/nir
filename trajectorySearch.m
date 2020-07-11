@@ -1,4 +1,4 @@
-function [functional, dis, s, y] = trajectorySearch(n,angle,case_traj)
+function [functional, dis, s, y] = trajectorySearch(n,angle,case_traj, symF)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 %clear;
@@ -25,7 +25,7 @@ ub = -lb;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 options = optimoptions ('fmincon','Display', 'none');
-fun=@(x)fun2min(x*1e-12, rf, Vf, case_traj, n, angle);
+fun=@(x)fun2min(x*1e-12, rf, Vf, case_traj, n, angle, symF);
 x = fmincon(fun,x0,A,b,Aeq,beq,lb,ub,[],options)*1e-12;
 %задаем начальные услови€
 r0 = [1*ae 0 0]';
@@ -46,7 +46,8 @@ L = [[u0(1) -u0(2) -u0(3) u0(4)];
     [u0(4) -u0(3) u0(2) -u0(1)]]; 
 
 v0 = L'*V0/(2*sqrt(-2*h0));
-y0 = cat(1, u0, v0, h0, x', t0)';
+pt0=0;
+y0 = cat(1, u0, v0, h0, x', t0, pt0)';
 
 sf = (n*2*pi+angle)*1.5;
 int_s0sf = linspace(0, sf, (n+1)*1e+4);
@@ -55,7 +56,7 @@ options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),int_s0sf,y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y, symF),int_s0sf,y0, options);
 functional = integrateFunctional(s, y);
 
 u = y(:, 1:4);

@@ -1,4 +1,4 @@
-function dis = fun2min(x, rf, Vf, case_traj, n, angle)
+function dis = fun2min(x, rf, Vf, case_traj, n, angle, symF)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -30,7 +30,8 @@ v0 = L'*V0/(2*sqrt(-2*h0));
 %pv0=[0 0]'*1e-08;
 %ph0=0';
 t0 = 0;
-y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0)';
+pt0=0;
+y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0, pt0)';
 %Определяем tf
 T=2*pi*sqrt((1*ae)^3/mug);
 %tf=3*T/12;
@@ -41,7 +42,7 @@ options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, angle, n));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),[0 sf],y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y, symF),[0 sf],y0, options);
 u = y(:, 1:4);
 r=zeros(length(u),4);
 for i = 1:length(u)

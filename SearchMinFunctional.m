@@ -1,12 +1,13 @@
 clc;
 clear;
+symbolic_Jacob
 %warning('off');
 angle = 6*pi/6;
 case_traj=2;
-[functional, dis, s, y] = trajectorySearch(0,angle,case_traj);
+[functional, dis, s, y] = trajectorySearch(0,angle,case_traj, symF);
 n = 0;
 for i = 1:10
-    [functional_tmp, dis_tmp, s_tmp, y_tmp] = trajectorySearch(i,angle,case_traj);
+    [functional_tmp, dis_tmp, s_tmp, y_tmp] = trajectorySearch(i,angle,case_traj, symF);
     i
     if (functional_tmp < functional) && (dis_tmp <= dis*100)
         functional = functional_tmp
