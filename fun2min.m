@@ -1,13 +1,26 @@
-function dis = fun2min(x, rf, Vf, case_traj, n, angle, symF)
+function dis = fun2min(x, case_traj, symF, t_Mars_0)
 %UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% Функция расстояния до Марса, в квадратах координаты-скорости.
+% Зависит от сопряжённых переменных в начальный момент времени
+
+mug = 132712.43994*(10^6)*(10^(3*3));
+ae = 149597870700;
+T_earth = 365.256363004*3600*24;
+T_mars=T_earth*1.8808476;
 
 pu0=x(1:4)';
 pv0=x(5:8)';
 ph0=x(9);
+tf=x(10);
 
-mug = 132712.43994*(10^6)*(10^(3*3));
-ae = 149597870700;
+n=floor(tf/T_earth);
+angle=(tf/T_earth-n)*2*pi;
+
+n_M = floor((tf+t_Mars_0)/T_mars);
+angle_M = ((tf+t_Mars_0)/T_mars-n_M)*2*pi;
+
+rf = 1.52*ae*[cos(angle_M) sin(angle_M) 0 0];
+Vf = ((mug/(1.52*ae))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0];
 
 r0 = [1*ae 0 0 0]';
 V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
@@ -33,12 +46,11 @@ t0 = 0;
 pt0=0;
 y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0, pt0)';
 %Определяем tf
-T=2*pi*sqrt((1*ae)^3/mug);
 %tf=3*T/12;
 sf = (n*2*pi+angle)*1.5;
 %angle = 3*pi/2;
 
-options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, angle, n));
+options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  tf));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 

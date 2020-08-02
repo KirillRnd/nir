@@ -36,5 +36,5 @@ f = [duds', dvds', dhds, dpuds', dpvds', dphds, dtauds, dptauds]';
 
 J = jacobian(f, y);
 
-symF = matlabFunction(f)
+symF = matlabFunction(f);
 %symJ = matlabFunction(J)

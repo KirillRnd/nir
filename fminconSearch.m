@@ -1,32 +1,51 @@
 clear;
 clc;
-symbolic_Jacob
+symbolic_Jacob;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
 %Количество витков
-n = 4;
-angle = 6*pi/6;
+%n = 4;
+%angle = 6*pi/6;
 %Начальные условия
-x0=[0 0 0 0 0 0 0 0 0];
+x0=[0 0 0 0 0 0 0 0 0 0];
 A = [];
 b = [];
 Aeq = [];
 beq = [];
 ae = 149597870700;
 mug = 132712.43994*(10^6)*(10^(3*3));
+T_earth = 365.256363004*3600*24;
+T_mars=T_earth*1.8808476;
 
-rf = 1.52*ae*[cos(angle) sin(angle) 0 0];
-Vf = ((mug/(1.52*ae))^(1/2))*[cos(angle+pi/2) sin(angle+pi/2) 0 0];
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1e-4]*1000;
+n=5;
+angle=0.5;
+rad=0.1;
+
+modifier=1e-8;
+modifier_p=1e-15; 
+tf_a = T_earth*(n + angle-rad)*modifier;
+tf_b = T_earth*(n + angle+rad)*modifier;
+
+x0(10)=T_earth*(n + angle)*modifier;
+
+n_M = floor((x0(10)/modifier)/T_mars);
+angle_M = (x0(10)/modifier)/T_mars-n_M;
+t_Mars_0 = (angle-angle_M-0.03)*T_mars;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1e-4, 0]*10000;
 ub = -lb;
+
+lb(10) = tf_a;
+ub(10) = tf_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 
-fun=@(x)fun2min(x*1e-12, rf, Vf, case_traj, n, angle, symF);
-x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub)*1e-12;
+fun=@(x)fun2min([x(1:9)*modifier_p x(10)/modifier], case_traj, symF, t_Mars_0);
+x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub);
+px = x(1:9)*modifier_p;
+tf = x(10)/modifier;
 %задаем начальные условия
-r0 = [1*ae 0 0]';
+r0 = [1*ae 0 0 0]';
 V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
 
 t0=0;
@@ -44,11 +63,18 @@ L = [[u0(1) -u0(2) -u0(3) u0(4)];
     [u0(4) -u0(3) u0(2) -u0(1)]]; 
 v0 = L'*V0/(2*sqrt(-2*h0));
 pt0=0;
-y0 = cat(1, u0, v0, h0, x', t0, pt0)';
+y0 = cat(1, u0, v0, h0, px', t0, pt0)';
+
+
+n = floor(tf/T_earth);
+angle = (tf/T_earth-n)*2*pi;
+
+n_M = floor((tf+t_Mars_0)/T_mars);
+angle_M = ((tf+t_Mars_0)/T_mars-n_M)*2*pi;
 
 sf = (n*2*pi+angle)*1.5;
 int_s0sf = linspace(0, sf, (n+1)*1e+4);
-options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, angle, n));
+options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
 options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
@@ -67,6 +93,8 @@ for i = 1:length(u)
     r(i,:)=L*rr';
 end
 
+
+
 %Проверка "на глаз"
 plot(0, 0,'y--o')
 hold on;
@@ -75,23 +103,6 @@ plot(ae*cos(th),ae*sin(th),'k');
 plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
 plot(r(:, 1), r(:, 2),'b')
 plot(r(end, 1), r(end, 2),'bO')
-plot(1.52*ae*cos(angle), 1.52*ae*sin(angle),'rO')
+plot(1.52*ae*cos(angle_M), 1.52*ae*sin(angle_M),'rO')
 axis equal
 hold off;
-
-%Сумма квадратов невязок для задачи пролёта
-if case_traj == 1
-    pv=y(end, 14:17);
-    r_end=r(end,:);
-    dis = norm((rf-r_end)/norm(r0))^2 + (norm(pv)^2)*1e+20;
-elseif case_traj == 2
-    v = y(end, 5:8)';
-    h = y(end, 9);
-    Lend = [[u(end, 1) -u(end, 2) -u(end, 3) u(end, 4)];
-    [u(end, 2) u(end, 1) -u(end, 4) -u(end, 3)];
-    [u(end, 3) u(end, 4) u(end, 1) u(end, 2)];
-    [u(end, 4) -u(end, 3) u(end, 2) -u(end, 1)]];
-    V = 2*sqrt(-2*h)*Lend*v/(norm(u(end,:))^2);
-    r_end=r(end,:);
-    dis = norm((rf-r_end)/norm(r0))^2 + (norm((V'-Vf)/norm(V0))^2);
-end
