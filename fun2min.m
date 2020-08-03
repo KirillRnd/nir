@@ -11,7 +11,8 @@ T_mars=T_earth*1.8808476;
 pu0=x(1:4)';
 pv0=x(5:8)';
 ph0=x(9);
-tf=x(10);
+pt0=x(10);
+tf=x(11);
 
 n=floor(tf/T_earth);
 angle=(tf/T_earth-n)*2*pi;
@@ -43,8 +44,8 @@ v0 = L'*V0/(2*sqrt(-2*h0));
 %pv0=[0 0]'*1e-08;
 %ph0=0';
 t0 = 0;
-pt0=0;
-y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0, pt0)';
+
+y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
 %Определяем tf
 %tf=3*T/12;
 sf = (n*2*pi+angle)*1.5;

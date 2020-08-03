@@ -5,7 +5,7 @@ u=y(1:4);
 v=y(5:8);
 h=y(9);
 %ÇÀÄÀ×À ÏĞÎË¨ÒÀ
-tau=y(19);
+tau=y(10);
 t = tau-2*(u'*v)/(-2*h);
 value = tf-t;
 isterminal = 1;

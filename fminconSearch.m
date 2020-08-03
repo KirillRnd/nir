@@ -1,6 +1,8 @@
 clear;
 clc;
-symbolic_Jacob;
+symbolic_Jacob
+
+
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
@@ -8,7 +10,7 @@ case_traj=2;
 %n = 4;
 %angle = 6*pi/6;
 %Начальные условия
-x0=[0 0 0 0 0 0 0 0 0 0];
+x0=[0 0 0 0 0 0 0 0 0 0 0];
 A = [];
 b = [];
 Aeq = [];
@@ -18,32 +20,32 @@ mug = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-n=5;
-angle=0.5;
-rad=0.1;
+n=6;
+angle=0.7;
+rad=0.01;
 
 modifier=1e-8;
 modifier_p=1e-15; 
 tf_a = T_earth*(n + angle-rad)*modifier;
 tf_b = T_earth*(n + angle+rad)*modifier;
 
-x0(10)=T_earth*(n + angle)*modifier;
+x0(11)=T_earth*(n + angle)*modifier;
 
-n_M = floor((x0(10)/modifier)/T_mars);
-angle_M = (x0(10)/modifier)/T_mars-n_M;
+n_M = floor((x0(11)/modifier)/T_mars);
+angle_M = (x0(11)/modifier)/T_mars-n_M;
 t_Mars_0 = (angle-angle_M-0.03)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1e-4, 0]*10000;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*10000;
 ub = -lb;
 
-lb(10) = tf_a;
-ub(10) = tf_b;
+lb(11) = tf_a;
+ub(11) = tf_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 
-fun=@(x)fun2min([x(1:9)*modifier_p x(10)/modifier], case_traj, symF, t_Mars_0);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)/modifier], case_traj, symF, t_Mars_0);
 x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub);
-px = x(1:9)*modifier_p;
-tf = x(10)/modifier;
+px = x(1:10)*modifier_p;
+tf = x(11)/modifier;
 %задаем начальные условия
 r0 = [1*ae 0 0 0]';
 V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
@@ -62,8 +64,8 @@ L = [[u0(1) -u0(2) -u0(3) u0(4)];
     [u0(3) u0(4) u0(1) u0(2)];
     [u0(4) -u0(3) u0(2) -u0(1)]]; 
 v0 = L'*V0/(2*sqrt(-2*h0));
-pt0=0;
-y0 = cat(1, u0, v0, h0, px', t0, pt0)';
+tau0=0;
+y0 = cat(1, u0, v0, h0, tau0,  px')';
 
 
 n = floor(tf/T_earth);
