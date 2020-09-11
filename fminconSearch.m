@@ -5,7 +5,7 @@ symbolic_Jacob
 
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=2;
+case_traj=1;
 %Количество витков
 %n = 4;
 %angle = 6*pi/6;
@@ -20,7 +20,7 @@ mug = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-n=6;
+n=0;
 angle=0.7;
 rad=0.01;
 

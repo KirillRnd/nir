@@ -90,7 +90,7 @@ Vf = ((mug/(1.52*ae))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0];
 
 %Сумма квадратов невязок для задачи пролёта
 if case_traj == 1
-    pv=y(end, 14:17);
+    pv=y(end, 15:18);
     r_end=r(end,:);
     dis = norm((rf-r_end)/norm(r0))^2 + (norm(pv)^2)*1e+20;
 elseif case_traj == 2

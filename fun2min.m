@@ -68,7 +68,7 @@ for i = 1:length(u)
 end
 %ÇÀÄÀ×À ÏĞÎË¨ÒÀ
 if case_traj == 1
-    pv=y(end, 14:17);
+    pv=y(end, 15:18);
     r_end=r(end,:);
     dis = norm((rf-r_end)/norm(r0))^2 + (norm(pv)^2)*1e+20;
 elseif case_traj == 2
