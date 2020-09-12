@@ -1,41 +1,36 @@
-function summ = integrateFunctional(s, y)
+function Jt = integrateFunctional(s, y)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
-summ = 0;
-for i = 2:length(s)
-    step = s(i)-s(i-1);
-    
-    y_local=y(i,:)';
-    u=y_local(1:4);
-    v=y_local(5:8);
-    h=y_local(9);
-    pv=y_local(15:18);
-    ph=y_local(19);
-    ptau=y_local(20);
-    %Вспомогательные величины
-    L = [[u(1) -u(2) -u(3) u(4)];
-    [u(2) u(1) -u(4) -u(3)];
-    [u(3) u(4) u(1) u(2)];
-    [u(4) -u(3) u(2) -u(1)]]; 
+%summ_J = zeros(length(s),1);
+%int_J = zeros(length(s),1);
+u = y(:, 1:4);
+r=zeros(length(u),4);
+a=zeros(length(u),4);
+t=zeros(length(u),1);
+for i = 1:length(u)
+    rr = u(i,:)';
+    L = [[rr(1) -rr(2) -rr(3) rr(4)];
+    [rr(2) rr(1) -rr(4) -rr(3)];
+    [rr(3) rr(4) rr(1) rr(2)];
+    [rr(4) -rr(3) rr(2) -rr(1)]];
+    r(i,:)=L*rr;
     u2=norm(u)^2;
-    a_i =L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u'*u)*u/(-2*h)^(3/2));
+    v=y(i, 5:8)';
+    h=y(i, 9)';
+    tau=y(i ,10)';
+    pu=y(i, 11:14)';
+    pv=y(i, 15:18)';
+    ph=y(i, 19)';
+    ptau=y(i, 20)';
+    aa=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(rr'*rr)*rr/(-2*h)^(3/2));
     
-    y_local=y(i-1,:)';
-    u=y_local(1:4);
-    v=y_local(5:8);
-    h=y_local(9);
-    pv=y_local(15:18);
-    ph=y_local(19);
-    ptau=y_local(20);
-    %Вспомогательные величины
-    L = [[u(1) -u(2) -u(3) u(4)];
-    [u(2) u(1) -u(4) -u(3)];
-    [u(3) u(4) u(1) u(2)];
-    [u(4) -u(3) u(2) -u(1)]]; 
-    u2=norm(u)^2;
-    a_i_1 =L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u'*u)*u/(-2*h)^(3/2));
-    
-    trapeze = step*(0.5*norm(a_i_1)^2+0.5*norm(a_i)^2)/2;
-    summ = summ + trapeze;
+    La = [[aa(1) -aa(2) -aa(3) aa(4)];
+    [aa(2) aa(1) -aa(4) -aa(3)];
+    [aa(3) aa(4) aa(1) aa(2)];
+    [aa(4) -aa(3) aa(2) -aa(1)]];
+    a(i, :)=La*aa;
+    t(i) = tau-2*(rr'*v)/(-2*h);
 end
+eta=0.45;
+Jt = cumtrapz(t, vecnorm(a, 2, 2))/eta;
 

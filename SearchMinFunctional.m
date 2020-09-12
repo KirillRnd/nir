@@ -4,13 +4,23 @@ clear;
 symbolic_Jacob
 warning('off');
 
-angle = 6*pi/6;
+N=30000;
+m0=5807;
+
+angle = 3*pi/6;
 rad=0.01;
 case_traj=1;
 [functional, dis, s, y] = trajectorySearch(0, angle, rad, case_traj, symF);
 n = 0;
+dm=zeros(11, 1);
+Jt = integrateFunctional(s, y);
+m=massLP(Jt, m0, N);
+dm(1)=m(1)-m(end);
 for i = 1:10
     [functional_tmp, dis_tmp, s_tmp, y_tmp] = trajectorySearch(i, angle, rad, case_traj, symF);
+    Jt = integrateFunctional(s_tmp, y_tmp);
+    m=massLP(Jt, m0, N);
+    dm(i+1)=m(1)-m(end);
     i
     if (functional_tmp < functional) && (dis_tmp <= dis*100)
         functional = functional_tmp
@@ -64,7 +74,7 @@ x_tmp=T_earth*(n + angle)*modifier;
 
 n_M = floor((x_tmp/modifier)/T_mars);
 angle_M = (x_tmp/modifier)/T_mars-n_M;
-t_Mars_0 = (angle-angle_M-0.03)*T_mars;
+t_Mars_0 = (angle-angle_M)*T_mars;
 
 u_f=y(end, 1:4);
 v_f=y(end, 5:8);
@@ -76,9 +86,22 @@ n_M = floor((tf+t_Mars_0)/T_mars);
 angle_M = ((tf+t_Mars_0)/T_mars-n_M)*2*pi;
 
 figure(2);
-plot(t, vecnorm(a, 2, 2))
+plot(t, vecnorm(a, 2, 2));
+title('Зависимость ускорения силы тяги от времени')
+xlabel('t, время')
+ylabel('a, силы тяги')
+
 figure(3);
-plot(s, t)
+plot(t, s);
+title('Зависимость мнимого времени от обычного')
+xlabel('t, время')
+ylabel('s, мнимое время')
+
+figure(4);
+plot(0:10, dm, ' *');
+title('Зависимость расхода топлива от количества витков')
+xlabel('t, время')
+ylabel('m0-m(t), затраченное топливо')
 %Проверка "на глаз"
 figure(1);
 plot(0, 0,'y--o')
@@ -87,7 +110,7 @@ th = 0:pi/50:2*pi;
 plot(ae*cos(th),ae*sin(th),'k');
 plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
 plot(r(:, 1), r(:, 2),'b')
-a_scale=1e+10;
+a_scale=5e+11;
 
 d = 24*3600;
 idxes=1;
@@ -101,4 +124,8 @@ end
 plot(r(end, 1), r(end, 2),'bO')
 plot(1.52*ae*cos(angle_M), 1.52*ae*sin(angle_M),'rO')
 axis equal
+
+title('Траектория КА с минимальным функционалом')
+xlabel('x')
+ylabel('y')
 hold off;

@@ -22,7 +22,7 @@ x0(11)=T_earth*(n + angle)*modifier;
 
 n_M = floor((x0(11)/modifier)/T_mars);
 angle_M = (x0(11)/modifier)/T_mars-n_M;
-t_Mars_0 = (angle-angle_M-0.03)*T_mars;
+t_Mars_0 = (angle-angle_M)*T_mars;
 lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*10000;
 ub = -lb;
 
@@ -68,8 +68,8 @@ options = odeset(options,'RelTol',1e-10);
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
 [s,y] = ode113(@(s,y) integrateTraectory(s,y,symF),int_s0sf,y0, options);
-functional = integrateFunctional(s, y)
-
+functional = integrateFunctional(s, y);
+functional = functional(end);
 u = y(:, 1:4);
 r=zeros(length(u),4);
 for i = 1:length(u)
