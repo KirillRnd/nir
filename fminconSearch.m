@@ -2,7 +2,8 @@ clear;
 clc;
 symbolic_Jacob
 
-
+N=1350;
+m0=367;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=1;
@@ -20,7 +21,7 @@ mug = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-n=3;
+n=2;
 angle=0.5;
 rad=0.01;
 
@@ -81,7 +82,7 @@ options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,symF),int_s0sf,y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y,symF),int_s0sf, y0, options);
 functional = integrateFunctional(s, y);
 functional = functional(end);
 
@@ -91,11 +92,8 @@ a=zeros(length(u),4);
 t=zeros(length(u),1);
 for i = 1:length(u)
     rr = u(i,:)';
-    L = [[rr(1) -rr(2) -rr(3) rr(4)];
-    [rr(2) rr(1) -rr(4) -rr(3)];
-    [rr(3) rr(4) rr(1) rr(2)];
-    [rr(4) -rr(3) rr(2) -rr(1)]];
-    r(i,:)=L*rr;
+    r(i,:)=KS(rr);
+    L=L_KS(rr);
     u2=norm(u)^2;
     v=y(i, 5:8)';
     h=y(i, 9)';
@@ -105,29 +103,30 @@ for i = 1:length(u)
     ph=y(i, 19)';
     ptau=y(i, 20)';
     aa=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(rr'*rr)*rr/(-2*h)^(3/2));
-    
-    La = [[aa(1) -aa(2) -aa(3) aa(4)];
-    [aa(2) aa(1) -aa(4) -aa(3)];
-    [aa(3) aa(4) aa(1) aa(2)];
-    [aa(4) -aa(3) aa(2) -aa(1)]];
-    a(i, :)=La*aa;
+    a(i, :)=KS(aa);
     t(i) = tau-2*(rr'*v)/(-2*h);
 end
 
 
 
 figure(2);
-plot(t, vecnorm(a, 2, 2));
+plot(t/(24*3600), vecnorm(a, 2, 2)*1e+03);
 title('Зависимость ускорения силы тяги от времени')
-xlabel('t, время')
-ylabel('a, силы тяги')
+xlabel('t, время в днях')
+ylabel('a, ускорение силы тяги. мм/с^2')
 
 figure(3);
-plot(t, s);
+plot(t/(24*3600), s);
 title('Зависимость мнимого времени от обычного')
-xlabel('t, время')
+xlabel('t, время в днях')
 ylabel('s, мнимое время')
-
+figure(4);
+Jt = integrateFunctional(s, y);
+m=massLP(Jt, m0, N);
+plot(t/(24*3600), m);
+title('Зависимость массы от времени')
+xlabel('t, время в днях')
+ylabel('m, масса, кг')
 %Проверка "на глаз"
 figure(1);
 plot(0, 0,'y--o')
@@ -136,7 +135,7 @@ th = 0:pi/50:2*pi;
 plot(ae*cos(th),ae*sin(th),'k');
 plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
 plot(r(:, 1), r(:, 2),'b')
-a_scale=1e+10;
+a_scale=2e+11;
 
 d = 24*3600;
 idxes=1;
@@ -152,7 +151,11 @@ plot(1.52*ae*cos(angle_M), 1.52*ae*sin(angle_M),'rO')
 axis equal
 
 title('Траектория КА')
-xlabel('x')
-ylabel('y')
+xlabel('x, м')
+ylabel('y, м')
+
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
 
 hold off;

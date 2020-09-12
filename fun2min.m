@@ -34,10 +34,7 @@ u0(1) = sqrt((norm(r0)+r0(1))/2);
 u0(2) = r0(2)/(2*u0(1));
 u0(3) = r0(3)/(2*u0(1));
 
-L = [[u0(1) -u0(2) -u0(3) u0(4)];
-    [u0(2) u0(1) -u0(4) -u0(3)];
-    [u0(3) u0(4) u0(1) u0(2)];
-    [u0(4) -u0(3) u0(2) -u0(1)]]; 
+L = L_KS(u0); 
 
 v0 = L'*V0/(2*sqrt(-2*h0));
 %pu0=[1 0]'*1e-12;
@@ -59,12 +56,8 @@ options = odeset(options,'RelTol',1e-10);
 u = y(:, 1:4);
 r=zeros(length(u),4);
 for i = 1:length(u)
-    rr = u(i,:);
-    L = [[rr(1) -rr(2) -rr(3) rr(4)];
-    [rr(2) rr(1) -rr(4) -rr(3)];
-    [rr(3) rr(4) rr(1) rr(2)];
-    [rr(4) -rr(3) rr(2) -rr(1)]];
-    r(i,:)=L*rr';
+    rr = u(i,:)';
+    r(i,:)=KS(rr);
 end
 %ÇÀÄÀ×À ÏĞÎË¨ÒÀ
 if case_traj == 1
@@ -74,10 +67,7 @@ if case_traj == 1
 elseif case_traj == 2
     v = y(end, 5:8)';
     h = y(end, 9);
-    Lend = [[u(end, 1) -u(end, 2) -u(end, 3) u(end, 4)];
-    [u(end, 2) u(end, 1) -u(end, 4) -u(end, 3)];
-    [u(end, 3) u(end, 4) u(end, 1) u(end, 2)];
-    [u(end, 4) -u(end, 3) u(end, 2) -u(end, 1)]];
+    Lend = L_KS(u(end,:));
     V = 2*sqrt(-2*h)*Lend*v/(norm(u(end,:))^2);
     r_end=r(end,:);
     dis = norm((rf-r_end)/norm(r0))^2 + (norm((V'-Vf)/norm(V0))^2);

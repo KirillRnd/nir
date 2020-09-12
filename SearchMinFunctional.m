@@ -4,8 +4,8 @@ clear;
 symbolic_Jacob
 warning('off');
 
-N=30000;
-m0=5807;
+N=1350;
+m0=367;
 
 angle = 3*pi/6;
 rad=0.01;
@@ -27,7 +27,7 @@ for i = 1:10
         dis = dis_tmp;
         s = s_tmp;
         y = y_tmp;
-        n = i
+        n = i;
     end
 end
 
