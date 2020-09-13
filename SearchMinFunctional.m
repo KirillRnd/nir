@@ -11,22 +11,24 @@ eta=0.45;
 angle = 3*pi/6;
 rad=0.15;
 case_traj=1;
-n = 0;
+n = 0
 [Jt, dis, s, y] = trajectorySearch(n, angle, rad, case_traj, symF, eta);
-functional = Jt(end);
+functional = Jt(end)
 
 dm=zeros(11, 1);
 m=massLP(Jt, m0, N);
+m(1)-m(end)
 dm(1)=m(1)-m(end);
 
 for i = 1:10
     [Jt_tmp, dis_tmp, s_tmp, y_tmp] = trajectorySearch(i, angle, rad, case_traj, symF, eta);
-    functional_tmp = Jt_tmp(end);
-    m=massLP(Jt_tmp, m0, N);
-    dm(i+1)=m(1)-m(end);
     i
+    functional_tmp = Jt_tmp(end)
+    m=massLP(Jt_tmp, m0, N);
+    dm(i+1)=m(1)-m(end)
+    
     if (functional_tmp < functional) && (dis_tmp <= dis*100)
-        functional = functional_tmp
+        functional = functional_tmp;
         Jt = Jt_tmp;
         dis = dis_tmp;
         s = s_tmp;
