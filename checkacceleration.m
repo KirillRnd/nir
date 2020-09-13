@@ -1,9 +1,3 @@
-function Jt = integrateFunctional(s, y, symF, eta)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-%summ_J = zeros(length(s),1);
-%int_J = zeros(length(s),1);
-mug = 132712.43994*(10^6)*(10^(3*3));
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
 a=zeros(length(uu),4);
@@ -32,6 +26,47 @@ for i = 1:length(uu)
     %a(i, :)=KS(aa);
     t(i) = tau-2*(u'*v)/(-2*h);
 end
-%eta=0.45;
-Jt = cumtrapz(t, vecnorm(a, 2, 2).^2)/(2*eta);
 
+
+
+r0 = [1*ae 0 0 0]';
+V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
+
+r=r0;
+V=V0;
+%Проверка "на глаз"
+figure(1);
+plot(0, 0,'y--o')
+hold on;
+th = 0:pi/50:2*pi;
+%plot(ae*cos(th),ae*sin(th),'k');
+plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
+%plot(r(:, 1), r(:, 2),'b')
+acc = (VV(2:end, :)-VV(1:end-1, :))./(t(2:end)-t(1:end-1));
+for i=1:length(a)-1
+    plot(r(1), r(2),'b.')
+    dt=t(i+1)-t(i);
+    
+    r_1=V;
+    V_1=-mug*r/norm(r)^3+a(i, :)';
+    
+    r=r+r_1*dt;
+    V=V+V_1*dt;
+end
+%plot(r(end, 1), r(end, 2),'bO')
+plot(1.52*ae*cos(angle_M), 1.52*ae*sin(angle_M),'rO')
+axis equal
+
+title('Траектория КА')
+xlabel('x, м')
+ylabel('y, м')
+
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+
+hold off;
+
+figure(2)
+plot(t(2:end), vecnorm(acc-a(2:end, :), 2, 2));
+sum(vecnorm(acc-a(2:end, :), 2, 2))

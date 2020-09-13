@@ -4,7 +4,6 @@ symbolic_Jacob
 
 N=1350;
 m0=367;
-eta=0.45;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=1;
@@ -23,8 +22,8 @@ T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
 n=0;
-angle=0.5;
-rad=0.15;
+angle=0.7;
+rad=0.01;
 
 modifier=1e-8;
 modifier_p=1e-15; 
@@ -36,7 +35,7 @@ x0(11)=T_earth*(n + angle)*modifier;
 n_M = floor((x0(11)/modifier)/T_mars);
 angle_M = (x0(11)/modifier)/T_mars-n_M;
 t_Mars_0 = (angle-angle_M-0.03)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*2e+04;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*10000;
 ub = -lb;
 
 lb(11) = tf_a;
@@ -84,20 +83,18 @@ options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
 
 [s,y] = ode113(@(s,y) integrateTraectory(s,y,symF),int_s0sf, y0, options);
-Jt = integrateFunctional(s, y, symF, eta);
+Jt = integrateFunctional(s, y, symF);
 functional = Jt(end);
 
-uu = y(:, 1:4);
-rr=zeros(length(uu),4);
-a=zeros(length(uu),4);
-t=zeros(length(uu),1);
-VV=zeros(length(uu),4);
-for i = 1:length(uu)
-    u = uu(i,:)';
-    r=KS(u);
-    rr(i,:)=r;
-    L=L_KS(u);
-    u2=norm(u)^2;
+u = y(:, 1:4);
+r=zeros(length(u),4);
+a=zeros(length(u),4);
+t=zeros(length(u),1);
+for i = 1:length(u)
+    uu = u(i,:)';
+    r(i,:)=KS(uu);
+    L=L_KS(uu);
+    u2=norm(uu)^2;
     v=y(i, 5:8)';
     h=y(i, 9)';
     tau=y(i ,10)';
@@ -106,14 +103,13 @@ for i = 1:length(uu)
     ph=y(i, 19)';
     ptau=y(i, 20)';
     %aa=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(rr'*rr)*rr/(-2*h)^(3/2));
-    res=symF(h,ph,ptau,pu(1),pu(2),pu(3),pu(4),pv(1),pv(2),pv(3),pv(4),u(1),u(2),u(3),u(4),v(1),v(2),v(3),v(4));
-    dvds=res(5:8);
-    dhds=res(9);
+    res=symF(h,ph,ptau,pu(1),pu(2),pu(3),pu(4),pv(1),pv(2),pv(3),pv(4),uu(1),uu(2),uu(3),uu(4),v(1),v(2),v(3),v(4));
+    dvdt=res(5:8);
+    dhdt=res(9);
     V = 2*sqrt(-2*h)*L*v/(u2);
-    VV(i, :)=V;
-    a(i, :)=(-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3);
+    a(i, :)=(-2*h/(u2^2))*(2*(L_KS(v)*v+L*dvdt)-(u2*dhdt/((-2*h)^(3/2)))*V)+mug*KS(uu)/u2^3;
     %a(i, :)=KS(aa);
-    t(i) = tau-2*(u'*v)/(-2*h);
+    t(i) = tau-2*(uu'*v)/(-2*h);
 end
 
 
@@ -143,8 +139,8 @@ hold on;
 th = 0:pi/50:2*pi;
 plot(ae*cos(th),ae*sin(th),'k');
 plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
-plot(rr(:, 1), rr(:, 2),'b')
-a_scale=3e+10/mean(vecnorm(a, 2, 2));
+plot(r(:, 1), r(:, 2),'b')
+a_scale=4e+10/mean(vecnorm(a, 2, 2));
 
 d = 24*3600;
 idxes=1;
@@ -153,9 +149,9 @@ for i=1:ceil(t(end)/d)
     idxes=[idxes, ix];
 end    
 for i = idxes
-    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
+    plot([r(i, 1), r(i, 1)+a_scale*a(i, 1)], [r(i, 2), r(i, 2)+a_scale*a(i, 2)],'k')
 end
-plot(rr(end, 1), rr(end, 2),'bO')
+plot(r(end, 1), r(end, 2),'bO')
 plot(1.52*ae*cos(angle_M), 1.52*ae*sin(angle_M),'rO')
 axis equal
 
