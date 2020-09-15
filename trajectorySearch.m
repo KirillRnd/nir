@@ -23,7 +23,7 @@ x0(11)=T_earth*(n + angle)*modifier;
 n_M = floor((x0(11)/modifier)/T_mars);
 angle_M = (x0(11)/modifier)/T_mars-n_M;
 t_Mars_0 = (angle-angle_M)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*2e+04;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*5e+04;
 ub = -lb;
 
 lb(11) = tf_a;

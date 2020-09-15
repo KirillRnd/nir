@@ -7,7 +7,7 @@ m0=367;
 eta=0.45;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=1;
+case_traj=2;
 %Количество витков
 %n = 4;
 %angle = 6*pi/6;
@@ -22,7 +22,7 @@ mug = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-n=2;
+n=3;
 angle=0.5;
 rad=0.15;
 
@@ -36,7 +36,7 @@ x0(11)=T_earth*(n + angle)*modifier;
 n_M = floor((x0(11)/modifier)/T_mars);
 angle_M = (x0(11)/modifier)/T_mars-n_M;
 t_Mars_0 = (angle-angle_M-0.03)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*2e+04;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*5e+04;
 ub = -lb;
 
 lb(11) = tf_a;
