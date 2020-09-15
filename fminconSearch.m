@@ -1,13 +1,16 @@
-clear;
+%clear;
+clearvars -except symF symF_a0
 clc;
-symbolic_Jacob
-
+if exist('symF','var') ~= 1
+    symbolic_Jacob
+end
 N=1350;
 m0=367;
 eta=0.45;
+amax=1e-01;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=2;
+case_traj=1;
 %Количество витков
 %n = 4;
 %angle = 6*pi/6;
@@ -22,13 +25,15 @@ mug = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-n=3;
+n=1;
 angle=0.5;
 rad=0.15;
 
 modifier=1e-8;
 modifier_p=1e-15; 
-tf_a = T_earth*(n + angle-rad)*modifier;
+%tf_a = T_earth*(n + angle-rad)*modifier;
+%tf_b = T_earth*(n + angle+rad)*modifier;
+tf_a = 0;
 tf_b = T_earth*(n + angle+rad)*modifier;
 
 x0(11)=T_earth*(n + angle)*modifier;
@@ -44,7 +49,7 @@ ub(11) = tf_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)/modifier], case_traj, symF, t_Mars_0);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)/modifier], case_traj, symF, symF_a0, t_Mars_0, amax);
 x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub);
 px = x(1:10)*modifier_p;
 tf = x(11)/modifier;
@@ -83,8 +88,8 @@ options = odeset(options,'AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,symF),int_s0sf, y0, options);
-Jt = integrateFunctional(s, y, symF, eta);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y,symF, symF_a0, amax),int_s0sf, y0, options);
+Jt = integrateFunctional(s, y);
 functional = Jt(end);
 
 uu = y(:, 1:4);
@@ -106,13 +111,13 @@ for i = 1:length(uu)
     ph=y(i, 19)';
     ptau=y(i, 20)';
     %aa=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(rr'*rr)*rr/(-2*h)^(3/2));
-    res=symF(h,ph,ptau,pu(1),pu(2),pu(3),pu(4),pv(1),pv(2),pv(3),pv(4),u(1),u(2),u(3),u(4),v(1),v(2),v(3),v(4));
-    dvds=res(5:8);
-    dhds=res(9);
-    V = 2*sqrt(-2*h)*L*v/(u2);
-    VV(i, :)=V;
-    a(i, :)=(-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3);
-    %a(i, :)=KS(aa);
+    %res=symF(amax, h,ph,ptau,pu(1),pu(2),pu(3),pu(4),pv(1),pv(2),pv(3),pv(4),u(1),u(2),u(3),u(4),v(1),v(2),v(3),v(4));
+    %dvds=res(5:8);
+    %dhds=res(9);
+    %V = 2*sqrt(-2*h)*L*v/(u2);
+    %VV(i, :)=V;
+    %lambda = L*(-pv*u2/(4*h)+(2*ph-pv'*v/h)*v+ptau*u*u2/((-2*h)^(3/2)));
+    %a = amax*lambda/norm(lambda);%a(i, :)=KS(aa);
     t(i) = tau-2*(u'*v)/(-2*h);
 end
 

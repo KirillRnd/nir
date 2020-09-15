@@ -1,7 +1,9 @@
 % Обходим витки и ищем минимум функционала
+clearvars -except symF
 clc;
-clear;
-symbolic_Jacob
+if exist('symF','var') ~= 1
+    symbolic_Jacob
+end
 warning('off');
 
 N=1350;
