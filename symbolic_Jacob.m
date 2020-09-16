@@ -31,11 +31,11 @@ dpvds=-gradient(H, v');
 dphds=-gradient(H, h);
 dptauds=-gradient(H, tau);
 
-y = [u', v', h, tau, pu', pv', ph, ptau];
+%y = [u', v', h, tau, pu', pv', ph, ptau];
 
 f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
 
-J = jacobian(f, y);
+%J = jacobian(f, y);
 
 symF = matlabFunction(f);
 %symJ = matlabFunction(J)

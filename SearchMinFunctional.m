@@ -8,27 +8,29 @@ N=1350;
 m0=367;
 eta=0.45;
 
-angle = 3*pi/6;
-rad=0.15;
+n_max=4;
+
+angle = 0.5;
+rad=0.1;
 case_traj=2;
 n = 0
 [Jt, dis, s, y] = trajectorySearch(n, angle, rad, case_traj, symF, eta);
 functional = Jt(end)
 
-dm=zeros(11, 1);
+dm=zeros(n_max+1, 1);
 m=massLP(Jt, m0, N);
 m(1)-m(end)
 dm(1)=m(1)-m(end);
-
-for i = 1:10
+dis
+for i = 1:n_max
     [Jt_tmp, dis_tmp, s_tmp, y_tmp] = trajectorySearch(i, angle, rad, case_traj, symF, eta);
     i
     functional_tmp = Jt_tmp(end)
     m=massLP(Jt_tmp, m0, N);
     m(1)-m(end)
     dm(i+1)=m(1)-m(end);
-    
-    if (functional_tmp < functional) && (dis_tmp <= dis*100)
+    dis_tmp
+    if functional_tmp < functional
         functional = functional_tmp;
         Jt = Jt_tmp;
         dis = dis_tmp;
@@ -111,7 +113,7 @@ xlabel('t, время в днях')
 ylabel('m, масса, кг')
 
 figure(5);
-plot(0:10, dm, '*');
+plot(0:n_max, dm, '*');
 title('Зависимость расхода топлива от количества витков')
 xlabel('n, витки')
 ylabel('dm, масса, кг')
