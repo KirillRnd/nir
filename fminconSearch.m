@@ -21,9 +21,9 @@ mug = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-n=2;
+n=3;
 angle=0.5;
-rad=0.1;
+rad=0.2;
 
 modifier=1e-8;
 modifier_p=1e-15;
@@ -49,7 +49,14 @@ ub(11) = s_b;
 %величинами и не выдавал лишних ворнингов
 
 fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, symF, t_Mars_0);
-x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub);
+
+options = optimoptions('fmincon','UseParallel', true);
+options = optimoptions(options, 'Display', 'iter');
+%options = optimoptions(options, 'OptimalityTolerance', 1e-02);
+%options = optimoptions(options, 'Algorithm', 'sqp');
+
+x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
+
 px = x(1:10)*modifier_p;
 s_f = x(11);
 %задаем начальные условия
