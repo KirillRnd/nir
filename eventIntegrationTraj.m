@@ -1,13 +1,9 @@
-function [value, isterminal, direction] = eventIntegrationTraj(s, y, tf)
+function [value, isterminal, direction] = eventIntegrationTraj(s, y, StartTime)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
-u=y(1:4);
-v=y(5:8);
-h=y(9);
-%ÇÀÄÀ×À ÏÐÎË¨ÒÀ
-tau=y(10);
-t = tau-2*(u'*v)/(-2*h);
-value = tf-t;
+time=clock-StartTime;
+time=time(end)
+value = time < 1.0;
 isterminal = 1;
 direction = 0;
 end

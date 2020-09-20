@@ -7,7 +7,8 @@ end
 N=1350;
 m0=367;
 eta=0.45;
-amax=1e-3;
+amax=2.4e-4;
+
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=1;
@@ -26,7 +27,7 @@ T_mars=T_earth*1.8808476;
 n=0;
 
 angle=0.5;
-rad=0.1;
+rad=0.3;
 
 modifier=1e-8;
 modifier_p=1e-15;
@@ -43,7 +44,7 @@ t_f = T_earth*(n + angle);
 n_M = floor(t_f/T_mars);
 angle_M = t_f/T_mars-n_M;
 t_Mars_0 = (angle-angle_M)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+05;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+03;
 ub = -lb;
 
 lb(11) = s_a;
@@ -53,7 +54,12 @@ ub(11) = s_b;
 
 fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, symF, symF_a0,  t_Mars_0, amax);
 
-x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub)
+options = optimoptions('fmincon','UseParallel', true);
+options = optimoptions(options, 'Display', 'iter');
+%options = optimoptions(options, 'OptimalityTolerance', 1e-02);
+options = optimoptions(options, 'MaxIterations', 75);
+
+x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
 px = x(1:10)*modifier_p;
 s_f = x(11);
 %задаем начальные условия
@@ -121,19 +127,14 @@ angle = (t_end/T_earth-n)*2*pi;
 n_M = floor((t_end+t_Mars_0)/T_mars);
 angle_M = ((t_end+t_Mars_0)/T_mars-n_M)*2*pi;
 
-figure(2);
-plot(t/(24*3600), vecnorm(a, 2, 2)*1e+03);
-title('Зависимость ускорения силы тяги от времени')
-xlabel('t, время в днях')
-ylabel('a, ускорение силы тяги. мм/с^2')
-
 figure(3);
 plot(t/(24*3600), s);
 title('Зависимость мнимого времени от обычного')
 xlabel('t, время в днях')
 ylabel('s, мнимое время')
 figure(4);
-m=massLP(Jt, m0, N);
+
+m=massLP(t*(amax^2), m0, N);
 plot(t/(24*3600), m);
 title('Зависимость массы от времени')
 xlabel('t, время в днях')

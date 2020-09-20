@@ -32,11 +32,14 @@ t0 = 0;
 
 y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
 
-%options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  t_f));
+%
+%StartTime=clock;
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
+%options = odeset(options, 'Events', @(s, y) eventIntegrationTraj(s, y, StartTime));
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y, symF, symF_a0, amax),[0 s_f],y0);
+%options = odeset(options,'MinStep',1e-10); 
+[s,y] = ode113(@(s,y) integrateTraectory(s,y, symF, symF_a0, amax),[0 s_f],y0,options);
 
 u=y(end, 1:4)';
 v=y(end, 5:8)';
