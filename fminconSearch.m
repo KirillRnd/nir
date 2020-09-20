@@ -1,19 +1,17 @@
-%clear;
 clearvars -except symF symF_a0
 clc;
 if exist('symF','var') ~= 1
     symbolic_Jacob
 end
+
 N=1350;
 m0=367;
 eta=0.45;
-amax=1e-01;
+amax=1e-3;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=1;
-%Количество витков
-%n = 4;
-%angle = 6*pi/6;
+
 %Начальные условия
 x0=[0 0 0 0 0 0 0 0 0 0 0];
 A = [];
@@ -25,34 +23,39 @@ mug = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-n=1;
+n=0;
+
 angle=0.5;
-rad=0.15;
+rad=0.1;
 
 modifier=1e-8;
-modifier_p=1e-15; 
-%tf_a = T_earth*(n + angle-rad)*modifier;
-%tf_b = T_earth*(n + angle+rad)*modifier;
-tf_a = 0;
-tf_b = T_earth*(n + angle+rad)*modifier;
+modifier_p=1e-15;
 
-x0(11)=T_earth*(n + angle)*modifier;
+koef = 2;
 
-n_M = floor((x0(11)/modifier)/T_mars);
-angle_M = (x0(11)/modifier)/T_mars-n_M;
-t_Mars_0 = (angle-angle_M-0.03)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*5e+04;
+s_a = (n + angle-rad)*pi*koef;
+s_b = (n + angle+rad)*pi*koef;
+
+x0(11)=(n + angle)*pi*koef;
+
+t_f = T_earth*(n + angle);
+
+n_M = floor(t_f/T_mars);
+angle_M = t_f/T_mars-n_M;
+t_Mars_0 = (angle-angle_M)*T_mars;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+05;
 ub = -lb;
 
-lb(11) = tf_a;
-ub(11) = tf_b;
+lb(11) = s_a;
+ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)/modifier], case_traj, symF, symF_a0, t_Mars_0, amax);
-x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, symF, symF_a0,  t_Mars_0, amax);
+
+x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub)
 px = x(1:10)*modifier_p;
-tf = x(11)/modifier;
+s_f = x(11);
 %задаем начальные условия
 r0 = [1*ae 0 0 0]';
 V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
@@ -66,25 +69,14 @@ u0(1) = sqrt((norm(r0)+r0(1))/2);
 u0(2) = r0(2)/(2*u0(1));
 u0(3) = r0(3)/(2*u0(1));
 
-L = [[u0(1) -u0(2) -u0(3) u0(4)];
-    [u0(2) u0(1) -u0(4) -u0(3)];
-    [u0(3) u0(4) u0(1) u0(2)];
-    [u0(4) -u0(3) u0(2) -u0(1)]]; 
+L = L_KS(u0); 
 v0 = L'*V0/(2*sqrt(-2*h0));
 tau0=0;
 y0 = cat(1, u0, v0, h0, tau0,  px')';
 
-
-n = floor(tf/T_earth);
-angle = (tf/T_earth-n)*2*pi;
-
-n_M = floor((tf+t_Mars_0)/T_mars);
-angle_M = ((tf+t_Mars_0)/T_mars-n_M)*2*pi;
-
-sf = (n*2*pi+angle)*1.5;
-int_s0sf = linspace(0, sf, (n+1)*1e+4);
-options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
-options = odeset(options,'AbsTol',1e-10);
+int_s0sf = linspace(0, s_f, (n+1)*1e+4);
+%options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
+options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
 
@@ -121,7 +113,13 @@ for i = 1:length(uu)
     t(i) = tau-2*(u'*v)/(-2*h);
 end
 
+t_end=t(end);
 
+n = floor(t_end/T_earth);
+angle = (t_end/T_earth-n)*2*pi;
+
+n_M = floor((t_end+t_Mars_0)/T_mars);
+angle_M = ((t_end+t_Mars_0)/T_mars-n_M)*2*pi;
 
 figure(2);
 plot(t/(24*3600), vecnorm(a, 2, 2)*1e+03);
@@ -149,8 +147,8 @@ th = 0:pi/50:2*pi;
 plot(ae*cos(th),ae*sin(th),'k');
 plot(1.52*ae*cos(th),1.52*ae*sin(th),'r');
 plot(rr(:, 1), rr(:, 2),'b')
-a_scale=3e+10/mean(vecnorm(a, 2, 2));
-
+%a_scale=3e+10/mean(vecnorm(a, 2, 2));
+a_scale=0;
 d = 24*3600;
 idxes=1;
 for i=1:ceil(t(end)/d)

@@ -12,16 +12,7 @@ pu0=x(1:4)';
 pv0=x(5:8)';
 ph0=x(9);
 pt0=x(10);
-tf=x(11);
-
-n=floor(tf/T_earth);
-angle=(tf/T_earth-n)*2*pi;
-
-n_M = floor((tf+t_Mars_0)/T_mars);
-angle_M = ((tf+t_Mars_0)/T_mars-n_M)*2*pi;
-
-rf = 1.52*ae*[cos(angle_M) sin(angle_M) 0 0];
-Vf = ((mug/(1.52*ae))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0];
+s_f=x(11);
 
 r0 = [1*ae 0 0 0]';
 V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
@@ -37,39 +28,38 @@ u0(3) = r0(3)/(2*u0(1));
 L = L_KS(u0); 
 
 v0 = L'*V0/(2*sqrt(-2*h0));
-%pu0=[1 0]'*1e-12;
-%pv0=[0 0]'*1e-08;
-%ph0=0';
 t0 = 0;
 
 y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
-%Îïðåäåëÿåì tf
-%tf=3*T/12;
-sf = (n*2*pi+angle)*1.5;
-%angle = 3*pi/2;
 
-options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  tf));
-options = odeset(options,'AbsTol',1e-10);
+%options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  t_f));
+options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y, symF, symF_a0, amax),[0 sf],y0, options);
-u = y(:, 1:4);
-r=zeros(length(u),4);
-for i = 1:length(u)
-    rr = u(i,:)';
-    r(i,:)=KS(rr);
-end
+[s,y] = ode113(@(s,y) integrateTraectory(s,y, symF, symF_a0, amax),[0 s_f],y0);
+
+u=y(end, 1:4)';
+v=y(end, 5:8)';
+h=y(end, 9)';
+tau=y(end, 10)';
+t_end = tau-2*(u'*v)/(-2*h);
+r_end=KS(u)';
+
+n_M = floor((t_end+t_Mars_0)/T_mars);
+angle_M = ((t_end+t_Mars_0)/T_mars-n_M)*2*pi;
+
+rf = 1.52*ae*[cos(angle_M) sin(angle_M) 0 0];
+Vf = ((mug/(1.52*ae))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0];
+
 %ÇÀÄÀ×À ÏÐÎË¨ÒÀ
 if case_traj == 1
     pv=y(end, 15:18);
-    r_end=r(end,:);
     dis = norm((rf-r_end)/norm(r0))^2 + (norm(pv)^2)*1e+20;
 elseif case_traj == 2
     v = y(end, 5:8)';
     h = y(end, 9);
-    Lend = L_KS(u(end,:));
-    V = 2*sqrt(-2*h)*Lend*v/(norm(u(end,:))^2);
-    r_end=r(end,:);
+    Lend = L_KS(u);
+    V = 2*sqrt(-2*h)*Lend*v/(norm(u)^2);
     dis = norm((rf-r_end)/norm(r0))^2 + (norm((V'-Vf)/norm(V0))^2);
 end
 end
