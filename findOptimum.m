@@ -1,51 +1,56 @@
 
 mug = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
- y0 = cat(2,[1*ae 0 0],[0 (mug/(1*ae))^(1/2) 0],[0 0 0],[0 0 0],...
-    reshape(zeros(3),[1,9]), reshape(zeros(3),[1,9]),...
-    reshape(eye(3),[1,9]), reshape(zeros(3),[1,9]),...
-    reshape(zeros(3),[1,9]), reshape(zeros(3),[1,9]),...
-    reshape(zeros(3),[1,9]), reshape(eye(3),[1,9])...
-    )';
+
+r0 = [1*ae 0 0]';
+V0 = [0 (mug/(1*ae))^(1/2) 0]';
+
+u0 = [0 0 0 0]';
+h0=(norm(V0)^2)/2-mug/norm(r0);
+
+u0(4) = 0;
+u0(1) = sqrt((norm(r0)+r0(1))/2);
+u0(2) = r0(2)/(2*u0(1));
+u0(3) = r0(3)/(2*u0(1));
+
+L = [[u(1) -u(2) -u(3) u(4)];
+    [u(2) u(1) -u(4) -u(3)];
+    [u(3) u(4) u(1) u(2)];
+    [u(4) -u(3) u(2) -u(1)]]; 
+v0 = L'*V0/(2*sqrt(-2*h0));
+pu0=[0 0 0 0]'*1e-13;
+pv0=[0 0 0 0]'*1e-12;
+ph0=0'*1e-15;
+t0=0;
+y0 = cat(1, u0, v0, h0, pu0, pv0, ph0, t0)';
 %Определяем tf
 T=2*pi*sqrt((1*ae)^3/mug);
-tf=T/4;
-optionsInn = odeset('AbsTol',1e-12);
 
-[t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 tf],y0,optionsInn);
-plot(y(:,1),y(:,2));
-axis equal
-drdzdt=reshape(y(end,49:66),[3,6]);
-drdz=reshape(y(end,13:30),[3,6]);
-
-dfdz = cat(1,drdz,drdzdt);
-
-rf = [0 1.5*ae 0];
-vf = [-(mug/(1.5*ae))^(1/2) 0 0];
-
-b=y(end,1:6)-cat(2,rf,vf);
-%оптимизируем траекторию
-z0=[0 0 0 0 0 0];
-
-optionsExt = odeset('AbsTol',1e-16);
-
-[tau,z] = ode45(@(t,y) optimiseToMars(t,y,b,tf),[0 1],z0, optionsExt);
-
-y0 = cat(2,[1*ae 0 0],[0 (mug/(1*ae))^(1/2) 0],z(end,:),...
-    reshape(zeros(3),[1,9]), reshape(zeros(3),[1,9]),...
-    reshape(eye(3),[1,9]), reshape(zeros(3),[1,9]),...
-    reshape(zeros(3),[1,9]), reshape(zeros(3),[1,9]),...
-    reshape(zeros(3),[1,9]), reshape(eye(3),[1,9])...
-    )';
-[t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 tf],y0,optionsInn);
-plot(y(:,1),y(:,2));
-axis equal
-hold on
-th = 0:pi/50:2*pi;
-plot(ae*cos(th),ae*sin(th));
-plot(1.5*ae*cos(th),1.5*ae*sin(th));
-plot(rf(1),rf(2),'b--o')
-plot(ae, 0,'b--o')
+%tf=3*T/12;
+sf = 4*pi;
+angle = 3*pi/2;
+rf = 1.52*ae*[cos(angle) sin(angle) 0];
+n = 1;
+options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, angle, n));
+options = odeset(options,'AbsTol',1e-10);
+options = odeset(options,'RelTol',1e-10);
+int_s0sf = linspace(0, sf, n*1e+4);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y,mug),int_s0sf,y0, options);
+u = y(:, 1:4);
+r=zeros(length(u),4);
+for i = 1:length(u)
+    rr = u(i,:);
+    L = [[rr(1) -rr(2) -rr(3) rr(4)];
+    [rr(2) rr(1) -rr(4) -rr(3)];
+    [rr(3) rr(4) rr(1) rr(2)];
+    [rr(4) -rr(3) rr(2) -rr(1)]];
+    r(i,:)=L*rr';
+end
 plot(0, 0,'y--o')
-plot(rf(1)+b(1),rf(2)+b(2),'r--o')
+hold on;
+th = 0:pi/50:2*pi;
+plot(ae*cos(th),ae*sin(th),'k');
+plot(r(:, 1), r(:, 2),'b')
+plot(r(end, 1), r(end, 2),'bO')
+axis equal
 hold off;
