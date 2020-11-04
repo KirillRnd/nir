@@ -21,13 +21,20 @@ mug = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-n=1;
+r_norm=ae;
+V_norm=sqrt(mug/ae);
+mug_norm=mug;
+T_norm = T_earth/(2*pi);
+
+mug=1;
+
+n=2;
 angle=0.5;
 rad=0.3;
-d_mars=-0.25;
+d_mars=0;
 
 modifier=1e-8;
-modifier_p=1e-15;
+modifier_p=1e-01;
 
 koef = 2;
 
@@ -61,8 +68,8 @@ x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
 px = x(1:10)*modifier_p;
 s_f = x(11);
 %задаем начальные условия
-r0 = [1*ae 0 0 0]';
-V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
+r0 = [1 0 0 0]';
+V0 = [0 1 0 0]';
 
 t0=0;
 u0 = [0 0 0 0]';
@@ -116,7 +123,7 @@ for i = 1:length(uu)
     a(i, :)=(-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3);
     
     %a(i, :)=KS(aa);
-    t(i) = tau-2*(u'*v)/(-2*h);
+    t(i) = (tau-2*(u'*v)/(-2*h))*T_norm;
 end
 
 t_end=t(end);
@@ -158,9 +165,9 @@ hold on;
 th = 0:pi/50:2*pi;
 plot(cos(th),sin(th),'k');
 plot(1.52*cos(th),1.52*sin(th),'r');
-plot(rr(:, 1)./ae, rr(:, 2)./ae,'b', 'LineWidth', 1.5)
-a_scale=3e+10/mean(vecnorm(a, 2, 2));
-%a_scale=0;
+plot(rr(:, 1), rr(:, 2),'b', 'LineWidth', 1.5)
+%a_scale=3e+10/mean(vecnorm(a, 2, 2));
+a_scale=0;
 d = 24*3600;
 idxes=1;
 for i=1:ceil(t(end)/d)
@@ -168,9 +175,9 @@ for i=1:ceil(t(end)/d)
     idxes=[idxes, ix];
 end    
 for i = idxes
-    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)]./ae, [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)]./ae,'k')
+    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
 end
-plot(rr(end, 1)./ae, rr(end, 2)./ae,'bO')
+plot(rr(end, 1), rr(end, 2),'bO')
 plot(1.52*cos(angle_M), 1.52*sin(angle_M),'rO')
 axis equal
 

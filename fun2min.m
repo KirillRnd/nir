@@ -8,14 +8,18 @@ ae = 149597870700;
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
+T_norm = T_earth/(2*pi);
+
+mug=1;
+
 pu0=x(1:4)';
 pv0=x(5:8)';
 ph0=x(9);
 pt0=x(10);
 s_f=x(11);
 
-r0 = [1*ae 0 0 0]';
-V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
+r0 = [1 0 0 0]';
+V0 = [0 1 0 0]';
 
 u0 = [0 0 0 0]';
 h0 = (norm(V0)^2)/2-mug/norm(r0);
@@ -42,25 +46,25 @@ u=y(end, 1:4)';
 v=y(end, 5:8)';
 h=y(end, 9)';
 tau=y(end, 10)';
-t_end = tau-2*(u'*v)/(-2*h);
+t_end = T_norm* (tau-2*(u'*v)/(-2*h));
 r_end=KS(u)';
 
 n_M = floor((t_end+t_Mars_0)/T_mars);
 angle_M = ((t_end+t_Mars_0)/T_mars-n_M)*2*pi;
 
-rf = 1.52*ae*[cos(angle_M) sin(angle_M) 0 0];
-Vf = ((mug/(1.52*ae))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0];
+rf = 1.52*[cos(angle_M) sin(angle_M) 0 0];
+Vf = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0];
 
 %ÇÀÄÀ×À ÏÐÎË¨ÒÀ
 if case_traj == 1
     pv=y(end, 15:18);
-    dis = norm((rf-r_end)/norm(r0))^2 + (norm(pv)^2)*1e+20;
+    dis = norm((rf-r_end))^2 + (norm(pv)^2)*1e+20;
 elseif case_traj == 2
     v = y(end, 5:8)';
     h = y(end, 9);
     Lend = L_KS(u);
     V = 2*sqrt(-2*h)*Lend*v/(norm(u)^2);
-    dis = norm((rf-r_end)/norm(r0))^2 + (norm((V'-Vf)/norm(V0))^2);
+    dis = norm((rf-r_end))^2 + (norm((V'-Vf))^2);
 end
 end
 
