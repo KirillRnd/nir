@@ -26,7 +26,7 @@ y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
 %Определяем tf
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
-
+s_f=pi;
 [s,y] = ode113(@(s,y) integrateTraectory(s, y, symF),[0 s_f],y0, options);
 
 uu = y(:, 1:4);
