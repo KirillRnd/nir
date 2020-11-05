@@ -21,14 +21,14 @@ L = L_KS(u0);
 v0 = L'*V0/(2*sqrt(-2*h0));
 t0 = 0;
 
-pu0=[0 0 0 0]';
-pv0=[0 0 0 0]';
+pu0=[0 0 0 0]'*1e-13;
+pv0=[0 0 0 0]'*1e-12;
 ph0=0;
-pt0=0;
+pt0=1e-1;
 
 
 y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
-s_f=
+s_f=pi;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  t_f));
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
