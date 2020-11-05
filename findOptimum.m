@@ -1,9 +1,9 @@
-
+%symbolic_Jacob;
 mug = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
 
-r0 = [1*ae 0 0 0]';
-V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
+r0 = [0 1*ae 0 0]';
+V0 = [-(mug/(1*ae))^(1/2) 0 0 0]';
 
 u0 = [0 0 0 0]';
 h0=(norm(V0)^2)/2-mug/norm(r0);
@@ -17,9 +17,9 @@ L = L_KS(u0);
 
 v0 = L'*V0/(2*sqrt(-2*h0));
 
-pu0=[10 0 0 0]'*1e-13;
+pu0=[0 0 0 0]'*1e-13;
 pv0=[0 0 0 0]'*1e-12;
-ph0=0'*1e-15;
+ph0=0';
 pt0=0;
 t0 = 0;
 y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
@@ -71,8 +71,8 @@ th = 0:pi/50:2*pi;
 plot(cos(th),sin(th),'k');
 plot(1.52*cos(th),1.52*sin(th),'r');
 plot(rr(:, 1)./ae, rr(:, 2)./ae,'b', 'LineWidth', 1.5)
-a_scale=3e+10/mean(vecnorm(a, 2, 2));
-%a_scale=0;
+%a_scale=3e+10/mean(vecnorm(a, 2, 2));
+a_scale=0;
 d = 24*3600;
 idxes=1;
 for i=1:ceil(t(end)/d)
