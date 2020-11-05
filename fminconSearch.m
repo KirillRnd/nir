@@ -1,5 +1,5 @@
-clearvars -except symF
-clc;
+%clearvars -except symF
+%clc;
 if exist('symF','var') ~= 1
     symbolic_Jacob
 end
@@ -24,7 +24,7 @@ T_mars=T_earth*1.8808476;
 n=1;
 angle=0.5;
 rad=0.3;
-d_mars=-0.25;
+d_mars=0;
 
 modifier=1e-8;
 modifier_p=1e-15;
