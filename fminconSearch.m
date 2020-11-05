@@ -28,13 +28,13 @@ T_norm = T_earth/(2*pi);
 
 mug=1;
 
-n=2;
+n=1;
 angle=0.5;
 rad=0.3;
 d_mars=0;
 
 modifier=1e-8;
-modifier_p=1e-01;
+modifier_p=1e-00;
 
 koef = 2;
 
@@ -123,7 +123,7 @@ for i = 1:length(uu)
     a(i, :)=(-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3);
     
     %a(i, :)=KS(aa);
-    t(i) = (tau-2*(u'*v)/(-2*h))*T_norm;
+    t(i) = tau*T_norm-2*(u'*v)/(-2*h);
 end
 
 t_end=t(end);
