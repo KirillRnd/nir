@@ -1,5 +1,5 @@
-clearvars -except symF
-clc;
+%clearvars -except symF
+%clc;
 if exist('symF','var') ~= 1
     symbolic_Jacob
 end
@@ -123,7 +123,7 @@ for i = 1:length(uu)
     a(i, :)=(-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3);
     
     %a(i, :)=KS(aa);
-    t(i) = tau*T_norm-2*(u'*v)/(-2*h);
+    t(i) = T_norm*(tau-2*(u'*v)/(-2*h));
 end
 
 t_end=t(end);

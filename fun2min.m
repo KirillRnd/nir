@@ -47,7 +47,7 @@ u=y(end, 1:4)';
 v=y(end, 5:8)';
 h=y(end, 9)';
 tau=y(end, 10)';
-t_end = T_norm*tau;%-2*(u'*v)/(-2*h);
+t_end = T_norm*(tau-2*(u'*v)/(-2*h));
 r_end=KS(u)';
 
 n_M = floor((t_end+t_Mars_0)/T_mars);
