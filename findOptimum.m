@@ -21,7 +21,7 @@ L = L_KS(u0);
 v0 = L'*V0/(2*sqrt(-2*h0));
 t0 = 0;
 
-pu0=0.515*sqrt(ae)*[1 0 0 0]'*1e-7;
+pu0=0.07352172271*ae*[1 0 0 0]'*1e-12;
 pv0=[0 0 0 0]'*1e-12;
 ph0=0;
 pt0=0;
@@ -101,3 +101,4 @@ ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
 box off;
 hold off;
+norm(rr(end, 1:2)-tmp_r)
