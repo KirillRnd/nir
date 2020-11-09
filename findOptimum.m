@@ -1,12 +1,12 @@
-symbolic_Jacob;
+%symbolic_Jacob;
 mug = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
 T_earth = 365.256363004*3600*24;
 T_norm = T_earth/(2*pi);
 
 mug=1;
-r0 = [1 0 0 0]';
-V0 = [0 1 0 0]';
+r0 = [0 1 0 0]';
+V0 = [-1 0 0 0]';
 
 u0 = [0 0 0 0]';
 h0 = (norm(V0)^2)/2-mug/norm(r0);
@@ -21,10 +21,10 @@ L = L_KS(u0);
 v0 = L'*V0/(2*sqrt(-2*h0));
 t0 = 0;
 
-pu0=[0 0 0 0]'*1e-13;
+pu0=0.515*sqrt(ae)*[1 0 0 0]'*1e-7;
 pv0=[0 0 0 0]'*1e-12;
 ph0=0;
-pt0=1e-1;
+pt0=0;
 
 
 y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
@@ -89,7 +89,7 @@ for i = idxes
     plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
 end
 plot(rr(end, 1), rr(end, 2),'bO')
-plot(1.52*cos(angle_M), 1.52*sin(angle_M),'rO')
+
 axis equal
 
 %title('Траектория КА')
