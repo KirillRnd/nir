@@ -39,6 +39,7 @@ y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  t_f));
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
+options = odeset(options,'NonNegative', 10);
 
 [s,y] = ode113(@(s,y) integrateTraectory(s, y, symF),[0 s_f],y0, options);
 
