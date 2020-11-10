@@ -1,8 +1,8 @@
 %clearvars -except symF
 %clc;
-if exist('symF','var') ~= 1
-    symbolic_Jacob
-end
+%5if exist('symF','var') ~= 1
+%    symbolic_Jacob
+%end
 
 N=1350;
 m0=367;
@@ -22,8 +22,8 @@ T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
 r_norm=ae;
-V_norm=sqrt(mug/ae);
-T_norm = T_earth/(2*pi);
+V_norm=sqrt(mug_0/ae);
+T_unit = T_earth/(2*pi);
 
 mug=1;
 
@@ -35,12 +35,11 @@ d_mars=-0.25;
 modifier=1e-8;
 modifier_p=1e-05;
 
-koef = 2;
 
-s_a = (n + angle-rad)*pi*koef;
-s_b = (n + angle+rad)*pi*koef;
+s_a = (n + angle-rad)*pi*2;
+s_b = (n + angle+rad)*pi*2;
 
-x0(11)=(n + angle)*pi*koef;
+x0(11)=(n + angle)*pi*2;
 
 t_f = T_earth*(n + angle);
 
@@ -55,11 +54,11 @@ ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, symF, t_Mars_0);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_Mars_0);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
-options = optimoptions(options, 'OptimalityTolerance', 1e-8);
+options = optimoptions(options, 'OptimalityTolerance', 1e-6);
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
 x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
@@ -90,8 +89,8 @@ options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,symF),int_s0sf, y0, options);
-Jt = integrateFunctional(s, y, symF, eta);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf, y0, options);
+Jt = integrateFunctional(s, y, eta);
 functional = Jt(end);
 
 uu = y(:, 1:4);
@@ -114,7 +113,7 @@ for i = 1:length(uu)
     ph=y(i, 19)';
     ptau=y(i, 20)';
     %aa=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(rr'*rr)*rr/(-2*h)^(3/2));
-    res=symF(h,ph,ptau,pu(1),pu(2),pu(3),pu(4),pv(1),pv(2),pv(3),pv(4),u(1),u(2),u(3),u(4),v(1),v(2),v(3),v(4));
+    res=symF(u,v,h,pu,pv,ph,ptau);
     dvds=res(5:8);
     dhds=res(9);
     V = 2*sqrt(-2*h)*L*v/(u2);
@@ -122,7 +121,7 @@ for i = 1:length(uu)
     a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
     
     %a(i, :)=KS(aa);
-    t(i) = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
+    t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
 
 t_end=t(end);

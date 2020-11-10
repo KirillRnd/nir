@@ -1,14 +1,14 @@
 %mug = 132712.43994*(10^6)*(10^(3*3));
 mug=1;
-u = sym('u', [1 4])';
-v = sym('v', [1 4])';
-h = sym('h');
-tau = sym('tau');
+u = sym('u', [1 4],'real')';
+v = sym('v', [1 4],'real')';
+h = sym('h','real');
+tau = sym('tau','real');
 
-pu = sym('pu', [1 4])';
-pv = sym('pv', [1 4])';
-ph = sym('ph');
-ptau = sym('ptau');
+pu = sym('pu', [1 4],'real')';
+pv = sym('pv', [1 4],'real')';
+ph = sym('ph','real');
+ptau = sym('ptau','real');
 
 u2 = u'*u;
 L = [[u(1) -u(2) -u(3) u(4)];
@@ -37,5 +37,5 @@ f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
 
 %J = jacobian(f, y);
 
-symF = matlabFunction(f);
+symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 %symJ = matlabFunction(J)

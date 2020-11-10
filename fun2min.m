@@ -1,4 +1,4 @@
-function dis = fun2min(x, case_traj, symF, t_Mars_0)
+function dis = fun2min(x, case_traj, t_Mars_0)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -8,7 +8,7 @@ ae = 149597870700;
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
-T_norm = T_earth/(2*pi);
+T_unit = T_earth/(2*pi);
 
 mug=1;
 
@@ -41,13 +41,13 @@ options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 options = odeset(options,'NonNegative', 10);
 
-[s,y] = ode113(@(s,y) integrateTraectory(s, y, symF),[0 s_f],y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s, y),[0 s_f],y0, options);
 
 u=y(end, 1:4)';
 v=y(end, 5:8)';
 h=y(end, 9)';
 tau=y(end, 10)';
-t_end = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
+t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 r_end=KS(u)';
 
 n_M = floor((t_end+t_Mars_0)/T_mars);
@@ -59,7 +59,7 @@ Vf = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0];
 %ЗАДАЧА ПРОЛЁТА
 if case_traj == 1
     pv=y(end, 15:18);
-    dis = norm((rf-r_end))^2 + (norm(pv)^2)*1e+20;
+    dis = norm((rf-r_end))^2 + (norm(pv)^2)*1e+5;
 elseif case_traj == 2
     v = y(end, 5:8)';
     h = y(end, 9);

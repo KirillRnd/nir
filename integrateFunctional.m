@@ -1,4 +1,4 @@
-function Jt = integrateFunctional(s, y, symF, eta)
+function Jt = integrateFunctional(s, y, eta)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %summ_J = zeros(length(s),1);
@@ -27,7 +27,7 @@ for i = 1:length(uu)
     ph=y(i, 19)';
     ptau=y(i, 20)';
     %aa=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(rr'*rr)*rr/(-2*h)^(3/2));
-    res=symF(h,ph,ptau,pu(1),pu(2),pu(3),pu(4),pv(1),pv(2),pv(3),pv(4),u(1),u(2),u(3),u(4),v(1),v(2),v(3),v(4));
+    res=symF(u,v,h,pu,pv,ph,ptau);
     dvds=res(5:8);
     dhds=res(9);
     V = 2*sqrt(-2*h)*L*v/(u2);
