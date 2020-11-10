@@ -1,4 +1,4 @@
-function dis = fun2min(x, case_traj, symF, symF_a0, t_Mars_0, amax)
+function dis = fun2min(x, case_traj, t_Mars_0, amax)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -39,7 +39,7 @@ options = odeset(options,'RelTol',1e-10);
 %options = odeset(options, 'Events', @(s, y) eventIntegrationTraj(s, y, StartTime));
 
 %options = odeset(options,'MinStep',1e-10); 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y, symF, symF_a0, amax),[0 s_f],y0,options);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y, amax),[0 s_f],y0,options);
 
 u=y(end, 1:4)';
 v=y(end, 5:8)';

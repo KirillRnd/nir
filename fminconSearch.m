@@ -52,7 +52,7 @@ ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, symF, symF_a0,  t_Mars_0, amax);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_Mars_0, amax);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
@@ -86,7 +86,7 @@ options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,symF, symF_a0, amax),int_s0sf, y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y, amax),int_s0sf, y0, options);
 Jt = integrateFunctional(s, y);
 functional = Jt(end);
 
