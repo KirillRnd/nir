@@ -17,17 +17,23 @@ b = [];
 Aeq = [];
 beq = [];
 ae = 149597870700;
-mug = 132712.43994*(10^6)*(10^(3*3));
+mug_0 = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
+r_norm=ae;
+V_norm=sqrt(mug/ae);
+T_norm = T_earth/(2*pi);
+
+mug=1;
+
 n=1;
 angle=0.5;
-rad=0.3;
-d_mars=0;
+rad=0.1;
+d_mars=-0.25;
 
 modifier=1e-8;
-modifier_p=1e-15;
+modifier_p=1e-05;
 
 koef = 2;
 
@@ -41,7 +47,7 @@ t_f = T_earth*(n + angle);
 n_M = floor(t_f/T_mars);
 angle_M = t_f/T_mars-n_M;
 t_Mars_0 = (d_mars+angle-angle_M)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+05;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+10;
 ub = -lb;
 
 lb(11) = s_a;
@@ -53,7 +59,7 @@ fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, symF, t_Mars_0);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
-%options = optimoptions(options, 'OptimalityTolerance', 1e-02);
+options = optimoptions(options, 'OptimalityTolerance', 1e-8);
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
 x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
@@ -61,8 +67,8 @@ x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
 px = x(1:10)*modifier_p;
 s_f = x(11);
 %задаем начальные услови€
-r0 = [1*ae 0 0 0]';
-V0 = [0 (mug/(1*ae))^(1/2) 0 0]';
+r0 = [1 0 0 0]';
+V0 = [0 1 0 0]';
 
 t0=0;
 u0 = [0 0 0 0]';
@@ -113,10 +119,10 @@ for i = 1:length(uu)
     dhds=res(9);
     V = 2*sqrt(-2*h)*L*v/(u2);
     VV(i, :)=V;
-    a(i, :)=(-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3);
+    a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
     
     %a(i, :)=KS(aa);
-    t(i) = tau-2*(u'*v)/(-2*h);
+    t(i) = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
 end
 
 t_end=t(end);
@@ -137,10 +143,11 @@ set(gca,'FontSize',14)
 
 figure(3);
 plot(t/(24*3600), s);
-title('«ависимость мнимого времени от обычного')
+title('«ависимость мнимого времени от физического')
 xlabel('t, врем€, дни')
 ylabel('s, мнимое врем€')
 box off;
+set(gca,'FontSize',14)
 
 figure(4);
 m=massLP(Jt, m0, N);
@@ -149,6 +156,7 @@ title('«ависимость массы от времени')
 xlabel('t, врем€, дни')
 ylabel('m, масса, кг')
 box off;
+set(gca,'FontSize',14)
 
 %ѕроверка "на глаз"
 figure(1);
@@ -158,8 +166,8 @@ hold on;
 th = 0:pi/50:2*pi;
 plot(cos(th),sin(th),'k');
 plot(1.52*cos(th),1.52*sin(th),'r');
-plot(rr(:, 1)./ae, rr(:, 2)./ae,'b', 'LineWidth', 1.5)
-a_scale=3e+10/mean(vecnorm(a, 2, 2));
+plot(rr(:, 1), rr(:, 2),'b', 'LineWidth', 1.5)
+a_scale=3e-01/mean(vecnorm(a, 2, 2));
 %a_scale=0;
 d = 24*3600;
 idxes=1;
@@ -168,9 +176,9 @@ for i=1:ceil(t(end)/d)
     idxes=[idxes, ix];
 end    
 for i = idxes
-    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)]./ae, [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)]./ae,'k')
+    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
 end
-plot(rr(end, 1)./ae, rr(end, 2)./ae,'bO')
+plot(rr(end, 1), rr(end, 2),'bO')
 plot(1.52*cos(angle_M), 1.52*sin(angle_M),'rO')
 axis equal
 

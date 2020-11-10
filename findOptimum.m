@@ -1,12 +1,16 @@
 %symbolic_Jacob;
-mug = 132712.43994*(10^6)*(10^(3*3));
+mug_0 = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
+T_earth = 365.256363004*3600*24;
+T_norm = T_earth/(2*pi);
 
-r0 = [0 1*ae 0 0]';
-V0 = [-(mug/(1*ae))^(1/2) 0 0 0]';
+
+mug=1;
+r0 = [0 1 0 0]';
+V0 = [-1 0 0 0]';
 
 u0 = [0 0 0 0]';
-h0=(norm(V0)^2)/2-mug/norm(r0);
+h0 = (norm(V0)^2)/2-mug/norm(r0);
 
 u0(4) = 0;
 u0(1) = sqrt((norm(r0)+r0(1))/2);
@@ -16,23 +20,24 @@ u0(3) = r0(3)/(2*u0(1));
 L = L_KS(u0); 
 
 v0 = L'*V0/(2*sqrt(-2*h0));
-
-pu0=[0 0 0 0]'*1e-13;
-pv0=[0 0 0 0]'*1e-12;
-ph0=0';
-pt0=0;
 t0 = 0;
+
+pu0=0.07352172271*ae*[1 0 0 0]'*1e-12;
+pv0=[0 0 0 0]'*1e-12;
+ph0=0;
+pt0=0;
+
 y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
-%Определяем tf
+s_f=pi;
+%options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  t_f));
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
-s_f=pi;
+
 [s,y] = ode113(@(s,y) integrateTraectory(s, y, symF),[0 s_f],y0, options);
 
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
 a=zeros(length(uu),4);
-
 t=zeros(length(uu),1);
 VV=zeros(length(uu),4);
 for i = 1:length(uu)
@@ -54,10 +59,11 @@ for i = 1:length(uu)
     dhds=res(9);
     V = 2*sqrt(-2*h)*L*v/(u2);
     VV(i, :)=V;
-    a(i, :)=(-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3);
+
+    a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
     
     %a(i, :)=KS(aa);
-    t(i) = tau-2*(u'*v)/(-2*h);
+    t(i) = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
 end
 
 t_end=t(end);
@@ -70,7 +76,7 @@ hold on;
 th = 0:pi/50:2*pi;
 plot(cos(th),sin(th),'k');
 plot(1.52*cos(th),1.52*sin(th),'r');
-plot(rr(:, 1)./ae, rr(:, 2)./ae,'b', 'LineWidth', 1.5)
+plot(rr(:, 1), rr(:, 2),'b', 'LineWidth', 1.5)
 %a_scale=3e+10/mean(vecnorm(a, 2, 2));
 a_scale=0;
 d = 24*3600;
@@ -80,10 +86,10 @@ for i=1:ceil(t(end)/d)
     idxes=[idxes, ix];
 end    
 for i = idxes
-    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)]./ae, [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)]./ae,'k')
+    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
 end
-plot(rr(end, 1)./ae, rr(end, 2)./ae,'bO')
-plot(1.52*cos(angle_M), 1.52*sin(angle_M),'rO')
+plot(rr(end, 1), rr(end, 2),'bO')
+
 axis equal
 
 %title('Траектория КА')

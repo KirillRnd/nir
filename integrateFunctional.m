@@ -3,7 +3,11 @@ function Jt = integrateFunctional(s, y, symF, eta)
 %   Detailed explanation goes here
 %summ_J = zeros(length(s),1);
 %int_J = zeros(length(s),1);
-mug = 132712.43994*(10^6)*(10^(3*3));
+mug_0 = 132712.43994*(10^6)*(10^(3*3));
+ae = 149597870700;
+T_earth = 365.256363004*3600*24;
+T_norm = T_earth/(2*pi);
+mug=1;
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
 a=zeros(length(uu),4);
@@ -28,9 +32,9 @@ for i = 1:length(uu)
     dhds=res(9);
     V = 2*sqrt(-2*h)*L*v/(u2);
     VV(i, :)=V;
-    a(i, :)=(-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3);
+    a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
     %a(i, :)=KS(aa);
-    t(i) = tau-2*(u'*v)/(-2*h);
+    t(i) = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
 end
 %eta=0.45;
 Jt = cumtrapz(t, vecnorm(a, 2, 2).^2)/(2*eta);
