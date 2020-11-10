@@ -143,10 +143,11 @@ set(gca,'FontSize',14)
 
 figure(3);
 plot(t/(24*3600), s);
-title('Зависимость мнимого времени от обычного')
+title('Зависимость мнимого времени от физического')
 xlabel('t, время, дни')
 ylabel('s, мнимое время')
 box off;
+set(gca,'FontSize',14)
 
 figure(4);
 m=massLP(Jt, m0, N);
@@ -155,6 +156,7 @@ title('Зависимость массы от времени')
 xlabel('t, время, дни')
 ylabel('m, масса, кг')
 box off;
+set(gca,'FontSize',14)
 
 %Проверка "на глаз"
 figure(1);
