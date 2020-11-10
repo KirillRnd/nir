@@ -29,7 +29,7 @@ mug=1;
 
 n=1;
 angle=0.5;
-rad=0.3;
+rad=0.0;
 d_mars=-0.25;
 
 modifier=1e-8;

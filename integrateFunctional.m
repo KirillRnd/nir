@@ -34,7 +34,7 @@ for i = 1:length(uu)
     VV(i, :)=V;
     a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
     %a(i, :)=KS(aa);
-    t(i) = T_norm*(tau-2*(u'*v)/(-2*h));
+    t(i) = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
 end
 %eta=0.45;
 Jt = cumtrapz(t, vecnorm(a, 2, 2).^2)/(2*eta);
