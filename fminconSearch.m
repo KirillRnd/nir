@@ -47,7 +47,7 @@ t_f = T_earth*(n + angle);
 n_M = floor(t_f/T_mars);
 angle_M = t_f/T_mars-n_M;
 t_Mars_0 = (d_mars+angle-angle_M)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+05;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+15;
 ub = -lb;
 
 lb(11) = s_a;
@@ -59,7 +59,7 @@ fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, symF, t_Mars_0);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
-%options = optimoptions(options, 'OptimalityTolerance', 1e-02);
+options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
 x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
