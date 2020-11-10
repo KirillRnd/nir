@@ -29,7 +29,7 @@ mug=1;
 
 n=1;
 angle=0.5;
-rad=0.0;
+rad=0.1;
 d_mars=-0.25;
 
 modifier=1e-8;
@@ -47,7 +47,7 @@ t_f = T_earth*(n + angle);
 n_M = floor(t_f/T_mars);
 angle_M = t_f/T_mars-n_M;
 t_Mars_0 = (d_mars+angle-angle_M)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+15;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+10;
 ub = -lb;
 
 lb(11) = s_a;
@@ -59,7 +59,7 @@ fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, symF, t_Mars_0);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
-options = optimoptions(options, 'OptimalityTolerance', 1e-10);
+options = optimoptions(options, 'OptimalityTolerance', 1e-8);
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
 x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
@@ -122,7 +122,7 @@ for i = 1:length(uu)
     a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
     
     %a(i, :)=KS(aa);
-    t(i) = T_norm*(tau-2*(u'*v)/(-2*h));
+    t(i) = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
 end
 
 t_end=t(end);
