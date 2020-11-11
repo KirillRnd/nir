@@ -40,7 +40,7 @@ f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
 
 %J = jacobian(f, y);
 
-symF = matlabFunction(f,'File','symF','Optimize',false, 'Vars', {u,v,h,pu,pv,ph,ptau,amax});
+symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau,amax});
 
 a = [0 0 0 0]';
 
@@ -60,5 +60,5 @@ y = [u', v', h, tau, pu', pv', ph, ptau];
 
 f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
 
-symF_a0 = matlabFunction(f,'File','symF_a0','Optimize',false, 'Vars', {u,v,h,pu,pv,ph,ptau});
+symF_a0 = matlabFunction(f,'File','symF_a0','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 %symJ = matlabFunction(J)
