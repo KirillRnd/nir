@@ -1,9 +1,3 @@
-clearvars -except symF symF_a0
-clc;
-if exist('symF','var') ~= 1
-    symbolic_Jacob
-end
-
 N=1350;
 m0=367;
 eta=0.45;
@@ -11,7 +5,7 @@ amax=2.4e-4;
 
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=1;
+case_traj=2;
 
 %Начальные условия
 x0=[0 0 0 0 0 0 0 0 0 0 0];
@@ -56,8 +50,8 @@ fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_Mars_0, amax);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
-%options = optimoptions(options, 'OptimalityTolerance', 1e-02);
-options = optimoptions(options, 'MaxIterations', 75);
+%options = optimoptions(options, 'OptimalityTolerance', 1e-07);
+%options = optimoptions(options, 'MaxIterations', 75);
 
 x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
 px = x(1:10)*modifier_p;
@@ -116,7 +110,7 @@ for i = 1:length(uu)
     %VV(i, :)=V;
     %lambda = L*(-pv*u2/(4*h)+(2*ph-pv'*v/h)*v+ptau*u*u2/((-2*h)^(3/2)));
     %a = amax*lambda/norm(lambda);%a(i, :)=KS(aa);
-    t(i) = tau-2*(u'*v)/(-2*h);
+    t(i) = tau-2*(u'*v)/sqrt(-2*h);
 end
 
 t_end=t(end);
