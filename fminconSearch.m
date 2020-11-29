@@ -59,9 +59,13 @@ fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_Mars_0);
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
 options = optimoptions(options, 'OptimalityTolerance', 1e-10);
+options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
+options = optimoptions(options, 'StepTolerance', 1e-10);
+options = optimoptions(options, 'ConstraintTolerance', 1e-10);
+
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
-x = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
+[x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
 toc
 px = x(1:10)*modifier_p;
 s_f = x(11);
@@ -191,8 +195,12 @@ ax.YAxisLocation = 'origin';
 box off;
 hold off;
 
-m(1)-m(end)
+disp(['Расход массы ', num2str(m(1)-m(end)), 'кг'])
 r_Mars=[1.52*ae*cos(angle_M); 1.52*ae*sin(angle_M)]';
 V_Mars=((mug_0/(1.52*ae))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2)];
-norm(rr(end, 1:2)*r_norm-r_Mars)
-norm(VV(end, 1:2)*V_norm-V_Mars)
+disp(['Невязка координаты ', num2str(norm(rr(end, 1:2)*r_norm-r_Mars),'%10.2e\n'),',м'])
+disp(['Невязка скорости ', num2str(norm(VV(end, 1:2)*V_norm-V_Mars),'%10.2e\n'),',м/с'])
+% относительное число обусловленности
+disp(['Относительное число обусловленности ', num2str(norm(x)*norm(grad)/fval,'%10.2e\n')])
+% абсолютное число обусловленности
+disp(['Абсолютное число обусловленности ', num2str(1/norm(grad),'%10.2e\n')])

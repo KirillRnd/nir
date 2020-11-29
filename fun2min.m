@@ -45,27 +45,37 @@ options = odeset(options,'NonNegative', 10);
 
 u=y(end, 1:4)';
 v=y(end, 5:8)';
-h=y(end, 9)';
+h_end=y(end, 9)';
+ph=y(end, 19)';
 tau=y(end, 10)';
-t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
-r_end=KS(u)';
-
+ptau=y(end, 20)';
+t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end));
+r_end=KS(u);
+L_end = L_KS(u);
+V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
 n_M = floor((t_end+t_Mars_0)/T_mars);
 angle_M = ((t_end+t_Mars_0)/T_mars-n_M)*2*pi;
 
-rf = 1.52*[cos(angle_M) sin(angle_M) 0 0];
-Vf = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0];
+rf = 1.52*[cos(angle_M) sin(angle_M) 0 0]';
+Vf = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0]';
+
+hf=(norm(Vf)^2)/2-mug/norm(rf);
+
+uf(4) = 0;
+uf(1) = sqrt((norm(r0)+r0(1))/2);
+uf(2) = r0(2)/(2*uf(1));
+uf(3) = r0(3)/(2*uf(1));
+
+L = L_KS(uf); 
+vf = L'*Vf/(2*sqrt(-2*hf));
 
 %ÇÀÄÀ×À ÏÐÎË¨ÒÀ
 if case_traj == 1
     pv=y(end, 15:18);
     dis = norm((rf-r_end))^2 + (norm(pv)^2)*1e+5;
 elseif case_traj == 2
-    v = y(end, 5:8)';
-    h = y(end, 9);
-    Lend = L_KS(u);
-    V = 2*sqrt(-2*h)*Lend*v/(norm(u)^2);
-    dis = norm((rf-r_end))^2 + (norm((V'-Vf))^2);
+    dis_p = [rf-r_end; Vf-V_end; ph; ptau;];
+    dis = norm(dis_p)^2;
 end
 end
 
