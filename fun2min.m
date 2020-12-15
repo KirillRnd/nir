@@ -1,10 +1,11 @@
-function dis = fun2min(x, case_traj, t_Mars_0)
+function dis = fun2min(x, case_traj, t_start, r0, V0)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
 
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
+V_unit=sqrt(mug_0/ae);
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
@@ -18,8 +19,7 @@ ph0=x(9);
 pt0=x(10);
 s_f=x(11);
 
-r0 = [1 0 0 0]';
-V0 = [0 1 0 0]';
+
 
 u0 = [0 0 0 0]';
 h0 = (norm(V0)^2)/2-mug/norm(r0);
@@ -49,16 +49,15 @@ h_end=y(end, 9)';
 ph=y(end, 19)';
 tau=y(end, 10)';
 ptau=y(end, 20)';
-t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end));
+t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end))/(24*60*60);
 r_end=KS(u);
 L_end = L_KS(u);
 V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
-n_M = floor((t_end+t_Mars_0)/T_mars);
-angle_M = ((t_end+t_Mars_0)/T_mars-n_M)*2*pi;
 
-rf = 1.52*[cos(angle_M) sin(angle_M) 0 0]';
-Vf = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0]';
+[rf, Vf] = planetEphemeris(t_end+t_start,'SolarSystem','Mars','430');
 
+rf = [rf/ae, 0]'*1e+03;
+Vf = [Vf/V_unit, 0]'*1e+03;
 hf=(norm(Vf)^2)/2-mug/norm(rf);
 
 uf(4) = 0;
@@ -74,7 +73,7 @@ if case_traj == 1
     pv=y(end, 15:18);
     dis = norm((rf-r_end))^2 + (norm(pv)^2)*1e+5;
 elseif case_traj == 2
-    dis_p = [rf-r_end; Vf-V_end; ph; ptau;];
+    dis_p = [rf-r_end; Vf-V_end; ptau;];
     dis = norm(dis_p)^2;
 end
 end

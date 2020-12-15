@@ -3,7 +3,7 @@
 %5if exist('symF','var') ~= 1
 %    symbolic_Jacob
 %end
-
+t_start = juliandate(2001,12,1);
 N=1350;
 m0=367;
 eta=0.45;
@@ -22,12 +22,17 @@ T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 
 r_norm=ae;
-V_norm=sqrt(mug_0/ae);
+V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
+
+[r0, V0] = planetEphemeris(t_start,'SolarSystem','Earth','430');
+
+r0 = [r0/ae, 0]'*1e+03;
+V0 = [V0/V_unit, 0]'*1e+03;
 
 mug=1;
 
-n=1;
+n=2;
 angle=0.5;
 rad=0.1;
 d_mars=-0.25;
@@ -54,7 +59,7 @@ ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_Mars_0);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
@@ -70,8 +75,6 @@ toc
 px = x(1:10)*modifier_p;
 s_f = x(11);
 %задаем начальные условия
-r0 = [1 0 0 0]';
-V0 = [0 1 0 0]';
 
 t0=0;
 u0 = [0 0 0 0]';
@@ -130,12 +133,6 @@ end
 
 t_end=t(end);
 
-n = floor(t_end/T_earth);
-angle = (t_end/T_earth-n)*2*pi;
-
-n_M = floor((t_end+t_Mars_0)/T_mars);
-angle_M = ((t_end+t_Mars_0)/T_mars-n_M)*2*pi;
-
 figure(2);
 plot(t/(24*3600), vecnorm(a, 2, 2)*1e+03, 'LineWidth', 3);
 %title('Зависимость ускорения силы тяги от времени')
@@ -163,26 +160,39 @@ set(gca,'FontSize',14)
 
 %Проверка "на глаз"
 figure(1);
-plot(0, 0,'y--o')
+plot3(0, 0, 0, 'y--o')
 set(gca,'FontSize',14)
 hold on;
 th = 0:pi/50:2*pi;
-plot(cos(th),sin(th),'k');
-plot(1.52*cos(th),1.52*sin(th),'r');
-plot(rr(:, 1), rr(:, 2),'b', 'LineWidth', 2.5)
-a_scale=3e-01/mean(vecnorm(a, 2, 2));
-%a_scale=0;
+
+t_orbit = linspace(t_start,t_start+T_earth/(24*3600), 1000);
+earth_traj = planetEphemeris(t_orbit','SolarSystem','Earth','430', 'AU');
+
+t_orbit = linspace(t_start,t_start+T_mars/(24*3600), 1000);
+mars_traj = planetEphemeris(t_orbit','SolarSystem','Mars','430', 'AU');
+
+%plot(cos(th),sin(th),'k');
+%plot(1.52*cos(th),1.52*sin(th),'r');
+plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
+plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
+
+mars_f=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430', 'AU');
+
+plot3(rr(:, 1), rr(:, 2), rr(:, 3), 'b', 'LineWidth', 2.5);
+%a_scale=3e-01/mean(vecnorm(a, 2, 2));
+a_scale=0;
 d = 24*3600;
 idxes=1;
 for i=1:ceil(t(end)/d)
     ix = find(t>d*i*10, 1);
     idxes=[idxes, ix];
 end    
-for i = idxes
-    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
-end
-plot(rr(end, 1), rr(end, 2),'bO')
-plot(1.52*cos(angle_M), 1.52*sin(angle_M),'rO')
+%for i = idxes
+%    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
+%end
+
+plot3(rr(end, 1), rr(end, 2), rr(end, 3),'bO')
+plot3(mars_f(1), mars_f(2),mars_f(3),'rO')
 axis equal
 
 %title('Траектория КА')
@@ -199,7 +209,7 @@ disp(['Расход массы ', num2str(m(1)-m(end)), 'кг'])
 r_Mars=[1.52*ae*cos(angle_M); 1.52*ae*sin(angle_M)]';
 V_Mars=((mug_0/(1.52*ae))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2)];
 disp(['Невязка координаты ', num2str(norm(rr(end, 1:2)*r_norm-r_Mars),'%10.2e\n'),',м'])
-disp(['Невязка скорости ', num2str(norm(VV(end, 1:2)*V_norm-V_Mars),'%10.2e\n'),',м/с'])
+disp(['Невязка скорости ', num2str(norm(VV(end, 1:2)*V_unit-V_Mars),'%10.2e\n'),',м/с'])
 % относительное число обусловленности
 disp(['Относительное число обусловленности ', num2str(norm(x)*norm(grad)/fval,'%10.2e\n')])
 % абсолютное число обусловленности
