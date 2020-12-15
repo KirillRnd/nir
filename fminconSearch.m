@@ -176,7 +176,7 @@ mars_traj = planetEphemeris(t_orbit','SolarSystem','Mars','430', 'AU');
 plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
 plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
 
-mars_f=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430', 'AU');
+mars_r_f=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430','AU');
 
 plot3(rr(:, 1), rr(:, 2), rr(:, 3), 'b', 'LineWidth', 2.5);
 a_scale=3e-01/mean(vecnorm(a, 2, 2));
@@ -192,7 +192,7 @@ for i = idxes
 end
 
 plot3(rr(end, 1), rr(end, 2), rr(end, 3),'bO')
-plot3(mars_f(1), mars_f(2),mars_f(3),'rO')
+plot3(mars_r_f(1), mars_r_f(2),mars_r_f(3),'rO')
 axis equal
 
 %title('Траектория КА')
@@ -205,12 +205,12 @@ ax.YAxisLocation = 'origin';
 box off;
 hold off;
 
+[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430');
+
 disp(['Расход массы ', num2str(m(1)-m(end)), 'кг'])
-r_Mars=[1.52*ae*cos(angle_M); 1.52*ae*sin(angle_M)]';
-V_Mars=((mug_0/(1.52*ae))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2)];
-disp(['Невязка координаты ', num2str(norm(rr(end, 1:2)*r_norm-r_Mars),'%10.2e\n'),',м'])
-disp(['Невязка скорости ', num2str(norm(VV(end, 1:2)*V_unit-V_Mars),'%10.2e\n'),',м/с'])
+disp(['Невязка координаты ', num2str(norm(rr(end, 1:3)*r_norm-mars_r_f*1e+03),'%10.2e\n'),',м'])
+disp(['Невязка скорости ', num2str(norm(VV(end, 1:3)*V_unit-mars_v_f*1e+03),'%10.2e\n'),',м/с'])
 % относительное число обусловленности
 disp(['Относительное число обусловленности ', num2str(norm(x)*norm(grad)/fval,'%10.2e\n')])
 % абсолютное число обусловленности
-disp(['Абсолютное число обусловленности ', num2str(1/norm(grad),'%10.2e\n')])
+%disp(['Абсолютное число обусловленности ', num2str(1/norm(grad),'%10.2e\n')])
