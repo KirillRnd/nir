@@ -56,15 +56,15 @@ V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
 
 [rf, Vf] = planetEphemeris(t_end+t_start,'SolarSystem','Mars','430');
 
-rf = rf'/ae*1e+03;
-Vf = Vf'/V_unit*1e+03;
+rf = [rf, 0]'/ae*1e+03;
+Vf = [Vf, 0]'/V_unit*1e+03;
 
 %ÇÀÄÀ×À ÏÐÎË¨ÒÀ
 if case_traj == 1
     pv=y(end, 15:18);
     dis = norm((rf-r_end))^2 + (norm(pv)^2)*1e+5;
 elseif case_traj == 2
-    dis_p = [rf-r_end(1:3); Vf-V_end(1:3);];
+    dis_p = [rf-r_end; Vf-V_end;];
     dis = norm(dis_p)^2;
 end
 end

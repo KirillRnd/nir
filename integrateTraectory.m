@@ -9,7 +9,7 @@ v=y(5:8);
 
 u_alt = [u(4) -u(3) u(2) -u(1)]';
 v_til = u_alt*(u_alt'*v)/(u_alt'*u_alt);
-v_alt=v-v_til;
+v_alt=norm(v)*(v-v_til)/norm(v-v_til);
 
 h=y(9)+h0;
 tau=y(10);
