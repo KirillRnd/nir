@@ -179,17 +179,17 @@ plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
 mars_f=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430', 'AU');
 
 plot3(rr(:, 1), rr(:, 2), rr(:, 3), 'b', 'LineWidth', 2.5);
-%a_scale=3e-01/mean(vecnorm(a, 2, 2));
-a_scale=0;
+a_scale=3e-01/mean(vecnorm(a, 2, 2));
+%a_scale=0;
 d = 24*3600;
 idxes=1;
 for i=1:ceil(t(end)/d)
     ix = find(t>d*i*10, 1);
     idxes=[idxes, ix];
 end    
-%for i = idxes
-%    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
-%end
+for i = idxes
+    plot3([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],[rr(i, 3), rr(i, 3)+a_scale*a(i, 3)],'k')
+end
 
 plot3(rr(end, 1), rr(end, 2), rr(end, 3),'bO')
 plot3(mars_f(1), mars_f(2),mars_f(3),'rO')
