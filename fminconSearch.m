@@ -88,7 +88,7 @@ u0(3) = r0(3)/(2*u0(1));
 L = L_KS(u0); 
 v0 = L'*V0/(2*sqrt(-2*h0));
 tau0=0;
-y0 = cat(1, u0, v0, h0, tau0,  px')';
+y0 = cat(1, u0, v0, 0, tau0,  px')';
 
 int_s0sf = linspace(0, s_f, (n+1)*1e+4);
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
@@ -96,8 +96,8 @@ options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf, y0, options);
-Jt = integrateFunctional(s, y, eta);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf, y0, options);
+Jt = integrateFunctional(s, y, eta, h0);
 functional = Jt(end);
 
 uu = y(:, 1:4);
@@ -113,7 +113,7 @@ for i = 1:length(uu)
     L=L_KS(u);
     u2=norm(u)^2;
     v=y(i, 5:8)';
-    h=y(i, 9)';
+    h=y(i, 9)'+h0;
     tau=y(i ,10)';
     pu=y(i, 11:14)';
     pv=y(i, 15:18)';

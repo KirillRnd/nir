@@ -34,18 +34,18 @@ L = L_KS(u0);
 v0 = L'*V0/(2*sqrt(-2*h0));
 t0 = 0;
 
-y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
+y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
 
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  t_f));
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 options = odeset(options,'NonNegative', 10);
 
-[s,y] = ode113(@(s,y) integrateTraectory(s, y),[0 s_f],y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s, y, h0),[0 s_f],y0, options);
 
 u=y(end, 1:4)';
 v=y(end, 5:8)';
-h_end=y(end, 9)';
+h_end=y(end, 9)'+h0;
 ph=y(end, 19)';
 tau=y(end, 10)';
 ptau=y(end, 20)';
@@ -56,9 +56,8 @@ V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
 
 [rf, Vf] = planetEphemeris(t_end+t_start,'SolarSystem','Mars','430');
 
-rf = [rf/ae]'*1e+03;
-Vf = [Vf/V_unit]'*1e+03;
-hf=(norm(Vf)^2)/2-mug/norm(rf);
+rf = rf'/ae*1e+03;
+Vf = Vf'/V_unit*1e+03;
 
 %ÇÀÄÀ×À ÏÐÎË¨ÒÀ
 if case_traj == 1
