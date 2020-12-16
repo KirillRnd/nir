@@ -1,103 +1,65 @@
-%symbolic_Jacob;
-mug_0 = 132712.43994*(10^6)*(10^(3*3));
+mug = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
-T_earth = 365.256363004*3600*24;
-T_norm = T_earth/(2*pi);
+global alpha_vsc;
+global v_opt;
+Vsc=norm(v_opt)-(mug/(1*ae))^(1/2);
+vsc=[Vsc*cos(alpha_vsc) Vsc*sin(alpha_vsc) 0];
+ y0 = cat(2,[1*ae 0 0],[0 (mug/(1*ae))^(1/2) 0] + vsc,[0 0 0],[0 0 0],...
+    reshape(zeros(3),[1,9]), reshape(zeros(3),[1,9]),...
+    reshape(eye(3),[1,9]), reshape(zeros(3),[1,9]),...
+    reshape(zeros(3),[1,9]), reshape(zeros(3),[1,9]),...
+    reshape(zeros(3),[1,9]), reshape(eye(3),[1,9])...
+    )';
+%Определяем tf
+T=2*pi*sqrt((1*ae)^3/mug);
+%tf=6*T/6;
+tf=(4+124)*3600*24-t_opt;
+optionsInn = odeset('AbsTol',1e-12);
 
-
-mug=1;
-r0 = [0 1 0 0]';
-V0 = [-1 0 0 0]';
-
-u0 = [0 0 0 0]';
-h0 = (norm(V0)^2)/2-mug/norm(r0);
-
-u0(4) = 0;
-u0(1) = sqrt((norm(r0)+r0(1))/2);
-u0(2) = r0(2)/(2*u0(1));
-u0(3) = r0(3)/(2*u0(1));
-
-L = L_KS(u0); 
-
-v0 = L'*V0/(2*sqrt(-2*h0));
-t0 = 0;
-
-pu0=0.07352172271*ae*[1 0 0 0]'*1e-12;
-pv0=[0 0 0 0]'*1e-12;
-ph0=0;
-pt0=0;
-
-y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
-s_f=pi;
-%options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  t_f));
-options = odeset('AbsTol',1e-10);
-options = odeset(options,'RelTol',1e-10);
-
-[s,y] = ode113(@(s,y) integrateTraectory(s, y, symF),[0 s_f],y0, options);
-
-uu = y(:, 1:4);
-rr=zeros(length(uu),4);
-a=zeros(length(uu),4);
-t=zeros(length(uu),1);
-VV=zeros(length(uu),4);
-for i = 1:length(uu)
-    u = uu(i,:)';
-    r=KS(u);
-    rr(i,:)=r;
-    L=L_KS(u);
-    u2=norm(u)^2;
-    v=y(i, 5:8)';
-    h=y(i, 9)';
-    tau=y(i ,10)';
-    pu=y(i, 11:14)';
-    pv=y(i, 15:18)';
-    ph=y(i, 19)';
-    ptau=y(i, 20)';
-    %aa=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(rr'*rr)*rr/(-2*h)^(3/2));
-    res=symF(h,ph,ptau,pu(1),pu(2),pu(3),pu(4),pv(1),pv(2),pv(3),pv(4),u(1),u(2),u(3),u(4),v(1),v(2),v(3),v(4));
-    dvds=res(5:8);
-    dhds=res(9);
-    V = 2*sqrt(-2*h)*L*v/(u2);
-    VV(i, :)=V;
-
-    a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
-    
-    %a(i, :)=KS(aa);
-    t(i) = T_norm*(tau-2*(u'*v)/sqrt(-2*h));
-end
-
-t_end=t(end);
-
-%Проверка "на глаз"
-figure(1);
-plot(0, 0,'y--o')
-set(gca,'FontSize',14)
-hold on;
-th = 0:pi/50:2*pi;
-plot(cos(th),sin(th),'k');
-plot(1.52*cos(th),1.52*sin(th),'r');
-plot(rr(:, 1), rr(:, 2),'b', 'LineWidth', 1.5)
-%a_scale=3e+10/mean(vecnorm(a, 2, 2));
-a_scale=0;
-d = 24*3600;
-idxes=1;
-for i=1:ceil(t(end)/d)
-    ix = find(t>d*i*10, 1);
-    idxes=[idxes, ix];
-end    
-for i = idxes
-    plot([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],'k')
-end
-plot(rr(end, 1), rr(end, 2),'bO')
-
+[t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 tf],y0,optionsInn);
+plot(y(:,1),y(:,2));
 axis equal
+hold on;
+drdzdt=reshape(y(end,49:66),[3,6]);
+drdz=reshape(y(end,13:30),[3,6]);
 
-%title('Траектория КА')
-xlabel('x, a.e.')
-ylabel('y, a.e.')
+dfdz = cat(1,drdz,drdzdt);
+global th_mars;  
+%th_mars=3*pi/6+pi/15;
+rf = [1.52*ae*cos(th_mars) 1.52*ae*sin(th_mars) 0];
+vf = [(mug/(1.52*ae))^(1/2)*cos(th_mars+pi/2) (mug/(1.52*ae))^(1/2)*sin(th_mars+pi/2) 0];
 
-ax = gca;
-ax.XAxisLocation = 'origin';
-ax.YAxisLocation = 'origin';
-box off;
+
+b=y(end,1:6)-cat(2,rf,vf);
+%оптимизируем траекторию
+z0=[0 0 0 0 0 0];
+
+optionsExt = odeset('AbsTol',1e-16);
+
+[tau,z] = ode45(@(t,y) optimiseToMars(t,y,b,tf),[0 1],z0, optionsExt);
+
+y0 = cat(2,[1*ae 0 0],[0 (mug/(1*ae))^(1/2) 0] + vsc,z(end,:),...
+    reshape(zeros(3),[1,9]), reshape(zeros(3),[1,9]),...
+    reshape(eye(3),[1,9]), reshape(zeros(3),[1,9]),...
+    reshape(zeros(3),[1,9]), reshape(zeros(3),[1,9]),...
+    reshape(zeros(3),[1,9]), reshape(eye(3),[1,9])...
+    )';
+[t,y] = ode45(@(t,y) integrateTraectory(t,y,mug),[0 tf],y0,optionsInn);
+plot(y(:,1),y(:,2));
+axis equal
+hold on
+th = 0:pi/50:2*pi;
+%орбита Земли
+plot(ae*cos(th),ae*sin(th));
+%орбита Марса
+plot(1.52*ae*cos(th),1.52*ae*sin(th));
+%конечная точка траектории
+plot(rf(1),rf(2),'b--o')
+%Земля
+plot(ae, 0,'b--o')
+%Солнце
+plot(0, 0,'y--o')
+%положение земли в момент времени tf
+%plot(rf(1)+b(1),rf(2)+b(2),'r--o')
 hold off;
+norm([rf(1)-y(end,1),rf(2)-y(end,2)])

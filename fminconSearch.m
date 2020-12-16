@@ -26,9 +26,11 @@ V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
 
 [r0, V0] = planetEphemeris(t_start,'SolarSystem','Earth','430');
-[rf, Vf] = planetEphemeris(t_start,'SolarSystem','Earth','430');
+[rf, Vf] = planetEphemeris(t_start,'SolarSystem','Mars','430');
 tic;
-y0 = cat(1, u0, v0, 0, tau0,  px')';
+[tau, z] = ode45(@(y)integrateExternal(y, b), z0);
+toc
+y0 = cat(1, u0, v0, 0, tau0,  z')';
 
 int_s0sf = linspace(0, s_f, (n+1)*1e+4);
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
