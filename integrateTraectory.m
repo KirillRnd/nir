@@ -4,20 +4,17 @@ function res = integrateTraectory(y)
 %s - фиктивное время, tau - временной элемент
 %Известные значения
 %s
-u=y(1:4);
-v=y(5:8);
+r=y(1:3);
+V=y(4:6);
+pV=y(7:9);
+dpVdt=y(10:12);
 
-u_alt = [u(4) -u(3) u(2) -u(1)]';
-v_til = u_alt*(u_alt'*v)/(u_alt'*u_alt);
-v_alt=norm(v)*(v-v_til)/norm(v-v_til);
+drdz=reshape(y(13:30),[3,6]);
+ddrdzdt=reshape(y(49:66),[3,6]);
 
-h=y(9)+h0;
-tau=y(10);
-pu=y(11:14);
-pv=y(15:18);
-ph=y(19);
-ptau=y(20);
-%Сохрняем провизводные
-res=symF(u,v_alt,h,pu,pv,ph,ptau);
+dpVdz=reshape(y(31:48),[3,6]);
+ddpVdtdz=reshape(y(67:84),[3,6]);
+
+res = symF(r,V,pV,dpVdt,drdz,ddrdzdt,dpVdz,ddpVdtdz);
 end
 

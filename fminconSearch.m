@@ -27,6 +27,11 @@ T_unit = T_earth/(2*pi);
 
 [r0, V0] = planetEphemeris(t_start,'SolarSystem','Earth','430');
 [rf, Vf] = planetEphemeris(t_start,'SolarSystem','Mars','430');
+
+z0 = 
+
+[t, y] = ode45(@(y)integrateTraectory(y), z0);
+
 tic;
 [tau, z] = ode45(@(y)integrateExternal(y, b), z0);
 toc
