@@ -1,4 +1,4 @@
-function res = integrateTraectory(y)
+function res = integrateTraectory(t,y)
 %integrateTraectory интегрирует от начальной 
 %точки до времени tf
 %s - фиктивное время, tau - временной элемент

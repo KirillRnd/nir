@@ -29,6 +29,8 @@ dddpVdzdtdt=jacobian(dFdr*pV, r)*drdz+dFdr*dpVdz;
 
 
 f =[drdt', dvdt', DpVdt', ddpvdtdt', reshape(Ddrdzdt,[18,1])', reshape(dddrdzdtdt,[18,1])', reshape(DpVdz,[18,1])', reshape(dddpVdzdtdt,[18,1])']';
+%f =[drdt', dvdt', zeros([1 78])]';
+
 symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {r,V,pV,dpVdt,drdz,ddrdzdt,dpVdz,ddpVdtdz});
 %symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 %symJ = matlabFunction(J)
