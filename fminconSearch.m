@@ -39,7 +39,9 @@ y0 = cat(2,r0,V0,z0,...
     reshape(zeros(3),[1,9]), reshape(eye(3),[1,9])...
     )';
 tspan = linspace(0, (tf-t0)*days2sec, (n+1)*1e+4);
-[t, y] = ode45(@(t,y)integrateTraectory(t,y),tspan, y0);
+options = odeset('AbsTol',1e-10);
+options = odeset(options,'RelTol',1e-10);
+[t, y] = ode45(@(t,y)integrateTraectory(t,y),tspan, y0,options);
 
 r_end =y(end, 1:3);
 V_end =y(end, 4:6);
@@ -66,7 +68,7 @@ options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y),tspan, y_found, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s,y),tspan, y0, options);
 
 rr=y(:,1:3);
 %Jt = integrateFunctional(s, y, eta, h0);
