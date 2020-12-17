@@ -1,18 +1,15 @@
-function res = externalIntegration(tau, z, b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan)
+function res = externalIntegration(tau, z, b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
-
-mug = 132712.43994*(10^6)*(10^(3*3));
-ae = 149597870700;
-%y0=[1 0 0 0 -mug^(1/2) 0 0 0 0 0 0 0]';
 y0_z=y0;
+y0_z(4:6)=V0*sqrt(mu_tau(tau)/mu_tau(1));
+y0_Z(88:90)=0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*V0;
 y0_z(7:12)=z;
-T=2*pi*sqrt((1*ae)^3/mug);
 
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 
-[t,y] = ode45(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr),tspan,y0_z,options);
+[t,y] = ode45(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,tau),tspan,y0_z,options);
 %plot(y(:,1),y(:,2));
 %axis equal
 drdpv=reshape(y(end,13:21),[3,3]);
@@ -26,7 +23,12 @@ ddrdzdt=cat(2,ddrdpvdt,ddVdpvdt);
 
 dfdz = cat(1,drdz,ddrdzdt);
 
-res=-(dfdz^-1)*b';
+drdtau=y(end,85:87);
+dvdtau=y(88:90);
+dfdtau = cat(2,drdtau,dvdtau-0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*Vf);
+res=-(dfdz^-1)*(dfdtau+b)';
 tau
+if tau == 1.0
+    cond(dfdz)
 end
 
