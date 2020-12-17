@@ -49,6 +49,7 @@ h_end=y(end, 9)'+h0;
 ph=y(end, 19)';
 tau=y(end, 10)';
 ptau=y(end, 20)';
+pv=y(end, 15:18);
 t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end))/(24*60*60);
 r_end=KS(u);
 L_end = L_KS(u);
@@ -61,11 +62,10 @@ Vf = [Vf, 0]'/V_unit*1e+03;
 
 %ÇÀÄÀ×À ÏĞÎË¨ÒÀ
 if case_traj == 1
-    pv=y(end, 15:18);
-    dis = norm((rf-r_end))^2 + (norm(pv)^2)*1e+5;
+    dis_p = [rf-r_end; pv;];
 elseif case_traj == 2
     dis_p = [rf-r_end; Vf-V_end;];
-    dis = norm(dis_p)^2;
 end
+dis = norm(dis_p)^2;
 end
 
