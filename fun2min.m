@@ -32,7 +32,7 @@ u0(3) = r0(3)/(2*u0(1));
 L = L_KS(u0); 
 
 v0 = L'*V0/(2*sqrt(-2*h0));
-t0 = 0;
+t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 
 y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
 
@@ -50,7 +50,8 @@ ph=y(end, 19)';
 tau=y(end, 10)';
 ptau=y(end, 20)';
 pv=y(end, 15:18);
-t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end))/(24*60*60);
+t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
+t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
 r_end=KS(u);
 L_end = L_KS(u);
 V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);

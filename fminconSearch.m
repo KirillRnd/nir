@@ -3,7 +3,7 @@
 %5if exist('symF','var') ~= 1
 %    symbolic_Jacob
 %end
-t_start = juliandate(2001,12,1);
+t_start = juliandate(2001,0,0);
 N=1350;
 m0=367;
 eta=0.45;
@@ -33,8 +33,8 @@ V0 = [V0/V_unit, 0]'*1e+03;
 mug=1;
 
 n=2;
-angle=0.5;
-rad=0.1;
+angle=1;
+rad=0.0;
 d_mars=-0.25;
 
 modifier=1e-8;
@@ -87,7 +87,7 @@ u0(3) = r0(3)/(2*u0(1));
 
 L = L_KS(u0); 
 v0 = L'*V0/(2*sqrt(-2*h0));
-tau0=0;
+tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 
 int_s0sf = linspace(0, s_f, (n+1)*1e+4);
@@ -130,7 +130,7 @@ for i = 1:length(uu)
     %a(i, :)=KS(aa);
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
-
+t = t - t(1);
 t_end=t(end);
 
 figure(2);
@@ -211,6 +211,6 @@ disp(['Расход массы ', num2str(m(1)-m(end)), 'кг'])
 disp(['Невязка координаты ', num2str(norm(rr(end, 1:3)*r_norm-mars_r_f*1e+03),'%10.2e\n'),',м'])
 disp(['Невязка скорости ', num2str(norm(VV(end, 1:3)*V_unit-mars_v_f*1e+03),'%10.2e\n'),',м/с'])
 % относительное число обусловленности
-disp(['Относительное число обусловленности ', num2str(norm(x)*norm(grad)/fval,'%10.2e\n')])
+disp(['Относительно е число обусловленности ', num2str(norm(x)*norm(grad)/fval,'%10.2e\n')])
 % абсолютное число обусловленности
 %disp(['Абсолютное число обусловленности ', num2str(1/norm(grad),'%10.2e\n')])
