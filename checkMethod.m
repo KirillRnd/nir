@@ -84,7 +84,7 @@ u0(3) = r0(3)/(2*u0(1));
 
 L = L_KS(u0); 
 v0 = L'*V0/(2*sqrt(-2*h0));
-tau0=0;
+tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 
 int_s0sf = linspace(0, s_f, (n+1)*1e+4);
@@ -127,7 +127,7 @@ for i = 1:length(uu)
     %a(i, :)=KS(aa);
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
-
+t = t - t(1);
 t_end=t(end);
 
 [mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430');
