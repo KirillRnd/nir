@@ -36,13 +36,13 @@ t0 = 0;
 
 y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
 
-%options = odeset('Events', @(s, y) eventIntegrationTraj(s, y,  t_f));
+time0 = tic;
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 options = odeset(options,'NonNegative', 10);
+options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
 
 [s,y] = ode113(@(s,y) integrateTraectory(s, y, h0),[0 s_f],y0, options);
-
 u=y(end, 1:4)';
 v=y(end, 5:8)';
 h_end=y(end, 9)'+h0;
