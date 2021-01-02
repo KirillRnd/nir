@@ -119,7 +119,8 @@ for i = 1:length(uu)
     pv=y(i, 15:18)';
     ph=y(i, 19)';
     ptau=y(i, 20)';
-    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)));
+    dtds=u2/sqrt(-2*h);
+    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
     a_ks(i, :)=aa_ks/(ae/sqrt(mug_0)).^2;
     res=symF(u,v,h,pu,pv,ph,ptau);
     dvds=res(5:8);
@@ -135,7 +136,7 @@ t = t - t(1);
 t_end=t(end);
 
 figure(2);
-plot(t/(24*3600), vecnorm(a, 2, 2)*1e+03, 'LineWidth', 3);
+plot(t/(24*3600), vecnorm(a_ks, 2, 2)*1e+03, 'LineWidth', 3);
 %title('Зависимость ускорения силы тяги от времени')
 xlabel('t, время, дни','FontSize',14)
 ylabel('Реактивное ускорение, мм/c^2','FontSize',14)

@@ -10,7 +10,7 @@ T_norm = T_earth/(2*pi);
 mug=1;
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
-a=zeros(length(uu),4);
+a_ks=zeros(length(uu),4);
 t=zeros(length(uu),1);
 VV=zeros(length(uu),4);
 for i = 1:length(uu)
@@ -30,12 +30,13 @@ for i = 1:length(uu)
     res=symF(u,v,h,pu,pv,ph,ptau);
     dvds=res(5:8);
     dhds=res(9);
+    dtds=u2/sqrt(-2*h);
     V = 2*sqrt(-2*h)*L*v/(u2);
     VV(i, :)=V;
-    a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
-    %a(i, :)=KS(aa);
+    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
+    a_ks(i, :)=aa_ks/(ae/sqrt(mug_0)).^2;
     t(i) = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
 end
 %eta=0.45;
-Jt = cumtrapz(t, vecnorm(a, 2, 2).^2)/(2*eta);
+Jt = cumtrapz(t, vecnorm(a_ks, 2, 2).^2)/(2*eta);
 
