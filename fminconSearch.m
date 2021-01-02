@@ -103,7 +103,7 @@ functional = Jt(end);
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
 a=zeros(length(uu),4);
-
+a_ks=zeros(length(uu),4);
 t=zeros(length(uu),1);
 VV=zeros(length(uu),4);
 for i = 1:length(uu)
@@ -119,13 +119,14 @@ for i = 1:length(uu)
     pv=y(i, 15:18)';
     ph=y(i, 19)';
     ptau=y(i, 20)';
-    %aa=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(rr'*rr)*rr/(-2*h)^(3/2));
+    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)));
+    a_ks(i, :)=aa_ks/(ae/sqrt(mug_0)).^2;
     res=symF(u,v,h,pu,pv,ph,ptau);
     dvds=res(5:8);
     dhds=res(9);
     V = 2*sqrt(-2*h)*L*v/(u2);
     VV(i, :)=V;
-    a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
+    %a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
     
     %a(i, :)=KS(aa);
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
@@ -179,7 +180,7 @@ plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
 mars_r_f=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430','AU');
 
 plot3(rr(:, 1), rr(:, 2), rr(:, 3), 'b', 'LineWidth', 2.5);
-a_scale=3e-01/mean(vecnorm(a, 2, 2));
+a_scale=3e-01/mean(vecnorm(a_ks, 2, 2));
 %a_scale=0;
 d = 24*3600;
 idxes=1;
@@ -188,7 +189,7 @@ for i=1:ceil(t(end)/d)
     idxes=[idxes, ix];
 end    
 for i = idxes
-    plot3([rr(i, 1), rr(i, 1)+a_scale*a(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a(i, 2)],[rr(i, 3), rr(i, 3)+a_scale*a(i, 3)],'k')
+    plot3([rr(i, 1), rr(i, 1)+a_scale*a_ks(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a_ks(i, 2)],[rr(i, 3), rr(i, 3)+a_scale*a_ks(i, 3)],'k')
 end
 
 plot3(rr(end, 1), rr(end, 2), rr(end, 3),'bO')
