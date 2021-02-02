@@ -33,7 +33,7 @@ for i = 1:length(uu)
     dtds=u2/sqrt(-2*h);
     V = 2*sqrt(-2*h)*L*v/(u2);
     VV(i, :)=V;
-    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
+    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)));
     a_ks(i, :)=aa_ks/(ae/sqrt(mug_0)).^2;
     t(i) = T_norm*tau-2*((ae/sqrt(mug_0)).^2)*(u'*v)/(-2*h);
 end

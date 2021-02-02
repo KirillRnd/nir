@@ -1,4 +1,4 @@
-function [dr,dv,C] = checkMethod(t_start,phi)
+function [dr,dv,C] = checkMethod(t_start,phi,rad)
 %UNTITLED9 Summary of this function goes here
 %   Detailed explanation goes here
 %clearvars -except symF
@@ -27,28 +27,24 @@ T_mars=T_earth*1.8808476;
 r_norm=ae;
 V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
-
-[r0, V0] = planetEphemeris(t_start,'SolarSystem','Earth','430');
+planet_start = 'Earth';
+planet_end = 'Mars';
+[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
 
 r0 = [r0/ae, 0]'*1e+03;
 V0 = [V0/V_unit, 0]'*1e+03;
 
 mug=1;
 
-n=2;
-angle=0.5;
-rad=pi/48;
-%d_mars=-0.25;
+modifier_p=1e-04;
+modifier_f=1e+04;
 
-modifier_p=1e-05;
+s_a = phi-rad;
+s_b = phi+rad;
 
+x0(11)=phi;
 
-s_a = (phi-rad);
-s_b = (phi+rad);
-
-x0(11)=(phi);
-
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+10;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+13;
 ub = -lb;
 
 lb(11) = s_a;
@@ -56,7 +52,7 @@ ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f);
 
 options = optimoptions('fmincon','UseParallel', true);
 %options = optimoptions(options, 'Display', 'iter');
@@ -65,13 +61,14 @@ options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-10);
 options = optimoptions(options, 'ConstraintTolerance', 1e-10);
 options = optimoptions(options,'OutputFcn',@myoutput);
-%options = optimoptions(options, 'Algorithm', 'sqp');
 
 [x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options);
 toc
 px = x(1:10)*modifier_p;
-s_f = x(11);
+s_f = x(11)*2*pi;
 %задаем начальные услови€
+%options = optimoptions(options,'OutputFcn',@myoutput);
+%options = optimoptions(options, 'Algorithm', 'sqp');
 
 t0=0;
 u0 = [0 0 0 0]';
@@ -86,11 +83,13 @@ L = L_KS(u0);
 v0 = L'*V0/(2*sqrt(-2*h0));
 tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
-
+n = 1;
 int_s0sf = linspace(0, s_f, (n+1)*1e+4);
+time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
+options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
 [s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf, y0, options);
@@ -130,7 +129,7 @@ end
 t = t - t(1);
 t_end=t(end);
 
-[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430');
+[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
 
 dr=norm(rr(end, 1:3)*r_norm-mars_r_f*1e+03);
 dv=norm(VV(end, 1:3)*V_unit-mars_v_f*1e+03);

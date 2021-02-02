@@ -1,4 +1,4 @@
-function dis = fun2min(x, case_traj, t_start, r0, V0)
+function dis = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -17,17 +17,12 @@ pu0=x(1:4)';
 pv0=x(5:8)';
 ph0=x(9);
 pt0=x(10);
-s_f=x(11);
+s_f=x(11)*2*pi;
 
 
 
-u0 = [0 0 0 0]';
+u0 = rToU(r0);
 h0 = (norm(V0)^2)/2-mug/norm(r0);
-
-u0(4) = 0;
-u0(1) = sqrt((norm(r0)+r0(1))/2);
-u0(2) = r0(2)/(2*u0(1));
-u0(3) = r0(3)/(2*u0(1));
 
 L = L_KS(u0); 
 
@@ -42,7 +37,7 @@ options = odeset(options,'RelTol',1e-10);
 options = odeset(options,'NonNegative', 10);
 options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
 
-[s,y] = ode113(@(s,y) integrateTraectory(s, y, h0),[0 s_f],y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), [0 s_f], y0, options);
 u=y(end, 1:4)';
 v=y(end, 5:8)';
 h_end=y(end, 9)'+h0;
@@ -56,17 +51,23 @@ r_end=KS(u);
 L_end = L_KS(u);
 V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
 
-[rf, Vf] = planetEphemeris(t_end+t_start,'SolarSystem','Mars','430');
+[rf, Vf] = planetEphemeris(t_end+t_start,'SolarSystem',planet_end,'430');
 
 rf = [rf, 0]'/ae*1e+03;
 Vf = [Vf, 0]'/V_unit*1e+03;
-
+uf=rToU(rf);
+vf=vFromV(Vf,rf,mug);
 %ЗАДАЧА ПРОЛЁТА
 if case_traj == 1
-    dis_p = [rf-r_end; pv;];
+    dis_p = [uf+u; pv';];
 elseif case_traj == 2
-    dis_p = [rf-r_end; Vf-V_end;];
+    dis_p = [uf+u; vf+v;];
 end
-dis = norm(dis_p)^2;
+% if case_traj == 1
+%     dis_p = [rf-r_end; pv';];
+% elseif case_traj == 2
+%     dis_p = [rf-r_end; Vf-V_end;];
+% end
+dis = modifier_f*norm(dis_p)^2;
 end
 

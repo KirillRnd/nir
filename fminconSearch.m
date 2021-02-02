@@ -24,34 +24,29 @@ T_mars=T_earth*1.8808476;
 r_norm=ae;
 V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
-
-[r0, V0] = planetEphemeris(t_start,'SolarSystem','Earth','430');
+planet_start = 'Earth';
+planet_end = 'Mars';
+[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
 
 r0 = [r0/ae, 0]'*1e+03;
 V0 = [V0/V_unit, 0]'*1e+03;
 
 mug=1;
 
-n=2;
-angle=1;
-rad=0.0;
-d_mars=-0.25;
+n=1;
+angle=0.6875;
+rad=1/32;
 
-modifier=1e-8;
-modifier_p=1e-05;
+modifier_p=1e-04;
+modifier_f=1e+04;
+phi = n + angle;
 
+s_a = phi - rad;
+s_b = phi + rad;
 
-s_a = (n + angle-rad)*pi*2;
-s_b = (n + angle+rad)*pi*2;
+x0(11) = phi;
 
-x0(11)=(n + angle)*pi*2;
-
-t_f = T_earth*(n + angle);
-
-n_M = floor(t_f/T_mars);
-angle_M = t_f/T_mars-n_M;
-t_Mars_0 = (d_mars+angle-angle_M)*T_mars;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+10;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+13;
 ub = -lb;
 
 lb(11) = s_a;
@@ -59,21 +54,22 @@ ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
 options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'StepTolerance', 1e-10);
+options = optimoptions(options, 'StepTolerance', 1e-12);
 options = optimoptions(options, 'ConstraintTolerance', 1e-10);
 
 %options = optimoptions(options, 'Algorithm', 'sqp');
-
-[x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options)
+%options = optimoptions(options, 'HessianApproximation','lbfgs');
+%options = optimoptions(options, 'ScaleProblem', 'obj-and-constr');
+[x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options);
 toc
 px = x(1:10)*modifier_p;
-s_f = x(11);
+s_f = x(11)*2*pi;
 %задаем начальные условия
 
 t0=0;
@@ -168,17 +164,17 @@ hold on;
 th = 0:pi/50:2*pi;
 
 t_orbit = linspace(t_start,t_start+T_earth/(24*3600), 1000);
-earth_traj = planetEphemeris(t_orbit','SolarSystem','Earth','430', 'AU');
+earth_traj = planetEphemeris(t_orbit','SolarSystem',planet_start,'430', 'AU');
 
 t_orbit = linspace(t_start,t_start+T_mars/(24*3600), 1000);
-mars_traj = planetEphemeris(t_orbit','SolarSystem','Mars','430', 'AU');
+mars_traj = planetEphemeris(t_orbit','SolarSystem',planet_end,'430', 'AU');
 
 %plot(cos(th),sin(th),'k');
 %plot(1.52*cos(th),1.52*sin(th),'r');
 plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
 plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
 
-mars_r_f=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430','AU');
+mars_r_f=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430','AU');
 
 plot3(rr(:, 1), rr(:, 2), rr(:, 3), 'b', 'LineWidth', 2.5);
 a_scale=3e-01/mean(vecnorm(a_ks, 2, 2));
@@ -207,7 +203,7 @@ ax.YAxisLocation = 'origin';
 box off;
 hold off;
 
-[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem','Mars','430');
+[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
 
 disp(['Расход массы ', num2str(m(1)-m(end)), 'кг'])
 disp(['Невязка координаты ', num2str(norm(rr(end, 1:3)*r_norm-mars_r_f*1e+03),'%10.2e\n'),',м'])
