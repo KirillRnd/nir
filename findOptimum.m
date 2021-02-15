@@ -5,7 +5,7 @@
 mug = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
 n=0;
-t0=juliandate(2002,12,1);
+t0=juliandate(2022,6,23);
 tf=t0+200;
 days2sec=24*3600;
 [r0, V0] = planetEphemeris(t0,'SolarSystem','Earth','430');
@@ -17,6 +17,7 @@ Vf=Vf*1e+03;
 
 mu0 = defineMu0(n,r0,V0,rf,(tf-t0)*days2sec,mug);
 mu_tau=@(tau)(mu0+(mug-mu0)*tau);
+%mu_tau=@(tau)(mug+0*tau);
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);   
 
@@ -45,17 +46,18 @@ y0 = cat(2,r0,V0*sqrt(mu_tau(0)/mu_tau(1)),[0 0 0],[0 0 0],...
     zeros([1, 3]), zeros([1, 3])...
     )';
 tspan=[0 (tf-t0)*days2sec];
-[t,y_initial] = ode45(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0,options);
+[t,y_initial] = ode45(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,0),tspan,y0,options);
 %plot(y(:,1),y(:,2));
 rf_0 = y_initial(end,1:3);
-
-b=y_initial(end,1:6)-cat(2,rf,Vf);
+Vf_0 = y_initial(end,4:6);
+b=cat(2,rf_0,Vf_0)-cat(2,rf,Vf*sqrt(mu_tau(0)/mu_tau(1)));
 %оптимизируем траекторию
-z0=[0 0 0 0 0 0];
+z0=zeros([1, 6]);
 tic;
 [tau,z] = ode45(@(t,z) externalIntegration(t,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf),[0 1],z0,options);
 toc
 y0_final=y0;
+y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);
 [t,y_final] = ode45(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0_final,options);
 T_earth = 365.256363004*3600*24;

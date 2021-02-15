@@ -1,9 +1,9 @@
-function res = externalIntegration(tau, z, b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf)
+function res = externalIntegration(tau,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 y0_z=y0;
 y0_z(4:6)=V0*sqrt(mu_tau(tau)/mu_tau(1));
-y0_Z(88:90)=0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*V0;
+y0_z(88:90)=0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*V0;
 y0_z(7:12)=z;
 
 options = odeset('AbsTol',1e-10);
@@ -24,9 +24,9 @@ ddrdzdt=cat(2,ddrdpvdt,ddVdpvdt);
 dfdz = cat(1,drdz,ddrdzdt);
 
 drdtau=y(end,85:87);
-dvdtau=y(88:90);
+dvdtau=y(end,88:90);
 dfdtau = cat(2,drdtau,dvdtau-0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*Vf);
-res=-(dfdz^-1)*(dfdtau+b)';
+res=-dfdz\(dfdtau+b)';
 tau
 if tau == 1.0
     cond(dfdz)
