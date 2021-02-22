@@ -1,4 +1,4 @@
-function dis = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f)
+function dis = fun2min(x, case_traj, t_start, r0, V0, planet_end,t_Mars_0, modifier_f)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -21,14 +21,14 @@ s_f=x(11)*2*pi;
 
 
 
-u0 = rToU(r0);
+u0 = rToU(r0,0);
 h0 = (norm(V0)^2)/2-mug/norm(r0);
 
 L = L_KS(u0); 
 
 v0 = L'*V0/(2*sqrt(-2*h0));
-t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-
+%t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
+t0=0;
 y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
 
 time0 = tic;
@@ -51,12 +51,15 @@ r_end=KS(u);
 L_end = L_KS(u);
 V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
 
-[rf, Vf] = planetEphemeris(t_end+t_start,'SolarSystem',planet_end,'430');
+T_mars_days = 365.256363004*1.8808476;
+n_M = floor((t_end+t_Mars_0)/T_mars_days);
+angle_M = ((t_end+t_Mars_0)/T_mars_days-n_M)*2*pi;
 
-rf = [rf, 0]'/ae*1e+03;
-Vf = [Vf, 0]'/V_unit*1e+03;
-uf=rToU(rf);
-vf=vFromV(Vf,rf,mug);
+rf = 1.52*[cos(angle_M) sin(angle_M) 0 0]';
+Vf = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0]';
+th = angle_M+n_M*2*pi;
+uf=rToU(rf, th);
+vf=vFromV(Vf,rf,mug,th);
 %ЗАДАЧА ПРОЛЁТА
 if case_traj == 1
     dis_p = [uf+u; pv';];
