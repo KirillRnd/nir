@@ -34,7 +34,7 @@ V0 = [V0/V_unit, 0]'*1e+03;
 mug=1;
 
 n=1;
-angle=0.6875;
+angle=0.3;
 rad=1/32;
 
 modifier_p=1e-04;
@@ -97,6 +97,7 @@ Jt = integrateFunctional(s, y, eta, h0);
 functional = Jt(end);
 
 uu = y(:, 1:4);
+vv = y(:, 5:8);
 rr=zeros(length(uu),4);
 a=zeros(length(uu),4);
 a_ks=zeros(length(uu),4);
@@ -163,12 +164,9 @@ set(gca,'FontSize',14)
 hold on;
 th = 0:pi/50:2*pi;
 
-t_orbit = linspace(t_start,t_start+T_earth/(24*3600), 1000);
-earth_traj = planetEphemeris(t_orbit','SolarSystem',planet_start,'430', 'AU');
-
-t_orbit = linspace(t_start,t_start+T_mars/(24*3600), 1000);
-mars_traj = planetEphemeris(t_orbit','SolarSystem',planet_end,'430', 'AU');
-
+th = linspace(0 ,2*pi,100)';
+mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
+earth_traj  = [cos(th), sin(th), zeros(100,1)];
 %plot(cos(th),sin(th),'k');
 %plot(1.52*cos(th),1.52*sin(th),'r');
 plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
@@ -194,6 +192,50 @@ plot3(mars_r_f(1), mars_r_f(2),mars_r_f(3),'rO')
 axis equal
 
 %title('Траектория КА')
+xlabel('x, a.e.')
+ylabel('y, a.e.')
+
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+box off;
+hold off;
+
+%Проверка "на глаз"
+figure(5);
+plot3(0, 0, 0, 'y--o')
+set(gca,'FontSize',14)
+hold on;
+
+th = linspace(0 ,4*pi,100)';
+mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
+earth_traj  = [cos(th), sin(th), zeros(100,1)];
+
+mars_traj_ks = arrayfun(@(r1, r2, r3, th) rToU([r1,r2,r3],th), mars_traj(:, 1),mars_traj(:, 2),mars_traj(:, 3), th,'UniformOutput',false);
+mars_traj_ks = cell2mat(mars_traj_ks')';
+earth_traj_ks = arrayfun(@(r1, r2, r3, th) rToU([r1,r2,r3],th), earth_traj(:, 1),earth_traj(:, 2),earth_traj(:, 3), th,'UniformOutput',false);
+earth_traj_ks = cell2mat(earth_traj_ks')';
+plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
+plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r')
+
+%plot3(uu(:, 1), uu(:, 2), uu(:, 3), 'b', 'LineWidth', 2.5);
+%a_scale=3e-01/mean(vecnorm(a_ks, 2, 2));
+a_scale=0;
+d = 24*3600;
+idxes=1;
+for i=1:ceil(t(end)/d)
+    ix = find(t>d*i*10, 1);
+    idxes=[idxes, ix];
+end    
+for i = idxes
+    %plot3([uu(i, 1), uu(i, 1)+a_scale*a_ks(i, 1)], [uu(i, 2), uu(i, 2)+a_scale*a_ks(i, 2)],[uu(i, 3), uu(i, 3)+a_scale*a_ks(i, 3)],'k')
+end
+
+%plot3(uu(end, 1), uu(end, 2), uu(end, 3),'bO')
+%plot3(mars_r_f(1), mars_r_f(2),mars_r_f(3),'rO')
+axis equal
+
+title('Траектория КА KS')
 xlabel('x, a.e.')
 ylabel('y, a.e.')
 
