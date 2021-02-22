@@ -24,7 +24,7 @@ T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 T_mars_days = 365.256363004*1.8808476;
 
-t_Mars_0=0.25;
+
 
 r_norm=ae;
 V_unit=sqrt(mug_0/ae);
@@ -41,6 +41,15 @@ mug=1;
 n=1;
 angle=0.5;
 rad=1/32;
+
+%t_f = T_earth*(n + angle);
+
+%d_mars=-0.25;
+%n_M = floor(t_f/T_mars);
+%angle_M = t_f/T_mars-n_M;
+%t_Mars_0 = (d_mars+angle-angle_M);
+
+t_Mars_0=-0.5;
 
 modifier_p=1e-04;
 modifier_f=1e+04;
@@ -181,7 +190,7 @@ n_M = floor((t_end+t_Mars_0*T_mars)/T_mars);
 angle_M = ((t_end+t_Mars_0*T_mars)/T_mars-n_M)*2*pi;
 
 mars_r_f = 1.52*[cos(angle_M) sin(angle_M) 0 0]';
-
+mars_v_f = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0]';
 %mars_r_f=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430','AU');
 
 plot3(rr(:, 1), rr(:, 2), rr(:, 3), 'b', 'LineWidth', 2.5);
@@ -257,8 +266,8 @@ hold off;
 %[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
 
 disp(['Расход массы ', num2str(m(1)-m(end)), 'кг'])
-disp(['Невязка координаты ', num2str(norm(rr(end, 1:3)*r_norm-mars_r_f*1e+03),'%10.2e\n'),',м'])
-disp(['Невязка скорости ', num2str(norm(VV(end, 1:3)*V_unit-mars_v_f*1e+03),'%10.2e\n'),',м/с'])
+disp(['Невязка координаты ', num2str(ae*(norm(rr(end, 1:3)-mars_r_f(1:3)')),'%10.2e\n'),',м'])
+disp(['Невязка скорости ', num2str(V_unit*(norm(VV(end, 1:3)-mars_v_f(1:3)')),'%10.2e\n'),',м/с'])
 % относительное число обусловленности
 disp(['Относительно е число обусловленности ', num2str(norm(x)*norm(grad)/fval,'%10.2e\n')])
 % абсолютное число обусловленности
