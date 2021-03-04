@@ -1,4 +1,4 @@
-function [dr,dv,C] = checkMethod(t_start,phi,rad)
+function [dr,dv,C] = checkMethod(t_Mars_0,phi,rad)
 %UNTITLED9 Summary of this function goes here
 %   Detailed explanation goes here
 %clearvars -except symF
@@ -13,6 +13,7 @@ function [dr,dv,C] = checkMethod(t_start,phi,rad)
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
+t_start=0;
 %Начальные условия
 x0=[0 0 0 0 0 0 0 0 0 0 0];
 A = [];
@@ -23,28 +24,32 @@ ae = 149597870700;
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
+T_mars_days = 365.256363004*1.8808476;
 
-r_norm=ae;
+r_unit=ae;
 V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
 planet_start = 'Earth';
 planet_end = 'Mars';
-[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
+%[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
 
-r0 = [r0/ae, 0]'*1e+03;
-V0 = [V0/V_unit, 0]'*1e+03;
+%r0 = [r0/ae, 0]'*1e+03;
+%V0 = [V0/V_unit, 0]'*1e+03;
+r0 = [1, 0, 0, 0]';
+V0 = [0, 1, 0, 0]';
 
 mug=1;
 
-modifier_p=1e-04;
-modifier_f=1e+04;
+modifier_p=1e-05;
+modifier_f=1e+03;
+modifier_b=1e+13;
 
 s_a = phi-rad;
 s_b = phi+rad;
 
 x0(11)=phi;
 
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+13;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*modifier_b;;
 ub = -lb;
 
 lb(11) = s_a;
@@ -52,13 +57,13 @@ ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, t_Mars_0*T_mars_days, modifier_f);
 
 options = optimoptions('fmincon','UseParallel', true);
 %options = optimoptions(options, 'Display', 'iter');
 options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'StepTolerance', 1e-10);
+options = optimoptions(options, 'StepTolerance', 1e-12);
 options = optimoptions(options, 'ConstraintTolerance', 1e-10);
 options = optimoptions(options,'OutputFcn',@myoutput);
 
@@ -81,7 +86,8 @@ u0(3) = r0(3)/(2*u0(1));
 
 L = L_KS(u0); 
 v0 = L'*V0/(2*sqrt(-2*h0));
-tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
+%tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
+tau0=0;
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 n = 1;
 int_s0sf = linspace(0, s_f, (n+1)*1e+4);
@@ -129,10 +135,13 @@ end
 t = t - t(1);
 t_end=t(end);
 
-[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
+n_M = floor((t_end+t_Mars_0*T_mars)/T_mars);
+angle_M = ((t_end+t_Mars_0*T_mars)/T_mars-n_M)*2*pi;
+mars_r_f = 1.52*[cos(angle_M) sin(angle_M) 0 0]';
+mars_v_f = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0]';
 
-dr=norm(rr(end, 1:3)*r_norm-mars_r_f*1e+03);
-dv=norm(VV(end, 1:3)*V_unit-mars_v_f*1e+03);
+dr=r_unit*norm(rr(end, 1:3)-mars_r_f(1:3)');
+dv=V_unit*norm(VV(end, 1:3)-mars_v_f(1:3)');
 C=norm(x)*norm(grad)/fval;
 end
 

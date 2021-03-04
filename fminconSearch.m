@@ -26,7 +26,7 @@ T_mars_days = 365.256363004*1.8808476;
 
 
 
-r_norm=ae;
+r_unit=ae;
 V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
 planet_start = 'Earth';
@@ -38,8 +38,8 @@ V0 = [0, 1, 0, 0]';
 
 mug=1;
 
-n=1;
-angle=0.5;
+n=2;
+angle=0.4375;
 rad=1/32;
 
 %t_f = T_earth*(n + angle);
@@ -49,10 +49,11 @@ rad=1/32;
 %angle_M = t_f/T_mars-n_M;
 %t_Mars_0 = (d_mars+angle-angle_M);
 
-t_Mars_0=-0.5;
+t_Mars_0=0.25;
 
-modifier_p=1e-04;
-modifier_f=1e+04;
+modifier_p=1e-06;
+modifier_f=1e+02;
+modifier_b=1e+13;
 phi = n + angle;
 
 s_a = phi - rad;
@@ -60,7 +61,7 @@ s_b = phi + rad;
 
 x0(11) = phi;
 
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*1e+13;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*modifier_b;
 ub = -lb;
 
 lb(11) = s_a;
@@ -74,7 +75,8 @@ options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
 options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'StepTolerance', 1e-12);
+options = optimoptions(options, 'MaxIterations', 1500);
+options = optimoptions(options, 'StepTolerance', 1e-15);
 options = optimoptions(options, 'ConstraintTolerance', 1e-10);
 
 %options = optimoptions(options, 'Algorithm', 'sqp');
@@ -108,8 +110,7 @@ options = odeset(options,'RelTol',1e-10);
 %Интегрируем, используя сопряженные переменные из fmincon
 
 [s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf, y0, options);
-Jt = integrateFunctional(s, y, eta, h0);
-functional = Jt(end);
+
 
 uu = y(:, 1:4);
 vv = y(:, 5:8);
@@ -146,6 +147,9 @@ for i = 1:length(uu)
 end
 t = t - t(1);
 t_end=t(end);
+
+Jt = integrateFunctional(s, y, eta, h0);
+functional = Jt(end);
 
 figure(2);
 plot(t/(24*3600), vecnorm(a_ks, 2, 2)*1e+03, 'LineWidth', 3);
@@ -255,8 +259,8 @@ end
 axis equal
 
 title('Траектория КА KS')
-xlabel('x, a.e.')
-ylabel('y, a.e.')
+xlabel('u1')
+ylabel('u2')
 
 ax = gca;
 ax.XAxisLocation = 'origin';

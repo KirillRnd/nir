@@ -32,11 +32,12 @@ t0=0;
 y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
 
 time0 = tic;
-options = odeset('AbsTol',1e-10);
-options = odeset(options,'RelTol',1e-10);
+acc=1e-14;
+options = odeset('AbsTol',acc);
+options = odeset(options,'RelTol',acc);
 options = odeset(options,'NonNegative', 10);
 options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
-
+warning('off','all');
 [s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), [0 s_f], y0, options);
 u=y(end, 1:4)';
 v=y(end, 5:8)';
@@ -58,13 +59,14 @@ angle_M = ((t_end+t_Mars_0)/T_mars_days-n_M)*2*pi;
 rf = 1.52*[cos(angle_M) sin(angle_M) 0 0]';
 Vf = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0]';
 th = angle_M+n_M*2*pi;
+
 uf=rToU(rf, th);
 vf=vFromV(Vf,rf,mug,th);
 %ÇÀÄÀ×À ÏÐÎË¨ÒÀ
 if case_traj == 1
-    dis_p = [uf+u; pv';];
+    dis_p = [uf-u; pv';];
 elseif case_traj == 2
-    dis_p = [uf+u; vf+v;];
+    dis_p = [uf-u; vf-v;];
 end
 % if case_traj == 1
 %     dis_p = [rf-r_end; pv';];
