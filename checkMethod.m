@@ -16,6 +16,8 @@ case_traj=2;
 t_start=0;
 %Начальные условия
 x0=[0 0 0 0 0 0 0 0 0 0 0];
+x0_2=1e+04*[0.7   -0.2 0 0 0.5 1 0 0 2 0.05 0];
+
 A = [];
 b = [];
 Aeq = [];
@@ -40,8 +42,8 @@ V0 = [0, 1, 0, 0]';
 
 mug=1;
 
-modifier_p=1e-05;
-modifier_f=1e+03;
+modifier_p=1e-06;
+modifier_f=1e+02;
 modifier_b=1e+13;
 
 s_a = phi-rad;

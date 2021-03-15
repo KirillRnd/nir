@@ -1,7 +1,7 @@
 %t_start = juliandate(2001,0,0);
 t_Mars_0=0.25;
 step = 1/16;
-ds = 3/2:step:5/2;
+ds = 1/2:step:10/2;
 rad = step/2;
 L=length(ds);
 DR=zeros([1,L]);
