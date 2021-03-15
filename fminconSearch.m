@@ -184,8 +184,23 @@ set(gca,'FontSize',14)
 hold on;
 
 th = linspace(0 ,2*pi,100)';
-mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
-earth_traj  = [cos(th), sin(th), zeros(100,1)];
+% mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
+% earth_traj  = [cos(th), sin(th), zeros(100,1)];
+
+t_orbit = linspace(t0,t0+T_earth/(24*3600), 1000);
+earth_traj = planetEphemeris(t_orbit','SolarSystem','Earth','430');
+earth_traj=earth_traj*1e+03;
+
+t_orbit = linspace(t0,t0+T_mars/(24*3600), 1000);
+mars_traj = planetEphemeris(t_orbit','SolarSystem','Mars','430');
+mars_traj=mars_traj*1e+03;
+
+%plot(cos(th),sin(th),'k');
+%plot(1.52*cos(th),1.52*sin(th),'r');
+plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
+hold on;
+plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
+
 %plot(cos(th),sin(th),'k');
 %plot(1.52*cos(th),1.52*sin(th),'r');
 plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
@@ -232,8 +247,17 @@ set(gca,'FontSize',14)
 hold on;
 
 th = linspace(0 ,4*pi,100)';
-mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
-earth_traj  = [cos(th), sin(th), zeros(100,1)];
+% mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
+% earth_traj  = [cos(th), sin(th), zeros(100,1)];
+
+t_orbit = linspace(t0,t0+T_earth/(24*3600), 1000);
+earth_traj = planetEphemeris(t_orbit','SolarSystem','Earth','430');
+earth_traj=earth_traj*1e+03;
+
+t_orbit = linspace(t0,t0+T_mars/(24*3600), 1000);
+mars_traj = planetEphemeris(t_orbit','SolarSystem','Mars','430');
+mars_traj=mars_traj*1e+03;
+
 
 mars_traj_ks = arrayfun(@(r1, r2, r3, th) rToU([r1,r2,r3],th), mars_traj(:, 1),mars_traj(:, 2),mars_traj(:, 3), th,'UniformOutput',false);
 mars_traj_ks = cell2mat(mars_traj_ks')';
