@@ -47,7 +47,7 @@ V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 mug=1;
 
 n=0;
-angle=0.5;
+angle=0.8;
 rad=1/32;
 
 modifier_p=1e-04;
@@ -112,6 +112,8 @@ a=zeros(length(uu),4);
 a_ks=zeros(length(uu),4);
 t=zeros(length(uu),1);
 VV=zeros(length(uu),4);
+t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
+
 for i = 1:length(uu)
     u = uu(i,:)';
     r=KS(u);
@@ -138,8 +140,11 @@ for i = 1:length(uu)
     %a(i, :)=KS(aa);
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
+
+t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
+
 t = t - t(1);
-t_end=t(end);
+%t_end=t(end);
 
 Jt = integrateFunctional(s, y, eta, h0);
 functional = Jt(end);
@@ -196,7 +201,7 @@ mars_traj_New = cell2mat(mars_traj_New')';
 plot3(earth_traj_New(:, 1), earth_traj_New(:, 2), earth_traj_New(:, 3), 'k')
 plot3(mars_traj_New(:, 1), mars_traj_New(:, 2), mars_traj_New(:, 3), 'r')
 
-[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
+[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
 mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
 plot3(rr(:, 1), rr(:, 2), rr(:, 3), 'b', 'LineWidth', 2.5);
