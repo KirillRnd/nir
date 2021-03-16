@@ -1,4 +1,4 @@
-function u = rToU(r,th)
+function u = rToU(r)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 % Определим r = [1 0 0] как точку старта
@@ -23,38 +23,13 @@ if C<0
     end
 end
 
-phi = th/2;
-if (phi > pi/2) && (phi < 3*pi/2)
-    j = -1;
-else
-    j = 1;
-end
-
-if (phi > pi) && (phi < 2*pi)
-    i = -1;
-else
-    i = 1;
-end
-
-
-PHI=0;
-gamma = theta-PHI;
+phi=0;
+gamma = theta-phi;
 u = [0 0 0 0]';
 
-u(1)=R1*cos(PHI);
+u(1)=R1*cos(phi);
 u(2)=R2*cos(gamma);
-u(3)=R2*cos(gamma);
-u(4)=R1*sin(PHI);
-
-
-% u(4) = 0;
-% u(1) = j*sqrt((norm(r)+x)/2);
-% if abs(u(1)) < 1e+03
-%     u(2)=i*y*sqrt((norm(r)-x)/2/(y^2+z^2));
-%     u(3)=u(2)*z/y;
-% else
-% u(2) = i*y/(2*u(1));
-% u(3) = z/(2*u(1));
-% end
+u(3)=R2*sin(gamma);
+u(4)=R1*sin(phi);
 end
 
