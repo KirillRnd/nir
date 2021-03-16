@@ -1,3 +1,4 @@
+%отладочный скрипт
 t0 = juliandate(2001,0,0);
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
@@ -10,9 +11,6 @@ hold on;
 a = 0.5;
 
 th = linspace(0 , a*2*pi,10000);
-% mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
-% earth_traj  = [cos(th), sin(th), zeros(100,1)];
-
 t_orbit_E = linspace(t0,t0+T_earth/(24*3600), 10000);
 [earth_traj, earth_traj_V] = planetEphemeris(t_orbit_E','SolarSystem','Earth','430');
 earth_traj=earth_traj*1e+03;

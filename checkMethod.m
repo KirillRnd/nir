@@ -1,15 +1,6 @@
-function [dr,dv,C] = checkMethod(t_start,phi,rad, UorR)
+function [dr,dv,C] = checkMethod(t_start,phi,rad, UorR,direction,modifier_p,modifier_f)
 %UNTITLED9 Summary of this function goes here
-%   Detailed explanation goes here
-%clearvars -except symF
-%clc;
-%5if exist('symF','var') ~= 1
-%    symbolic_Jacob
-%end
-% t_start = juliandate(2001,12,1);
-% N=1350;
-% m0=367;
-% eta=0.45;
+%   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
@@ -41,8 +32,8 @@ V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 
 mug=1;
 
-modifier_p=1e-06;
-modifier_f=1e+04;
+% modifier_p=1e-04;
+% modifier_f=1e+04;
 modifier_b=1e+13;
 
 s_a = phi-rad;
@@ -58,7 +49,7 @@ ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction);
 
 options = optimoptions('fmincon','UseParallel', true);
 %options = optimoptions(options, 'Display', 'iter');

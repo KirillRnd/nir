@@ -12,7 +12,9 @@ eta=0.45;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
+%Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 UorR = 'u';
+direction = 1;
 %Начальные условия
 x0=[0 0 0 0 0 0 0 0 0 0 0];
 x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
@@ -34,7 +36,7 @@ T_unit = T_earth/(2*pi);
 planet_start = 'Earth';
 planet_end = 'Mars';
 [r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
-
+%Поворот всех физических координат углами эйлера
 eul = [0 pi/4 0];
 rotmZYX = eul2rotm(eul);
 
@@ -44,18 +46,9 @@ V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 
 mug=1;
 
-n=1;
-angle=0.25;
+n=0;
+angle=0.5;
 rad=1/32;
-
-%t_f = T_earth*(n + angle);
-
-%d_mars=-0.25;
-%n_M = floor(t_f/T_mars);
-%angle_M = t_f/T_mars-n_M;
-%t_Mars_0 = (d_mars+angle-angle_M);
-
-t_Mars_0=0.25;
 
 modifier_p=1e-04;
 modifier_f=1e+04;
@@ -75,7 +68,7 @@ ub(11) = s_b;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR, direction);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
@@ -98,15 +91,9 @@ t0=0;
 h0=(norm(V0)^2)/2-mug/norm(r0);
 
 u0 = rToU(r0);
-% u0(4) = 0;
-% u0(1) = sqrt((norm(r0)+r0(1))/2);
-% u0(2) = r0(2)/(2*u0(1));
-% u0(3) = r0(3)/(2*u0(1));
-
 L = L_KS(u0); 
 v0 = vFromV(V0,r0,mug);
 tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-%tau0=0;
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 
 int_s0sf = linspace(0, s_f, (n+1)*1e+4);
@@ -206,19 +193,9 @@ mars_traj=mars_traj*1e+03/ae;
 mars_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', mars_traj(:, 1),mars_traj(:, 2),mars_traj(:, 3),'UniformOutput',false);
 mars_traj_New = cell2mat(mars_traj_New')';
 
-%plot(cos(th),sin(th),'k');
-%plot(1.52*cos(th),1.52*sin(th),'r');
-
-%plot(cos(th),sin(th),'k');
-%plot(1.52*cos(th),1.52*sin(th),'r');
 plot3(earth_traj_New(:, 1), earth_traj_New(:, 2), earth_traj_New(:, 3), 'k')
 plot3(mars_traj_New(:, 1), mars_traj_New(:, 2), mars_traj_New(:, 3), 'r')
 
-% n_M = floor((t_end+t_Mars_0*T_mars)/T_mars);
-% angle_M = ((t_end+t_Mars_0*T_mars)/T_mars-n_M)*2*pi;
-
-%mars_r_f = 1.52*[cos(angle_M) sin(angle_M) 0 0]';
-%mars_v_f = ((mug/(1.52))^(1/2))*[cos(angle_M+pi/2) sin(angle_M+pi/2) 0 0]';
 [mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
 mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
@@ -242,6 +219,7 @@ axis equal
 %title('Траектория КА')
 xlabel('x, a.e.')
 ylabel('y, a.e.')
+zlabel('z, a.e.')
 
 ax = gca;
 ax.XAxisLocation = 'origin';
@@ -249,22 +227,21 @@ ax.YAxisLocation = 'origin';
 box off;
 hold off;
 
-%Проверка "на глаз"
+%Выводим траекторию в параметрических переменных"
 figure(5);
 plot3(0, 0, 0, 'y--o')
 set(gca,'FontSize',14)
 hold on;
 
 th = linspace(0 ,4*pi,1000)';
-% mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
-% earth_traj  = [cos(th), sin(th), zeros(100,1)];
 
 mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3]), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
 mars_traj_ks = cell2mat(mars_traj_ks')';
+mars_traj_ks=-mars_traj_ks*direction;
 earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3]), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
 earth_traj_ks = cell2mat(earth_traj_ks')';
 plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
-plot3(-mars_traj_ks(:, 1), -mars_traj_ks(:, 2), -mars_traj_ks(:, 3), 'r')
+plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r')
 
 plot3(uu(:, 1), uu(:, 2), uu(:, 3), 'b', 'LineWidth', 2.5);
 %a_scale=3e-01/mean(vecnorm(a_ks, 2, 2));
@@ -286,6 +263,7 @@ axis equal
 title('Траектория КА KS')
 xlabel('u1')
 ylabel('u2')
+zlabel('u3')
 
 ax = gca;
 ax.XAxisLocation = 'origin';
