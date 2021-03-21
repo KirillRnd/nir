@@ -1,4 +1,4 @@
-function [dr,dv,C] = checkMethod(t_start,phi,rad, UorR,direction,modifier_p,modifier_f)
+function [dr,dv,C, px,s_f] = checkMethod(t_start,phi,rad, UorR,direction,modifier_p,modifier_f)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
