@@ -9,7 +9,7 @@ y0_z(7:12)=z;
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
 
-[t,y] = ode45(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,tau),tspan,y0_z,options);
+[t,y] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,tau),tspan,y0_z,options);
 %plot(y(:,1),y(:,2));
 %axis equal
 drdpv=reshape(y(end,13:21),[3,3]);
