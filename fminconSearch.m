@@ -16,7 +16,7 @@ case_traj=2;
 UorR = 'u';
 direction = 1;
 %Начальные условия
-x0=[0 0 0 0 0 0 0 0 0 0 0];
+x0=zeros([1, 12]);
 x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
 b = [];
@@ -46,29 +46,32 @@ V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 
 mug=1;
 
-n=0;
-angle=0.8;
+n=1;
+angle=0.5;
 rad=1/32;
 
 modifier_p=1e-04;
 modifier_f=1e+04;
 modifier_b=1e+13;
-phi = n + angle;
+psi = n + angle;
 
-s_a = phi - rad;
-s_b = phi + rad;
+s_a = psi - rad;
+s_b = psi + rad;
 
-x0(11) = phi;
+x0(11) = psi;
 
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*modifier_b;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
 ub = -lb;
 
 lb(11) = s_a;
 ub(11) = s_b;
+
+lb(12) = 0.0;
+ub(12) = 0.0;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR, direction);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR, direction);
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
@@ -85,14 +88,15 @@ options = optimoptions(options, 'ConstraintTolerance', 1e-10);
 toc
 px = x(1:10)*modifier_p;
 s_f = x(11)*2*pi;
+phi = x(12)*2*pi;
 %задаем начальные условия
 
 t0=0;
 h0=(norm(V0)^2)/2-mug/norm(r0);
 
-u0 = rToU(r0);
+u0 = rToU(r0, phi);
 L = L_KS(u0); 
-v0 = vFromV(V0,r0,mug);
+v0 = vFromV(V0,r0,mug,phi);
 tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 
@@ -240,10 +244,10 @@ hold on;
 
 th = linspace(0 ,4*pi,1000)';
 
-mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3]), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
+mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], phi), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
 mars_traj_ks = cell2mat(mars_traj_ks')';
 mars_traj_ks=-mars_traj_ks*direction;
-earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3]), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
+earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], phi), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
 earth_traj_ks = cell2mat(earth_traj_ks')';
 plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
 plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r')

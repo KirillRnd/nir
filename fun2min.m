@@ -19,15 +19,16 @@ pv0=x(5:8)';
 ph0=x(9);
 pt0=x(10);
 s_f=x(11)*2*pi;
-u0 = rToU(r0);
+phi=x(12)*2*pi;
+u0 = rToU(r0, phi);
 h0 = (norm(V0)^2)/2-mug/norm(r0);
-v0=vFromV(V0,r0,mug);
+v0 = vFromV(V0,r0,mug,phi);
 t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
 
 %Определяем параметры для оптимизатора
 time0 = tic;
-acc=1e-14;
+acc=1e-12;
 options = odeset('AbsTol',acc);
 options = odeset(options,'RelTol',acc);
 options = odeset(options,'NonNegative', 10);
@@ -57,8 +58,8 @@ rotmZYX = eul2rotm(eul);
 rf = [rotmZYX*rf'; 0]/ae*1e+03;
 Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 %Получаем параметрические координату и скорость планеты
-uf=rToU(rf);
-vf=vFromV(Vf,rf,mug);
+uf=rToU(rf, phi);
+vf=vFromV(Vf,rf,mug,phi);
 %Оптимизриуем по параметрическим координатам или по физическим
 if UorR == 'u'
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ

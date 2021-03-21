@@ -1,8 +1,8 @@
 %Ёот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
 UorR='u';
-step = 1/4;
-ds = 2/2:step:3/2;
+step = 1/8D;
+ds = 2/2:step:5/2;
 rad = step/2;
 L=length(ds);
 DR=zeros([1,L]);
@@ -16,16 +16,18 @@ modifier_f=1e+04;
 warning('off');
 %ѕоложительное или отрицательное семейство
 direction = 1;
+
 for i=1:L
     %»щем наименьшую нев€зку по координате среди 4-х методов дл€ каждого
     %случа€
+    x0=zeros([1, 11]);
     i
     ds(i)
     modifier_p=1e-04;
     modifier_f=1e+04;
     UorR = 'u';
     
-    [dr, dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f);
+    [dr, dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
     DR(i)=dr;
     DV(i)=dV;
     CONV(i)=C;
@@ -34,7 +36,7 @@ for i=1:L
     %развернуть направление
     if DR(i)>1e+07 && UorR == 'u'
         direction = -1*direction
-        [dr,dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f);
+        [dr,dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
         if dr<DR(i)
             DR(i)=dr;
             DV(i)=dV;
@@ -45,10 +47,11 @@ for i=1:L
             direction = -1*direction;
         end
     end
+
     %пробуем сходитьс€ в физичеких координатах
     if DR(i)>1e+07 && UorR == 'u'
         UorR = 'r';
-        [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f);
+        [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f, x0);
         if dr<DR(i)
             DR(i)=dr;
             DV(i)=dV;
@@ -62,7 +65,7 @@ for i=1:L
     %пробуем уменьшить масштаб
     if DR(i)>1e+07 && UorR == 'u'
         modifier_p=1e-06;
-        [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f);
+        [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
         if dr<DR(i)
             DR(i)=dr;
             DV(i)=dV;

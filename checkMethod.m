@@ -1,11 +1,11 @@
-function [dr,dv,C, px,s_f] = checkMethod(t_start,phi,rad, UorR,direction,modifier_p,modifier_f)
+function [dr,dv,C, px,s_f] = checkMethod(t_start,phi,rad, UorR,direction,modifier_p,modifier_f, x0)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
 %Начальные условия
-x0=[0 0 0 0 0 0 0 0 0 0 0];
+%x0=zeros([1, 11]);
 
 A = [];
 b = [];

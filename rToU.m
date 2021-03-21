@@ -1,4 +1,4 @@
-function u = rToU(r)
+function u = rToU(r,phi)
 %UNTITLED Summary of this function goes here
 %   Переводим физические координаты в параметрические 
 x=r(1);
@@ -21,7 +21,7 @@ if C<0
     end
 end
 %phi выбран нулевым для обращения u4 в ноль
-phi=0;
+%phi=0;
 gamma = theta-phi;
 u = [0 0 0 0]';
 % находим параметрические координаты
