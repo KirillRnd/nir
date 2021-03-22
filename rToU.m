@@ -10,16 +10,19 @@ R2=sqrt(0.5*(norm(r)-x));
 %Находим синус S и косинус C угла theta, где theta=phi+gamma
 C=y/(2*R1*R2);
 S=z/(2*R1*R2);
-theta=asin(S);
-if C<0
-    if S>0
-        theta=pi-theta;
-    elseif S<0
-        theta=-pi-theta;
-    else
-        theta=theta+pi;
-    end
-end
+theta=atan2(S,C);
+
+% theta=asin(S);
+% 
+% if C<0
+%     if S>0
+%         theta=pi-theta;
+%     elseif S<0
+%         theta=-pi-theta;
+%     else
+%         theta=theta+pi;
+%     end
+% end
 %phi выбран нулевым для обращения u4 в ноль
 %phi=0;
 gamma = theta-phi;
