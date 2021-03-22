@@ -14,7 +14,7 @@ eta=0.45;
 case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 UorR = 'u';
-direction = 1;
+direction = -1;
 %Начальные условия
 x0=zeros([1, 12]);
 x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
@@ -50,8 +50,8 @@ n=1;
 angle=0.5;
 rad=1/32;
 
-modifier_p=1e-04;
-modifier_f=1e+04;
+modifier_p=1e-06;
+modifier_f=1e+08;
 modifier_b=1e+13;
 psi = n + angle;
 
@@ -67,7 +67,7 @@ lb(11) = s_a;
 ub(11) = s_b;
 
 lb(12) = 0.0;
-ub(12) = 0.0;
+ub(12) = 1.0;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
@@ -75,11 +75,11 @@ fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, p
 
 options = optimoptions('fmincon','UseParallel', true);
 options = optimoptions(options, 'Display', 'iter');
-options = optimoptions(options, 'OptimalityTolerance', 1e-10);
+options = optimoptions(options, 'OptimalityTolerance', 1e-15);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'MaxIterations', 1500);
-options = optimoptions(options, 'StepTolerance', 1e-15);
-options = optimoptions(options, 'ConstraintTolerance', 1e-10);
+options = optimoptions(options, 'StepTolerance', 1e-12);
+options = optimoptions(options, 'ConstraintTolerance', 1e-12);
 
 %options = optimoptions(options, 'Algorithm', 'sqp');
 %options = optimoptions(options, 'HessianApproximation','lbfgs');
@@ -94,9 +94,9 @@ phi = x(12)*2*pi;
 t0=0;
 h0=(norm(V0)^2)/2-mug/norm(r0);
 
-u0 = rToU(r0, phi);
+u0 = rToU(r0, 0);
 L = L_KS(u0); 
-v0 = vFromV(V0,r0,mug,phi);
+v0 = vFromV(V0,r0,mug,0);
 tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 
