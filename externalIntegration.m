@@ -23,10 +23,10 @@ ddrdzdt=cat(2,ddrdpvdt,ddVdpvdt);
 
 dfdz = cat(1,drdz,ddrdzdt);
 
-drdtau=y(end,85:87);
-dvdtau=y(end,88:90);
-dfdtau = cat(2,drdtau,dvdtau-0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*Vf);
-res=-dfdz\(dfdtau+b)';
+drdtau = y(end,85:87)';
+dvdtau = y(end,88:90)';
+dfdtau = cat(1,drdtau,dvdtau-0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*Vf);
+res=-dfdz\(dfdtau+b);
 tau
 if tau == 1.0
     cond(dfdz)
