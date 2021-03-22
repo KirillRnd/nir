@@ -1,4 +1,4 @@
-function [dr,dv,C, px,s_f] = checkMethod(t_start,phi,rad, UorR,direction,modifier_p,modifier_f, x0)
+function [dr,dv,C, px,s_f] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -36,20 +36,24 @@ mug=1;
 % modifier_f=1e+04;
 modifier_b=1e+13;
 
-s_a = phi-rad;
-s_b = phi+rad;
+s_a = psi-rad;
+s_b = psi+rad;
 
-x0(11)=phi;
+x0(11)=psi;
 
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]*modifier_b;
+
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
 ub = -lb;
 
 lb(11) = s_a;
 ub(11) = s_b;
+
+lb(12) = 0.0;
+ub(12) = 1.0;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction);
 
 options = optimoptions('fmincon','UseParallel', true);
 %options = optimoptions(options, 'Display', 'iter');
@@ -63,6 +67,7 @@ options = optimoptions(options,'OutputFcn',@myoutput);
 toc
 px = x(1:10)*modifier_p;
 s_f = x(11)*2*pi;
+phi = x(12)*2*pi;
 %задаем начальные условия
 %options = optimoptions(options,'OutputFcn',@myoutput);
 %options = optimoptions(options, 'Algorithm', 'sqp');
@@ -71,13 +76,10 @@ t0=0;
 u0 = [0 0 0 0]';
 h0=(norm(V0)^2)/2-mug/norm(r0);
 
-u0(4) = 0;
-u0(1) = sqrt((norm(r0)+r0(1))/2);
-u0(2) = r0(2)/(2*u0(1));
-u0(3) = r0(3)/(2*u0(1));
-
+u0 = rToU(r0, 0);
 L = L_KS(u0); 
-v0 = vFromV(V0,r0,mug);
+v0 = vFromV(V0,r0,mug,0);
+
 tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 n = 1;

@@ -1,7 +1,7 @@
 %Эот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
 UorR='u';
-step = 1/8D;
+step = 1/8;
 ds = 2/2:step:5/2;
 rad = step/2;
 L=length(ds);
@@ -10,21 +10,18 @@ DV=zeros([1,L]);
 CONV=zeros([1,L]);
 SF=zeros([1,L]);
 PX=zeros([10,L]);
-modifier_p=1e-04;
-modifier_f=1e+04;
-
+modifier_p=1e-06;
+modifier_f=1e+08;
+x0=zeros([1, 12]);
 warning('off');
 %Положительное или отрицательное семейство
-direction = 1;
+direction = -1;
 
 for i=1:L
     %Ищем наименьшую невязку по координате среди 4-х методов для каждого
     %случая
-    x0=zeros([1, 11]);
     i
     ds(i)
-    modifier_p=1e-04;
-    modifier_f=1e+04;
     UorR = 'u';
     
     [dr, dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
@@ -33,49 +30,49 @@ for i=1:L
     CONV(i)=C;
     PX(:,i)=px;
     SF(i)=sf;
-    %развернуть направление
-    if DR(i)>1e+07 && UorR == 'u'
-        direction = -1*direction
-        [dr,dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
-        if dr<DR(i)
-            DR(i)=dr;
-            DV(i)=dV;
-            CONV(i) =C;
-            PX(:,i)=px;
-            SF(i)=sf;
-        else
-            direction = -1*direction;
-        end
-    end
-
-    %пробуем сходиться в физичеких координатах
-    if DR(i)>1e+07 && UorR == 'u'
-        UorR = 'r';
-        [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f, x0);
-        if dr<DR(i)
-            DR(i)=dr;
-            DV(i)=dV;
-            CONV(i) =C;
-            PX(:,i)=px;
-            SF(i)=sf;
-        else
-             UorR = 'u';
-        end
-    end
-    %пробуем уменьшить масштаб
-    if DR(i)>1e+07 && UorR == 'u'
-        modifier_p=1e-06;
-        [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
-        if dr<DR(i)
-            DR(i)=dr;
-            DV(i)=dV;
-            CONV(i) =C;
-            PX(:,i)=px;
-            SF(i)=sf;
-        else
-            modifier_p=1e-04;
-        end
-    end
+%     %развернуть направление
+%     if DR(i)>1e+07 && UorR == 'u'
+%         direction = -1*direction
+%         [dr,dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
+%         if dr<DR(i)
+%             DR(i)=dr;
+%             DV(i)=dV;
+%             CONV(i) =C;
+%             PX(:,i)=px;
+%             SF(i)=sf;
+%         else
+%             direction = -1*direction;
+%         end
+%     end
+% 
+%     %пробуем сходиться в физичеких координатах
+%     if DR(i)>1e+07 && UorR == 'u'
+%         UorR = 'r';
+%         [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f, x0);
+%         if dr<DR(i)
+%             DR(i)=dr;
+%             DV(i)=dV;
+%             CONV(i) =C;
+%             PX(:,i)=px;
+%             SF(i)=sf;
+%         else
+%              UorR = 'u';
+%         end
+%     end
+%     %пробуем уменьшить масштаб
+%     if DR(i)>1e+07 && UorR == 'u'
+%         modifier_p=1e-06;
+%         [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
+%         if dr<DR(i)
+%             DR(i)=dr;
+%             DV(i)=dV;
+%             CONV(i) =C;
+%             PX(:,i)=px;
+%             SF(i)=sf;
+%         else
+%             modifier_p=1e-04;
+%         end
+%     end
     
 end
 
@@ -135,10 +132,10 @@ hold on;
 
 th = linspace(0 ,4*pi,1000)';
 
-mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3]), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
+mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
 mars_traj_ks = cell2mat(mars_traj_ks')';
 mars_traj_ks=-mars_traj_ks*direction;
-earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3]), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
+earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
 earth_traj_ks = cell2mat(earth_traj_ks')';
 plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
 plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r')
@@ -164,9 +161,9 @@ for i=1:L
     t0=0;
     h0=(norm(V0)^2)/2-mug/norm(r0);
 
-    u0 = rToU(r0);
+    u0 = rToU(r0, 0);
     L = L_KS(u0); 
-    v0 = vFromV(V0,r0,mug);
+    v0 = vFromV(V0,r0,mug, 0);
     tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
     y0 = cat(1, u0, v0, 0, tau0,  px)';
 
