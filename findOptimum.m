@@ -5,8 +5,8 @@
 mug = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
 n=0;
-t0=juliandate(2021,9,20);
-dt=200;
+t0=juliandate(2020,11,5);
+dt=400;
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 days2sec=24*3600;
@@ -108,6 +108,7 @@ for i = idxes
 end
 
 %plot3(rr(end, 1), rr(end, 2), rr(end, 3),'bO')
+plot3([0 mars_r_f(1)], [0 mars_r_f(2)],[0 mars_r_f(3)],'-')
 plot3(mars_r_f(1), mars_r_f(2),mars_r_f(3),'rO')
 plot3(earth_r_f(1), earth_r_f(2),earth_r_f(3),'bO')
 plot3(rf_0(1), rf_0(2),rf_0(3),'gO')

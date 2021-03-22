@@ -11,9 +11,9 @@ Ef=2*atan(sqrt((1-e)/(1+e))*tan(thetaf/2));
 if Ef < 0
     Ef=2*pi+Ef;
 end
-Mf=Ef-e*sin(Ef)+2*pi*N2;
-h=norm(cross(r0,V0));
-a0=(h^2)/(mug*(1-e^2));
+Ef=Ef+2*pi*N2;
+Mf=Ef-e*sin(Ef);
+a0=1/(2/norm(r0)-norm(V0)^2/mug);
 mu0=((Mf+2*pi*N-M0)/tft0)^2*a0^3;
 end
 
