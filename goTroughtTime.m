@@ -2,7 +2,7 @@
 t_start = juliandate(2022,0,0);
 UorR='u';
 step = 1/8;
-ds = 2/2:step:5/2;
+ds = 4/2:step:5/2;
 rad = step/2;
 L=length(ds);
 DR=zeros([1,L]);
@@ -10,12 +10,11 @@ DV=zeros([1,L]);
 CONV=zeros([1,L]);
 SF=zeros([1,L]);
 PX=zeros([10,L]);
-modifier_p=1e-06;
-modifier_f=1e+08;
+
 x0=zeros([1, 12]);
 warning('off');
 %Положительное или отрицательное семейство
-direction = -1;
+direction = 1;
 
 for i=1:L
     %Ищем наименьшую невязку по координате среди 4-х методов для каждого
@@ -23,7 +22,8 @@ for i=1:L
     i
     ds(i)
     UorR = 'u';
-    
+    modifier_p=1e-06;
+    modifier_f=1e+08;
     [dr, dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
     DR(i)=dr;
     DV(i)=dV;
@@ -59,20 +59,20 @@ for i=1:L
 %              UorR = 'u';
 %         end
 %     end
-%     %пробуем уменьшить масштаб
-%     if DR(i)>1e+07 && UorR == 'u'
-%         modifier_p=1e-06;
-%         [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
-%         if dr<DR(i)
-%             DR(i)=dr;
-%             DV(i)=dV;
-%             CONV(i) =C;
-%             PX(:,i)=px;
-%             SF(i)=sf;
-%         else
-%             modifier_p=1e-04;
-%         end
-%     end
+    %пробуем уменьшить масштаб
+    if DR(i)>1e+07 && UorR == 'u'
+        modifier_f=1e+06;
+        [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
+        if dr<DR(i)
+            DR(i)=dr;
+            DV(i)=dV;
+            CONV(i) =C;
+            PX(:,i)=px;
+            SF(i)=sf;
+        else
+            modifier_f=1e+08;
+        end
+    end
     
 end
 

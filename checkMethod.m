@@ -48,8 +48,8 @@ ub = -lb;
 lb(11) = s_a;
 ub(11) = s_b;
 
-lb(12) = 0.0;
-ub(12) = 1.0;
+lb(12) = 0;
+ub(12) = 1;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
@@ -57,10 +57,11 @@ fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, p
 
 options = optimoptions('fmincon','UseParallel', true);
 %options = optimoptions(options, 'Display', 'iter');
-options = optimoptions(options, 'OptimalityTolerance', 1e-10);
+options = optimoptions(options, 'OptimalityTolerance', 1e-15);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-12);
-options = optimoptions(options, 'ConstraintTolerance', 1e-10);
+options = optimoptions(options, 'ConstraintTolerance', 1e-12);
+options = optimoptions(options, 'MaxIterations', 1500);
 options = optimoptions(options,'OutputFcn',@myoutput);
 
 [x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options);
