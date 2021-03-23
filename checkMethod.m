@@ -1,9 +1,9 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta, case_traj)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=2;
+
 %Начальные условия
 %x0=zeros([1, 11]);
 
@@ -84,7 +84,7 @@ v0 = vFromV(V0,r0,mug,0);
 tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 n = 1;
-int_s0sf = linspace(0, s_f, (n+1)*1e+4);
+int_s0sf = linspace(0, s_f, (n+1)*1e+3);
 time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
 options = odeset('AbsTol',1e-10);

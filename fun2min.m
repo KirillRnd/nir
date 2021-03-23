@@ -38,16 +38,19 @@ warning('off','all');
 
 %Разбираем результат в конечный момент на переменные
 u=y(end, 1:4)';
+u2=u'*u;
 v=y(end, 5:8)';
 h_end=y(end, 9)'+h0;
 tau=y(end, 10)';
-pv=y(end, 15:18);
+pv=y(end, 15:18)';
+ph=y(end, 19)';
+ptau=y(end, 20)';
 t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
 t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
 r_end=KS(u);
 L_end = L_KS(u);
 V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
-
+aa_ks_end=L_end*(-(u2)*pv/(4*h_end) + v*(2*ph-(1/h_end)*pv'*v)+ptau*(u2)*u/((-2*h_end)^(3/2)));
 
 %Получаем координату и скорость планеты в эфемеридах и поворачиваем систеу
 %координат
@@ -60,12 +63,13 @@ Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 %Получаем параметрические координату и скорость планеты
 uf=rToU(rf, phi);
 vf=vFromV(Vf,rf,mug,phi);
+
 %Оптимизриуем по параметрическим координатам или по физическим
 if UorR == 'u'
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
     if case_traj == 1
-        dis_p = [uf+direction*u; pv';];
+        dis_p = [uf+direction*u; aa_ks_end;];
     elseif case_traj == 2
         dis_p = [uf+direction*u; vf+direction*v;];
     end

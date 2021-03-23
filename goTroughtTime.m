@@ -1,8 +1,9 @@
 %Ёот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
+eta=0.45;
 UorR='u';
-step = 1/8;
-ds = 4/2:step:5/2;
+step = 1/4;
+ds = 2/2:step:3/2;
 rad = step/2;
 L=length(ds);
 DR=zeros([1,L]);
@@ -24,7 +25,7 @@ for i=1:L
     UorR = 'u';
     modifier_p=1e-06;
     modifier_f=1e+08;
-    [dr, dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
+    [dr,dv, C, px, sf, phi, t_end, s, uu, rr, VV, t, Jt, a_ks]  = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0, eta);
     DR(i)=dr;
     DV(i)=dV;
     CONV(i)=C;
@@ -60,19 +61,19 @@ for i=1:L
 %         end
 %     end
     %пробуем уменьшить масштаб
-    if DR(i)>1e+07 && UorR == 'u'
-        modifier_f=1e+06;
-        [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
-        if dr<DR(i)
-            DR(i)=dr;
-            DV(i)=dV;
-            CONV(i) =C;
-            PX(:,i)=px;
-            SF(i)=sf;
-        else
-            modifier_f=1e+08;
-        end
-    end
+%     if DR(i)>1e+07 && UorR == 'u'
+%         modifier_f=1e+06;
+%         [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
+%         if dr<DR(i)
+%             DR(i)=dr;
+%             DV(i)=dV;
+%             CONV(i) =C;
+%             PX(:,i)=px;
+%             SF(i)=sf;
+%         else
+%             modifier_f=1e+08;
+%         end
+%     end
     
 end
 
@@ -138,8 +139,8 @@ mars_traj_ks=-mars_traj_ks*direction;
 earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
 earth_traj_ks = cell2mat(earth_traj_ks')';
 plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
-plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r')
-plot3(-mars_traj_ks(:, 1), -mars_traj_ks(:, 2), -mars_traj_ks(:, 3), 'r')
+plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r--')
+plot3(-mars_traj_ks(:, 1), -mars_traj_ks(:, 2), -mars_traj_ks(:, 3), 'r--')
 
 axis equal
 
@@ -154,8 +155,16 @@ ax.YAxisLocation = 'origin';
 box off;
 hold off;
 
+[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
+
+eul = [0 pi/4 0];
+rotmZYX = eul2rotm(eul);
+
+r0 = [rotmZYX*r0'/ae; 0]*1e+03;
+V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 
 for i=1:L
+    
     px = PX(:,i);
     s_f =SF(i);
     t0=0;

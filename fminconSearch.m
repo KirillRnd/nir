@@ -11,10 +11,10 @@ m0=367;
 eta=0.45;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=2;
+case_traj=1;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 UorR = 'u';
-direction = 1;
+direction = -1;
 %Начальные условия
 x0=zeros([1, 12]);
 x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
@@ -39,16 +39,17 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=2;
-angle=0.3750;
+n=1;
+angle=0.5;
 rad=1/16;
 
 modifier_p=1e-06;
 modifier_f=1e+08;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta);
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj);
 
+[rr_cont] = checkContinuation(t_start, t_end, t);
 functional = Jt(end);
 %t_end=t(end);
 
@@ -83,9 +84,6 @@ plot3(0, 0, 0, 'y--o')
 set(gca,'FontSize',14)
 hold on;
 
-th = linspace(0 ,2*pi,100)';
-% mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
-% earth_traj  = [cos(th), sin(th), zeros(100,1)];
 t0 = t_start;
 t_orbit = linspace(t0,t0+T_earth/(24*3600), 1000);
 earth_traj = planetEphemeris(t_orbit','SolarSystem','Earth','430');
@@ -114,6 +112,7 @@ rr_old = cell2mat(rr_old')';
 
 plot3(rr_old(:, 1), rr_old(:, 2), rr_old(:, 3), 'b', 'LineWidth', 2.5);
 
+
 a_ks_old= arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', a_ks(:, 1),a_ks(:, 2),a_ks(:, 3),'UniformOutput',false);
 a_ks_old = cell2mat(a_ks_old')';
 
@@ -132,6 +131,8 @@ end
 
 plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
 plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
+
+plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
 axis equal
 
 title('Траектория КА')
@@ -155,13 +156,18 @@ th = linspace(0 ,4*pi,1000)';
 
 mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], phi), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
 mars_traj_ks = cell2mat(mars_traj_ks')';
+
+mars_traj_ks_zero = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
+mars_traj_ks_zero = cell2mat(mars_traj_ks_zero')';
+
 mars_traj_ks=-mars_traj_ks*direction;
 %phi === 0
 earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
 earth_traj_ks = cell2mat(earth_traj_ks')';
 plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
 plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r')
-
+%plot3(-mars_traj_ks_zero(:, 1), -mars_traj_ks_zero(:, 2), -mars_traj_ks_zero(:, 3), 'r--')
+%plot3(mars_traj_ks_zero(:, 1), mars_traj_ks_zero(:, 2), mars_traj_ks_zero(:, 3), 'r--')
 plot3(uu(:, 1), uu(:, 2), uu(:, 3), 'b', 'LineWidth', 2.5);
 %a_scale=3e-01/mean(vecnorm(a_ks, 2, 2));
 a_scale=0;
