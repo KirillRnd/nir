@@ -1,4 +1,4 @@
-function res = externalIntegration(tau,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf)
+function res = externalIntegration(tau,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf,case_traj)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 y0_z=y0;

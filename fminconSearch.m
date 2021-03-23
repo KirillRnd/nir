@@ -11,7 +11,7 @@ m0=367;
 eta=0.45;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=1;
+case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 UorR = 'u';
 direction = -1;
@@ -49,7 +49,7 @@ modifier_f=1e+08;
 %переменных
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj);
 
-[rr_cont] = checkContinuation(t_start, t_end, t);
+[rr_cont] = checkContinuation(t_start, t_end, t, case_traj);
 functional = Jt(end);
 %t_end=t(end);
 

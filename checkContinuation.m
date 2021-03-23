@@ -1,4 +1,4 @@
-function [rr_cont] = checkContinuation(t0, dt, t_nonlinear)
+function [rr_cont] = checkContinuation(t0, dt, t_nonlinear, case_traj)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug = 132712.43994*(10^6)*(10^(3*3));
@@ -53,7 +53,7 @@ y0 = cat(2,r0',V0'*sqrt(mu_tau(0)/mu_tau(1)),[0 0 0],[0 0 0],...
     )';
 %tspan=[0 dt*days2sec];
 tspan = t_nonlinear;
-[t,y_initial] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,0),tspan,y0,options);
+[t,y_initial] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,0, case_traj),tspan,y0,options);
 %plot(y(:,1),y(:,2));
 rf_0 = y_initial(end,1:3)';
 Vf_0 = y_initial(end,4:6)';
@@ -61,12 +61,12 @@ b=cat(1,rf_0,Vf_0)-cat(1,rf,Vf*sqrt(mu_tau(0)/mu_tau(1)));
 %оптимизируем траекторию
 z0=zeros([1, 6]);
 tic;
-[tau,z] = ode113(@(t,z) externalIntegration(t,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf),[0 1],z0,options);
+[tau,z] = ode113(@(t,z) externalIntegration(t,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf, case_traj),[0 1],z0,options);
 toc
 y0_final=y0;
 y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);
-[t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0_final,options);
+[t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1, case_traj),tspan,y0_final,options);
 rr_cont = y_final(:, 1:3);
 end
 
