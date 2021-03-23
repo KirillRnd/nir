@@ -110,6 +110,10 @@ mars_v_f=mars_v_f'*1e+03;
 rr_old = arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', rr(:, 1),rr(:, 2),rr(:, 3),'UniformOutput',false);
 rr_old = cell2mat(rr_old')';
 
+VV_old = arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', VV(:, 1),VV(:, 2),VV(:, 3),'UniformOutput',false);
+VV_old = cell2mat(VV_old')';
+
+
 plot3(rr_old(:, 1), rr_old(:, 2), rr_old(:, 3), 'b', 'LineWidth', 2.5);
 
 
@@ -199,7 +203,7 @@ hold off;
 
 disp(['Расход массы ', num2str(m(1)-m(end)), 'кг'])
 disp(['Невязка координаты ', num2str(norm(ae*rr_old(end, 1:3)-mars_r_f(1:3)'),'%10.2e\n'),',м'])
-disp(['Невязка скорости ', num2str((norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)')),'%10.2e\n'),',м/с'])
+disp(['Невязка скорости ', num2str((norm(V_unit*VV_old(end, 1:3)-mars_v_f(1:3)')),'%10.2e\n'),',м/с'])
 % относительное число обусловленности
 disp(['Относительное число обусловленности ', num2str(C,'%10.2e\n')])
 % абсолютное число обусловленности
