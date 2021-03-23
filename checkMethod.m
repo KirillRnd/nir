@@ -1,4 +1,4 @@
-function [dr,dv,C, px,s_f] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -56,7 +56,7 @@ tic;
 fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction);
 
 options = optimoptions('fmincon','UseParallel', true);
-%options = optimoptions(options, 'Display', 'iter');
+options = optimoptions(options, 'Display', 'iter');
 options = optimoptions(options, 'OptimalityTolerance', 1e-15);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-12);
@@ -95,12 +95,14 @@ options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
 [s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf, y0, options);
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
-
+Jt = integrateFunctional(s, y, eta, h0);
+t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
 
 t=zeros(length(uu),1);
 VV=zeros(length(uu),4);
+a_ks=zeros(length(uu),4);
 for i = 1:length(uu)
     u = uu(i,:)';
     r=KS(u);
@@ -110,14 +112,22 @@ for i = 1:length(uu)
     v=y(i, 5:8)';
     h=y(i, 9)'+h0;
     tau=y(i ,10)';
+    pv=y(i, 15:18)';
+    ph=y(i, 19)';
+    ptau=y(i, 20)';
+    dtds=u2/sqrt(-2*h);
+    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
+    a_ks(i, :)=aa_ks/(ae/sqrt(mug_0)).^2;
+
     V = 2*sqrt(-2*h)*L*v/(u2);
     VV(i, :)=V;
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
 t = t - t(1);
-t_end=t(end);
+t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
 
-[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
+
+[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
 mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
 

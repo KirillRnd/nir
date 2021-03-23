@@ -28,21 +28,14 @@ T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 T_mars_days = 365.256363004*1.8808476;
 
-
+eul = [0 pi/4 0];
+rotmZYX = eul2rotm(eul);
 
 r_unit=ae;
 V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
 planet_start = 'Earth';
 planet_end = 'Mars';
-[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
-%Поворот всех физических координат углами эйлера
-eul = [0 pi/4 0];
-rotmZYX = eul2rotm(eul);
-
-r0 = [rotmZYX*r0'/ae; 0]*1e+03;
-V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
-
 
 mug=1;
 
@@ -51,107 +44,13 @@ angle=0.3750;
 rad=1/16;
 
 modifier_p=1e-06;
-modifier_f=1e+06;
-modifier_b=1e+13;
-psi = n + angle;
+modifier_f=1e+08;
+%Одиночный запуск метода и получение всех необходимых для графиков
+%переменных
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta);
 
-s_a = psi - rad;
-s_b = psi + rad;
-
-x0(11) = psi;
-x0(12)=0;
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
-ub = -lb;
-
-lb(11) = s_a;
-ub(11) = s_b;
-
-lb(12) = 0;
-ub(12) = 1;
-%домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
-%величинами и не выдавал лишних ворнингов
-tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR, direction);
-
-options = optimoptions('fmincon','UseParallel', true);
-options = optimoptions(options, 'Display', 'iter');
-options = optimoptions(options, 'OptimalityTolerance', 1e-15);
-options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'MaxIterations', 1500);
-options = optimoptions(options, 'StepTolerance', 1e-12);
-options = optimoptions(options, 'ConstraintTolerance', 1e-12);
-
-%options = optimoptions(options, 'Algorithm', 'sqp');
-%options = optimoptions(options, 'HessianApproximation','lbfgs');
-%options = optimoptions(options, 'ScaleProblem', 'obj-and-constr');
-[x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options);
-toc
-px = x(1:10)*modifier_p;
-s_f = x(11)*2*pi;
-phi = x(12)*2*pi;
-%задаем начальные условия
-
-t0=0;
-h0=(norm(V0)^2)/2-mug/norm(r0);
-
-u0 = rToU(r0, 0);
-L = L_KS(u0); 
-v0 = vFromV(V0,r0,mug,0);
-tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-y0 = cat(1, u0, v0, 0, tau0,  px')';
-
-int_s0sf = linspace(0, s_f, (n+1)*1e+4);
-%options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
-options = odeset('AbsTol',1e-10);
-options = odeset(options,'RelTol',1e-10);
-%Интегрируем, используя сопряженные переменные из fmincon
-
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf, y0, options);
-
-
-uu = y(:, 1:4);
-vv = y(:, 5:8);
-rr=zeros(length(uu),4);
-a=zeros(length(uu),4);
-a_ks=zeros(length(uu),4);
-t=zeros(length(uu),1);
-VV=zeros(length(uu),4);
-t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
-
-for i = 1:length(uu)
-    u = uu(i,:)';
-    r=KS(u);
-    rr(i,:)=r;
-    L=L_KS(u);
-    u2=norm(u)^2;
-    v=y(i, 5:8)';
-    h=y(i, 9)'+h0;
-    tau=y(i ,10)';
-    pu=y(i, 11:14)';
-    pv=y(i, 15:18)';
-    ph=y(i, 19)';
-    ptau=y(i, 20)';
-    dtds=u2/sqrt(-2*h);
-    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
-    a_ks(i, :)=aa_ks/(ae/sqrt(mug_0)).^2;
-    res=symF(u,v,h,pu,pv,ph,ptau);
-    dvds=res(5:8);
-    dhds=res(9);
-    V = 2*sqrt(-2*h)*L*v/(u2);
-    VV(i, :)=V;
-    %a(i, :)=((-2*h/(norm(r)^2))*(2*(L_KS(v)*v+L_KS(u)*dvds)-(2*u'*v/(sqrt(-2*h)) + norm(r)*dhds/((-2*h)^(3/2)))*V)+mug*r/(norm(r)^3))/(ae/sqrt(mug_0)).^2;
-    
-    %a(i, :)=KS(aa);
-    t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
-end
-
-t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
-
-t = t - t(1);
-%t_end=t(end);
-
-Jt = integrateFunctional(s, y, eta, h0);
 functional = Jt(end);
+%t_end=t(end);
 
 figure(2);
 plot(t/(24*3600), vecnorm(a_ks, 2, 2)*1e+03, 'LineWidth', 3);
@@ -191,7 +90,7 @@ t0 = t_start;
 t_orbit = linspace(t0,t0+T_earth/(24*3600), 1000);
 earth_traj = planetEphemeris(t_orbit','SolarSystem','Earth','430');
 earth_traj=earth_traj*1e+03/ae;
-
+%Для KS
 earth_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', earth_traj(:, 1),earth_traj(:, 2),earth_traj(:, 3),'UniformOutput',false);
 earth_traj_New = cell2mat(earth_traj_New')';
 
@@ -199,16 +98,25 @@ t_orbit = linspace(t0,t0+T_mars/(24*3600), 1000);
 mars_traj = planetEphemeris(t_orbit','SolarSystem','Mars','430');
 mars_traj=mars_traj*1e+03/ae;
 
+%Для KS
 mars_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', mars_traj(:, 1),mars_traj(:, 2),mars_traj(:, 3),'UniformOutput',false);
 mars_traj_New = cell2mat(mars_traj_New')';
 
-plot3(earth_traj_New(:, 1), earth_traj_New(:, 2), earth_traj_New(:, 3), 'k')
-plot3(mars_traj_New(:, 1), mars_traj_New(:, 2), mars_traj_New(:, 3), 'r')
+plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
+plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
 
 [mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
-mars_r_f=rotmZYX*mars_r_f'*1e+03;
-mars_v_f=rotmZYX*mars_v_f'*1e+03;
-plot3(rr(:, 1), rr(:, 2), rr(:, 3), 'b', 'LineWidth', 2.5);
+mars_r_f=mars_r_f'*1e+03;
+mars_v_f=mars_v_f'*1e+03;
+
+rr_old = arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', rr(:, 1),rr(:, 2),rr(:, 3),'UniformOutput',false);
+rr_old = cell2mat(rr_old')';
+
+plot3(rr_old(:, 1), rr_old(:, 2), rr_old(:, 3), 'b', 'LineWidth', 2.5);
+
+a_ks_old= arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', a_ks(:, 1),a_ks(:, 2),a_ks(:, 3),'UniformOutput',false);
+a_ks_old = cell2mat(a_ks_old')';
+
 a_scale=3e-01/mean(vecnorm(a_ks, 2, 2));
 %a_scale=0;
 d = 24*3600;
@@ -218,18 +126,19 @@ for i=1:ceil(t(end)/d)
     idxes=[idxes, ix];
 end    
 for i = idxes
-    plot3([rr(i, 1), rr(i, 1)+a_scale*a_ks(i, 1)], [rr(i, 2), rr(i, 2)+a_scale*a_ks(i, 2)],[rr(i, 3), rr(i, 3)+a_scale*a_ks(i, 3)],'k')
+    plot3([rr_old(i, 1), rr_old(i, 1)+a_scale*a_ks_old(i, 1)], [rr_old(i, 2), rr_old(i, 2)+...
+        a_scale*a_ks_old(i, 2)],[rr_old(i, 3), rr_old(i, 3)+a_scale*a_ks_old(i, 3)],'k')
 end
 
-plot3(rr(end, 1), rr(end, 2), rr(end, 3),'bO')
+plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
 plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
 axis equal
 
-%title('Траектория КА')
+title('Траектория КА')
 xlabel('x, a.e.')
 ylabel('y, a.e.')
 zlabel('z, a.e.')
-
+view(0,90)
 ax = gca;
 ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
@@ -247,7 +156,8 @@ th = linspace(0 ,4*pi,1000)';
 mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], phi), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
 mars_traj_ks = cell2mat(mars_traj_ks')';
 mars_traj_ks=-mars_traj_ks*direction;
-earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], phi), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
+%phi === 0
+earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
 earth_traj_ks = cell2mat(earth_traj_ks')';
 plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
 plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r')
@@ -282,9 +192,9 @@ hold off;
 %[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
 
 disp(['Расход массы ', num2str(m(1)-m(end)), 'кг'])
-disp(['Невязка координаты ', num2str(norm(ae*rr(end, 1:3)-mars_r_f(1:3)'),'%10.2e\n'),',м'])
+disp(['Невязка координаты ', num2str(norm(ae*rr_old(end, 1:3)-mars_r_f(1:3)'),'%10.2e\n'),',м'])
 disp(['Невязка скорости ', num2str((norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)')),'%10.2e\n'),',м/с'])
 % относительное число обусловленности
-disp(['Относительное число обусловленности ', num2str(norm(x)*norm(grad)/fval,'%10.2e\n')])
+disp(['Относительное число обусловленности ', num2str(C,'%10.2e\n')])
 % абсолютное число обусловленности
 %disp(['Абсолютное число обусловленности ', num2str(1/norm(grad),'%10.2e\n')])
