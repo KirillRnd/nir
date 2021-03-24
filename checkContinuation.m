@@ -1,4 +1,4 @@
-function [rr_cont] = checkContinuation(t0, dt, t_nonlinear, case_traj)
+function [rr_cont, Jt] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug = 132712.43994*(10^6)*(10^(3*3));
@@ -10,7 +10,7 @@ n = floor(dt/(T_earth/days2sec));
 tf=t0+dt;
 
 [r0, V0] = planetEphemeris(t0,'SolarSystem','Earth','430');
-[rf, Vf] = planetEphemeris(tf,'SolarSystem','Mars','430');
+[rf, Vf] = planetEphemeris(tf,'SolarSystem',planet_end,'430');
 r0=r0'*1e+03;
 V0=V0'*1e+03;
 rf=rf'*1e+03;
@@ -53,11 +53,17 @@ y0 = cat(2,r0',V0'*sqrt(mu_tau(0)/mu_tau(1)),[0 0 0],[0 0 0],...
     )';
 %tspan=[0 dt*days2sec];
 tspan = t_nonlinear;
-[t,y_initial] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,0, case_traj),tspan,y0,options);
+[t,y_initial] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,0),tspan,y0,options);
 %plot(y(:,1),y(:,2));
 rf_0 = y_initial(end,1:3)';
 Vf_0 = y_initial(end,4:6)';
-b=cat(1,rf_0,Vf_0)-cat(1,rf,Vf*sqrt(mu_tau(0)/mu_tau(1)));
+pvf_0 = y_initial(end,7:9)';
+if case_traj == 1
+    b=cat(1,rf_0,pvf_0)-cat(1,rf,[0 0 0]');
+elseif case_traj == 2
+    b=cat(1,rf_0,Vf_0)-cat(1,rf,Vf*sqrt(mu_tau(0)/mu_tau(1)));
+end
+
 %оптимизируем траекторию
 z0=zeros([1, 6]);
 tic;
@@ -66,7 +72,9 @@ toc
 y0_final=y0;
 y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);
-[t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1, case_traj),tspan,y0_final,options);
+[t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0_final,options);
 rr_cont = y_final(:, 1:3);
+a=y_final(:, 7:9);
+Jt = cumtrapz(t, vecnorm(a, 2, 2).^2)/(2*eta);
 end
 

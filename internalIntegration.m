@@ -1,4 +1,4 @@
-function res = internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,tau,case_traj)
+function res = internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,tau)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 mu0=mu_tau(0);

@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta, case_traj)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta, case_traj,planet_end)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -21,7 +21,6 @@ r_unit=ae;
 V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
 planet_start = 'Earth';
-planet_end = 'Mars';
 [r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
 
 eul = [0 pi/4 0];

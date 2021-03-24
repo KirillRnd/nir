@@ -13,19 +13,28 @@ options = odeset(options,'RelTol',1e-10);
 %plot(y(:,1),y(:,2));
 %axis equal
 drdpv=reshape(y(end,13:21),[3,3]);
-dvdpv=reshape(y(end,22:30),[3,3]);
-
-drdz=cat(2,drdpv,dvdpv);
+drddpvdt=reshape(y(end,22:30),[3,3]);
+drdz=cat(2,drdpv,drddpvdt);
 
 ddrdpvdt=reshape(y(end,49:57),[3,3]);
 ddVdpvdt=reshape(y(end,58:66),[3,3]);
 ddrdzdt=cat(2,ddrdpvdt,ddVdpvdt);
 
-dfdz = cat(1,drdz,ddrdzdt);
+dpvdpv=reshape(y(31:39),[3,3]);
+dPvdpv=reshape(y(40:48),[3,3]);
+dpvdz=cat(2,dpvdpv,dPvdpv);
 
 drdtau = y(end,85:87)';
 dvdtau = y(end,88:90)';
-dfdtau = cat(1,drdtau,dvdtau-0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*Vf);
+dpvdtau = y(end,91:93)';
+
+if case_traj == 1
+    dfdz = cat(1,drdz,dpvdz);
+    dfdtau = cat(1,drdtau,dpvdtau);
+elseif case_traj == 2
+    dfdz = cat(1,drdz,ddrdzdt);
+    dfdtau = cat(1,drdtau,dvdtau-0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*Vf);
+end
 res=-dfdz\(dfdtau+b);
 tau
 if tau == 1.0
