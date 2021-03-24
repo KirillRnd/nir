@@ -11,6 +11,8 @@ A = [];
 b = [];
 Aeq = [];
 beq = [];
+
+
 ae = 149597870700;
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
@@ -29,6 +31,7 @@ rotmZYX = eul2rotm(eul);
 r0 = [rotmZYX*r0'/ae; 0]*1e+03;
 V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 
+nonlcon = @(x)ubOrtPv(x, rToU(r0, 0));
 mug=1;
 
 % modifier_p=1e-04;
@@ -63,7 +66,7 @@ options = optimoptions(options, 'ConstraintTolerance', 1e-12);
 options = optimoptions(options, 'MaxIterations', 1500);
 options = optimoptions(options,'OutputFcn',@myoutput);
 
-[x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub,[], options);
+[x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub, nonlcon, options);
 toc
 px = x(1:10)*modifier_p;
 s_f = x(11)*2*pi;
@@ -82,8 +85,8 @@ v0 = vFromV(V0,r0,mug,0);
 
 tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
-n = 1;
-int_s0sf = linspace(0, s_f, (n+1)*1e+3);
+
+int_s0sf = linspace(0, s_f, 1e+3);
 time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
 options = odeset('AbsTol',1e-10);

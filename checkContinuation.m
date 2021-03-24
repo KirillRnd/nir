@@ -1,4 +1,4 @@
-function [rr_cont, Jt] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta)
+function [rr_cont, Jt] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug = 132712.43994*(10^6)*(10^(3*3));
@@ -6,7 +6,8 @@ ae = 149597870700;
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
 days2sec=24*3600;
-n = floor(dt/(T_earth/days2sec));
+
+
 tf=t0+dt;
 
 [r0, V0] = planetEphemeris(t0,'SolarSystem','Earth','430');
@@ -15,7 +16,10 @@ r0=r0'*1e+03;
 V0=V0'*1e+03;
 rf=rf'*1e+03;
 Vf=Vf'*1e+03;
-
+% 
+% phi = getAngleRoRf(r0,rf,V0);
+% 
+% n = floor(dt/(T_earth/days2sec) - phi/(2*pi));
 % r0 = [ae 0 0]';
 % V0 = [0 sqrt(mug/ae) 0]'; 
 % a_m = 5*pi/3;

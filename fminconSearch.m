@@ -11,7 +11,7 @@ m0=367;
 eta=0.45;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=1;
+case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 UorR = 'u';
 direction = -1;
@@ -39,8 +39,8 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=1;
-angle=0.3;
+n=2;
+angle=0.5;
 rad=1/16;
 
 modifier_p=1e-06;
@@ -50,7 +50,7 @@ modifier_f=1e+08;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end);
 x0_sec = [px s_f phi];
 functional = Jt(end);
-[rr_cont, Jt_cont] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta);
+[rr_cont, Jt_cont] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);
@@ -139,6 +139,9 @@ plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
 plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
 
 plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
+%эти две точки должны находиться рядом
+%plot3(rr_cont(500, 1)/ae, rr_cont(500, 2)/ae, rr_cont(500, 3)/ae, 'gO', 'LineWidth', 2.5);
+%plot3(rr_old(500, 1), rr_old(500, 2), rr_old(500, 3), 'bO', 'LineWidth', 2.5);
 axis equal
 
 title('Траектория КА')
@@ -202,7 +205,10 @@ ax.YAxisLocation = 'origin';
 box off;
 hold off;
 %[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
+d = rr_old(:, 1:3)*ae-rr_cont;
+d_norm = vecnorm(d, 2, 2);
 
+disp(['Средняя разница в  координатах ', num2str(mean(d_norm),'%10.2e\n'), 'м'])
 disp(['Расход массы в KS-координатах ', num2str(m(1)-m(end)), 'кг'])
 disp(['Расход массы методом продолжения ', num2str(m_cont(1)-m_cont(end)), 'кг'])
 disp(['Невязка координаты ', num2str(norm(ae*rr_old(end, 1:3)-mars_r_f(1:3)'),'%10.2e\n'),',м'])

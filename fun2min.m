@@ -50,7 +50,7 @@ t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
 r_end=KS(u);
 L_end = L_KS(u);
 V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
-aa_ks_end=L_end*(-(u2)*pv/(4*h_end) + v*(2*ph-(1/h_end)*pv'*v)+ptau*(u2)*u/((-2*h_end)^(3/2)));
+a_ks_end=L_end*(-(u2)*pv/(4*h_end) + v*(2*ph-(1/h_end)*pv'*v)+ptau*(u2)*u/((-2*h_end)^(3/2)));
 
 %Получаем координату и скорость планеты в эфемеридах и поворачиваем систеу
 %координат
@@ -69,14 +69,14 @@ if UorR == 'u'
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
     if case_traj == 1
-        dis_p = [uf+direction*u; aa_ks_end;];
+        dis_p = [uf+direction*u; a_ks_end];
     elseif case_traj == 2
         dis_p = [uf+direction*u; vf+direction*v;];
     end
 elseif  UorR == 'r'
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     if case_traj == 1
-        dis_p = [rf-r_end; pv';];
+        dis_p = [rf-r_end; pv;];
     elseif case_traj == 2
         dis_p = [rf-r_end; Vf-V_end;];
     end
