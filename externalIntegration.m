@@ -36,8 +36,8 @@ elseif case_traj == 2
     dfdtau = cat(1,drdtau,dvdtau-0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*Vf);
 end
 res=-dfdz\(dfdtau+b);
-tau
-if tau == 1.0
-    cond(dfdz)
+% tau
+% if tau == 1.0
+%     cond(dfdz)
 end
 

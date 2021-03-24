@@ -58,7 +58,7 @@ tic;
 fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction);
 
 options = optimoptions('fmincon','UseParallel', true);
-options = optimoptions(options, 'Display', 'iter');
+%options = optimoptions(options, 'Display', 'iter');
 options = optimoptions(options, 'OptimalityTolerance', 1e-15);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-12);
