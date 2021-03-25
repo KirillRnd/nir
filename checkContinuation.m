@@ -1,10 +1,9 @@
-function [rr_cont, Jt] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
+function [rr_cont, Jt, evaluation_time] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
 T_earth = 365.256363004*3600*24;
-T_mars=T_earth*1.8808476;
 days2sec=24*3600;
 
 
@@ -72,7 +71,7 @@ end
 z0=zeros([1, 6]);
 tic;
 [tau,z] = ode113(@(t,z) externalIntegration(t,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf, case_traj),[0 1],z0,options);
-toc
+evaluation_time = toc;
 y0_final=y0;
 y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);

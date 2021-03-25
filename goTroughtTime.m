@@ -1,15 +1,24 @@
 %Эот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
+N=1350;
+m0=367;
 eta=0.45;
 UorR='u';
 step = 1/4;
-ds = 2/2:step:3/2;
+ds = 1/2:step:5/2;
 rad = step/2;
 L=length(ds);
+T=zeros([1,L]);
+T_cont=zeros([1,L]);
 DR=zeros([1,L]);
 DV=zeros([1,L]);
 CONV=zeros([1,L]);
 SF=zeros([1,L]);
+%Затраты массы
+M=zeros([1,L]);
+M_cont=zeros([1,L]);
+%Разница по координатам вдоль траектории
+D=zeros([1,L]);
 PX=zeros([10,L]);
 case_traj = 2;
 x0=zeros([1, 12]);
@@ -27,12 +36,15 @@ for i=1:L
     UorR = 'u';
     modifier_p=1e-06;
     modifier_f=1e+08;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end);
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end);
+    T(i)=evaluation_time;
     DR(i)=dr;
     DV(i)=dV;
     CONV(i)=C;
     PX(:,i)=px;
     SF(i)=s_f;
+    m=massLP(Jt, m0, N);
+    M(i)=m(1)-m(end);
 %     %развернуть направление
 %     if DR(i)>1e+07 && UorR == 'u'
 %         direction = -1*direction
@@ -119,10 +131,6 @@ mars_traj_New = cell2mat(mars_traj_New')';
 plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
 plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
 
-
-
-
-
 axis equal
 
 %title('Траектория КА')
@@ -133,6 +141,7 @@ zlabel('z, a.e.')
 ax = gca;
 ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
+view(0,90);
 box off;
 hold off;
 
@@ -177,10 +186,9 @@ mug=1;
 h0=(norm(V0)^2)/2-mug/norm(r0);
 t0=0;
 
-
 u0 = rToU(r0, 0);
-
 v0 = vFromV(V0,r0,mug, 0);
+disp('--------------------')
 for i=1:L
     px = PX(:,i);
     s_f =SF(i);
@@ -195,7 +203,6 @@ for i=1:L
     %Интегрируем, используя сопряженные переменные из fmincon
 
     [s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf, y0, options);
-
 
     uu = y(:, 1:4);
     vv = y(:, 5:8);
@@ -236,9 +243,10 @@ for i=1:L
     t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
 
     t = t - t(1);
-    [rr_cont, Jt_cont] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
+    [rr_cont, Jt_cont, T_cont(i)] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
     functional_cont = Jt_cont(end);
-
+    m_cont=massLP(Jt_cont, m0, N);
+    M_cont(i)=m_cont(1)-m_cont(end);
     figure(1);
     hold on;
     [mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
@@ -254,13 +262,21 @@ for i=1:L
     
     hold off;
     
-    
     figure(5)
     hold on;
     plot3(uu(:, 1), uu(:, 2), uu(:, 3), 'b', 'LineWidth', 2.5);
+    plot3(uu(end, 1), uu(end, 2), uu(end, 3), 'bO');
     hold off;
     
-     d = rr_old(:, 1:3)*ae-rr_cont;
-     d_norm = vecnorm(d, 2, 2);
-     disp(['Средняя разница в  координатах ', num2str(mean(d_norm),'%10.2e\n'), 'м'])
+    d = rr_old(:, 1:3)*ae-rr_cont;
+    d_norm = mean(vecnorm(d, 2, 2));
+    D(i)=d_norm;
+    disp(['Величина мнимого времени ', num2str(ds(i)*2*pi,'%10.2f\n'), ' рад.'])
+    disp(['Невязка по координате предложенного метода ', num2str(DR(i),'%10.2e\n'), 'м.'])
+    disp(['Время работы предложенного метода ', num2str(T(i),'%10.2f\n'), 'сек.'])
+    disp(['Время работы метода продолжения по параметру ', num2str(T_cont(i),'%10.2f\n'), 'сек.'])
+    disp(['Затраты массы предложенного метода ', num2str(M(i),'%10.2f\n'), 'кг.'])
+    disp(['Затраты массы метода продолжения по параметру ', num2str(M_cont(i),'%10.2f\n'), 'кг.'])
+    disp(['Средняя разница в координатах ', num2str(D(i),'%10.2e\n'), 'м.'])
+    disp('--------------------')
 end

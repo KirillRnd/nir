@@ -39,7 +39,7 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=2;
+n=0;
 angle=0.5;
 rad=1/16;
 
@@ -50,7 +50,7 @@ modifier_f=1e+08;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end);
 x0_sec = [px s_f phi];
 functional = Jt(end);
-[rr_cont, Jt_cont] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
+[rr_cont, Jt_cont, evaluation_time] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);

@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta, case_traj,planet_end)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta, case_traj,planet_end)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -16,8 +16,6 @@ beq = [];
 ae = 149597870700;
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
-T_mars=T_earth*1.8808476;
-T_mars_days = 365.256363004*1.8808476;
 
 r_unit=ae;
 V_unit=sqrt(mug_0/ae);
@@ -58,8 +56,7 @@ tic;
 fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction);
 
 options = optimoptions('fmincon','UseParallel', true);
-%options = optimoptions(options, 'Display', 'iter');
-options = optimoptions(options, 'OptimalityTolerance', 1e-15);
+%options = optimoptions(options, 'OptimalityTolerance', 1e-15);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-12);
 options = optimoptions(options, 'ConstraintTolerance', 1e-12);
@@ -67,7 +64,7 @@ options = optimoptions(options, 'MaxIterations', 1500);
 options = optimoptions(options,'OutputFcn',@myoutput);
 
 [x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub, nonlcon, options);
-toc
+evaluation_time = toc;
 px = x(1:10)*modifier_p;
 s_f = x(11)*2*pi;
 phi = x(12)*2*pi;
