@@ -243,7 +243,7 @@ for i=1:L
     t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
 
     t = t - t(1);
-    [rr_cont, Jt_cont, T_cont(i)] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
+    [rr_cont, Jt_cont, C_cont, T_cont(i)] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
     functional_cont = Jt_cont(end);
     m_cont=massLP(Jt_cont, m0, N);
     M_cont(i)=m_cont(1)-m_cont(end);

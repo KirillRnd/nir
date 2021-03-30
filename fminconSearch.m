@@ -50,7 +50,7 @@ modifier_f=1e+08;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end);
 x0_sec = [px s_f phi];
 functional = Jt(end);
-[rr_cont, Jt_cont, evaluation_time] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
+[rr_cont, Jt_cont, C_cont, evaluation_time] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);
@@ -215,5 +215,6 @@ disp(['Ќев€зка координаты ', num2str(norm(ae*rr_old(end, 1:3)-mars_r_f(1:3)'),'%
 disp(['Ќев€зка скорости ', num2str((norm(V_unit*VV_old(end, 1:3)-mars_v_f(1:3)')),'%10.2e\n'),',м/с'])
 % относительное число обусловленности
 disp(['ќтносительное число обусловленности ', num2str(C,'%10.2e\n')])
+disp(['„исло обусловленности в методе продолжени€ ', num2str(C_cont,'%10.2e\n')])
 % абсолютное число обусловленности
 %disp(['јбсолютное число обусловленности ', num2str(1/norm(grad),'%10.2e\n')])

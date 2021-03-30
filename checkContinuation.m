@@ -1,4 +1,4 @@
-function [rr_cont, Jt, evaluation_time] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
+function [rr_cont, Jt, C, evaluation_time] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug = 132712.43994*(10^6)*(10^(3*3));
@@ -76,8 +76,30 @@ y0_final=y0;
 y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);
 [t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0_final,options);
+%Координаты
 rr_cont = y_final(:, 1:3);
+%Ускорение (pV)
 a=y_final(:, 7:9);
+%Функционал
 Jt = cumtrapz(t, vecnorm(a, 2, 2).^2)/(2*eta);
+%Матрица чувствительности
+drdpv=reshape(y_final(end,13:21),[3,3]);
+drddpvdt=reshape(y_final(end,22:30),[3,3]);
+drdz=cat(2,drdpv,drddpvdt);
+
+ddrdpvdt=reshape(y_final(end,49:57),[3,3]);
+ddVdpvdt=reshape(y_final(end,58:66),[3,3]);
+ddrdzdt=cat(2,ddrdpvdt,ddVdpvdt);
+
+dpvdpv=reshape(y_final(31:39),[3,3]);
+dPvdpv=reshape(y_final(40:48),[3,3]);
+dpvdz=cat(2,dpvdpv,dPvdpv);
+
+if case_traj == 1
+    dfdz = cat(1,drdz,dpvdz);
+elseif case_traj == 2
+    dfdz = cat(1,drdz,ddrdzdt);
+end
+C = cond(dfdz);
 end
 
