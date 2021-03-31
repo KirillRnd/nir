@@ -80,8 +80,9 @@ y0_final(7:12)=z(end,:);
 rr_cont = y_final(:, 1:3);
 %Ускорение (pV)
 a=y_final(:, 7:9);
+a_vec=vecnorm(a, 2, 2).^2;
 %Функционал
-Jt = cumtrapz(t, vecnorm(a, 2, 2).^2)/(2*eta);
+Jt = cumtrapz(t, a_vec)/(2*eta);
 %Матрица чувствительности
 drdpv=reshape(y_final(end,13:21),[3,3]);
 drddpvdt=reshape(y_final(end,22:30),[3,3]);

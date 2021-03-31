@@ -95,7 +95,7 @@ earth_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', earth_traj(:, 1),earth_tra
 earth_traj_New = cell2mat(earth_traj_New')';
 
 t_orbit = linspace(t0,t0+T_mars/(24*3600), 1000);
-mars_traj = planetEphemeris(t_orbit','SolarSystem','Mars','430');
+mars_traj = planetEphemeris(t_orbit','SolarSystem',planet_end,'430');
 mars_traj=mars_traj*1e+03/ae;
 
 %Äëÿ KS
