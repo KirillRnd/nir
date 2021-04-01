@@ -1,4 +1,4 @@
-function dis = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction)
+function dis = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction,terminal_state)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -18,21 +18,31 @@ pu0=x(1:4)';
 pv0=x(5:8)';
 ph0=x(9);
 pt0=x(10);
-s_f=x(11)*2*pi;
+if terminal_state == 's'
+    s_f=x(11)*2*pi;
+elseif terminal_state == 't'
+    t_end=x(11)*365.256363004;
+    s_f=1.5*x(11)*2*pi;
+end
 phi=x(12)*2*pi;
 u0 = rToU(r0, 0);
 h0 = (norm(V0)^2)/2-mug/norm(r0);
 v0 = vFromV(V0,r0,mug,0);
 t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
-
+t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
 acc=1e-10;
 options = odeset('AbsTol',acc);
 options = odeset(options,'RelTol',acc);
 options = odeset(options,'NonNegative', 10);
-options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
+if terminal_state == 's'
+    options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
+elseif terminal_state == 't'
+    options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0, t_end, h0, t_start_fix));
+end
+
 warning('off','all');
 [s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), [0 s_f], y0, options);
 
@@ -45,7 +55,7 @@ tau=y(end, 10)';
 pv=y(end, 15:18)';
 ph=y(end, 19)';
 ptau=y(end, 20)';
-t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
+
 t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
 r_end=KS(u);
 L_end = L_KS(u);

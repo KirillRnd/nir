@@ -1,10 +1,11 @@
 %Ёот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
+display=0;
 N=1350;
 m0=367;
 eta=0.45;
 UorR='u';
-step = 1/4;
+step = 1/8;
 ds = 1/2:step:5/2;
 rad = step/2;
 L=length(ds);
@@ -14,6 +15,7 @@ DR=zeros([1,L]);
 DV=zeros([1,L]);
 CONV=zeros([1,L]);
 SF=zeros([1,L]);
+PHI=zeros([1,L]);
 %«атраты массы
 M=zeros([1,L]);
 M_cont=zeros([1,L]);
@@ -36,13 +38,14 @@ for i=1:L
     UorR = 'u';
     modifier_p=1e-06;
     modifier_f=1e+08;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end);
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display);
     T(i)=evaluation_time;
     DR(i)=dr;
     DV(i)=dV;
     CONV(i)=C;
     PX(:,i)=px;
     SF(i)=s_f;
+    PHI(i)=phi;
     m=massLP(Jt, m0, N);
     M(i)=m(1)-m(end);
 %     %развернуть направление

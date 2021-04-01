@@ -5,7 +5,7 @@
 %end
 t_start = juliandate(2022,0,0);
 %t_start=0;
-
+terminal_state = 't';
 N=1350;
 m0=367;
 eta=0.45;
@@ -39,15 +39,16 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=0;
+n=1;
 angle=0.5;
-rad=1/16;
+rad=0;
 
 modifier_p=1e-06;
 modifier_f=1e+08;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end);
+display = 1;
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state);
 x0_sec = [px s_f phi];
 functional = Jt(end);
 [rr_cont, Jt_cont, C_cont, evaluation_time] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);

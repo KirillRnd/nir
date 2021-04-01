@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta, case_traj,planet_end)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -53,9 +53,12 @@ ub(12) = 1;
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction,terminal_state);
 
 options = optimoptions('fmincon','UseParallel', true);
+if display == 1
+    options = optimoptions(options, 'Display', 'iter');
+end
 %options = optimoptions(options, 'OptimalityTolerance', 1e-15);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-12);
@@ -66,7 +69,12 @@ options = optimoptions(options,'OutputFcn',@myoutput);
 [x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub, nonlcon, options);
 evaluation_time = toc;
 px = x(1:10)*modifier_p;
-s_f = x(11)*2*pi;
+if terminal_state == 's'
+    s_f=x(11)*2*pi;
+elseif terminal_state == 't'
+    t_end=x(11)*365.256363004;
+    s_f=1.5*x(11)*2*pi;
+end
 phi = x(12)*2*pi;
 %задаем начальные условия
 %options = optimoptions(options,'OutputFcn',@myoutput);
@@ -83,12 +91,17 @@ v0 = vFromV(V0,r0,mug,0);
 tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 y0 = cat(1, u0, v0, 0, tau0,  px')';
 
+t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60);
 int_s0sf = linspace(0, s_f, 1e+3);
 time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
 options = odeset('AbsTol',1e-10);
 options = odeset(options,'RelTol',1e-10);
-options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
+if terminal_state == 's'
+    options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
+elseif terminal_state == 't'
+    options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0, t_end, h0, t_start_fix));
+end
 %Интегрируем, используя сопряженные переменные из fmincon
 
 [s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf, y0, options);
