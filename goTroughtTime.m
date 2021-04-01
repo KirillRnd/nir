@@ -1,16 +1,18 @@
 %Ёот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
 display=0;
+terminal_state = 't';
 N=1350;
 m0=367;
 eta=0.45;
 UorR='u';
-step = 1/8;
-ds = 1/2:step:5/2;
+step = 1/4;
+ds = 1/2:step:4/2;
 rad = step/2;
 L=length(ds);
 T=zeros([1,L]);
 T_cont=zeros([1,L]);
+T_END=zeros([1,L]);
 DR=zeros([1,L]);
 DV=zeros([1,L]);
 CONV=zeros([1,L]);
@@ -38,7 +40,7 @@ for i=1:L
     UorR = 'u';
     modifier_p=1e-06;
     modifier_f=1e+08;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display);
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
     T(i)=evaluation_time;
     DR(i)=dr;
     DV(i)=dV;
@@ -47,6 +49,7 @@ for i=1:L
     SF(i)=s_f;
     PHI(i)=phi;
     m=massLP(Jt, m0, N);
+    T_END(i)=t_end;
     M(i)=m(1)-m(end);
 %     %развернуть направление
 %     if DR(i)>1e+07 && UorR == 'u'
@@ -194,14 +197,24 @@ v0 = vFromV(V0,r0,mug, 0);
 disp('--------------------')
 for i=1:L
     px = PX(:,i);
-    s_f =SF(i);
-
+    if terminal_state == 's'
+        s_f=SF(i);
+    elseif terminal_state == 't'
+        t_end=T_END(i);
+        s_f=1.5*SF(i);
+    end
     tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
     y0 = cat(1, u0, v0, 0, tau0,  px)';
-
+    
+    t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60);
     int_s0sf = linspace(0, s_f, 1e+03);
-    %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
+    time0 = tic;
     options = odeset('AbsTol',1e-10);
+    if terminal_state == 's'
+        options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
+    elseif terminal_state == 't'
+        options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0, t_end, h0, t_start_fix));
+    end
     options = odeset(options,'RelTol',1e-10);
     %»нтегрируем, использу€ сопр€женные переменные из fmincon
 

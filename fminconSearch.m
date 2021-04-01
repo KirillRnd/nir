@@ -40,11 +40,11 @@ planet_end = 'Mars';
 mug=1;
 
 n=1;
-angle=0.5;
-rad=0;
+angle=1.75;
+rad=1/16;
 
 modifier_p=1e-06;
-modifier_f=1e+08;
+modifier_f=1e+06;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
