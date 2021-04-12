@@ -29,9 +29,19 @@ dhds=2*v'*L'*a;
 dvds=-u/4-(u2)/(4*h)*L'*a-(dhds/(2*h))*v;
 dtauds=(mug+4*(u'*v)*dhds+u2*u'*L'*a)/((-2*h)^(3/2));
 
-
-
 H=-dtds*(a'*a)/2+pu'*duds+pv'*dvds+ph'*dhds+ptau'*dtauds;
+
+a_solved = solve(gradient(H,a)==0,a);
+a_S=simplify([a_solved.a1;a_solved.a2;a_solved.a3;a_solved.a4;]);
+matlabFunction(a_S,'File','a_reactive','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
+
+duds=v;
+dhds=2*v'*L'*a_S;
+dvds=-u/4-(u2)/(4*h)*L'*a_S-(dhds/(2*h))*v;
+dtauds=(mug+4*(u'*v)*dhds+u2*u'*L'*a_S)/((-2*h)^(3/2));
+
+H=-dtds*(a_S'*a_S)/2+pu'*duds+pv'*dvds+ph'*dhds+ptau'*dtauds;
+
 
 dpuds=-simplify(gradient(H, u'));
 dpvds=-simplify(gradient(H, v'));
@@ -42,10 +52,10 @@ y = [u', v', h, tau, pu', pv', ph, ptau];
 
 f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
 
-J = jacobian(f, y);
+%J = jacobian(f, y);
 
 symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
-symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
+%symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 
 y = 2*(u(1)*u(2)-u(3)*u(4));
 z = 2*(u(1)*u(3)+u(2)*u(4));

@@ -23,13 +23,15 @@ for i = 1:length(uu)
     v=y(i, 5:8)';
     h=y(i, 9)'+h0;
     tau=y(i ,10)';
+    pu=y(i, 11:14)';
     pv=y(i, 15:18)';
     ph=y(i, 19)';
     ptau=y(i, 20)';
     V = 2*sqrt(-2*h)*L*v/(u2);
     VV(i, :)=V;
     dtds=u2/sqrt(-2*h);
-    aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
+    %aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
+    aa_ks=a_reactive(u,v,h,pu,pv,ph,ptau);
     a_ks(i, :)=aa_ks/a_unit;
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end

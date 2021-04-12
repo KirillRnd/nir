@@ -138,7 +138,7 @@ F = [[Vf(1) Vf(2) Vf(3) Vf(4)];
 pu_ort_eq=C1(bil(pu_end))^2+C2(bil(pu_end))^2;
 pv_ort_eq=C1(bil(F'*pv_end))^2+C2(bil(F'*pv_end))^2;
 %Оптимизриуем по параметрическим координатам или по физическим
-modifier_f_2=modifier_f;
+modifier_f_2=0;
 if strcmp(UorR,'u_hat')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
