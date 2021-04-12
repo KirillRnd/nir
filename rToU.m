@@ -8,23 +8,14 @@ z=r(3);
 R1=sqrt(0.5*(norm(r)+x));
 R2=sqrt(0.5*(norm(r)-x));
 %Находим синус S и косинус C угла theta, где theta=phi+gamma
-C=y/(2*R1*R2);
-S=z/(2*R1*R2);
-theta=atan2(S,C);
+% C=y/(2*R1*R2);
+% S=z/(2*R1*R2);
+if z == 0 && y ==0
+    theta=0;
+else
+    theta=atan2(z,y);
+end
 
-% theta=asin(S);
-% 
-% if C<0
-%     if S>0
-%         theta=pi-theta;
-%     elseif S<0
-%         theta=-pi-theta;
-%     else
-%         theta=theta+pi;
-%     end
-% end
-%phi выбран нулевым для обращения u4 в ноль
-%phi=0;
 gamma = theta-phi;
 u = [0 0 0 0]';
 % находим параметрические координаты

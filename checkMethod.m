@@ -29,7 +29,8 @@ rotmZYX = eul2rotm(eul);
 r0 = [rotmZYX*r0'/ae; 0]*1e+03;
 V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 
-nonlcon = @(x)ubOrtPv(x, rToU(r0, 0));
+%nonlcon = @(x)ubOrtPv(x, rToU(r0, 0));
+nonlcon=[];
 mug=1;
 
 % modifier_p=1e-04;
@@ -39,7 +40,7 @@ modifier_b=1e+13;
 s_a = psi-rad;
 s_b = psi+rad;
 
-x0(11)=psi;
+%x0(11)=psi;
 
 
 lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
@@ -48,8 +49,14 @@ ub = -lb;
 lb(11) = s_a;
 ub(11) = s_b;
 
-lb(12) = 0;
-ub(12) = 1;
+
+if strcmp(UorR,'u') || strcmp(UorR,'r')
+    lb(12) = 0;
+    ub(12) = 1;
+elseif strcmp(UorR,'u_hat')
+    lb(12) = x0(12);
+    ub(12) = x0(12);
+end
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
@@ -59,14 +66,14 @@ options = optimoptions('fmincon','UseParallel', true);
 if display == 1
     options = optimoptions(options, 'Display', 'iter');
 end
-%options = optimoptions(options, 'OptimalityTolerance', 1e-15);
+options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-12);
 options = optimoptions(options, 'ConstraintTolerance', 1e-12);
 options = optimoptions(options, 'MaxIterations', 1500);
 options = optimoptions(options,'OutputFcn',@myoutput);
 
-[x,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun, x0, A, b, Aeq, beq, lb, ub, nonlcon, options);
+[x,fval,exitflag,output,lambda,grad,hessian] = fmincon(@(x)1, x0, A, b, Aeq, beq, lb, ub, fun, options);
 evaluation_time = toc;
 px = x(1:10)*modifier_p;
 if terminal_state == 's'
@@ -95,8 +102,8 @@ t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60)
 int_s0sf = linspace(0, s_f, 1e+3);
 time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
-options = odeset('AbsTol',1e-10);
-options = odeset(options,'RelTol',1e-10);
+options = odeset('AbsTol',1e-14);
+options = odeset(options,'RelTol',1e-14);
 if terminal_state == 's'
     options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
 elseif terminal_state == 't'

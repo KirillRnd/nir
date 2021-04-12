@@ -1,13 +1,13 @@
 %Ёот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
 display=0;
-terminal_state = 't';
+terminal_state = 's';
+UorR='u';
 N=1350;
 m0=367;
 eta=0.45;
-UorR='u';
-step = 1/4;
-ds = 1/2:step:4/2;
+step = 1/8;
+ds = 1/2:step:2/2;
 rad = step/2;
 L=length(ds);
 T=zeros([1,L]);
@@ -51,49 +51,45 @@ for i=1:L
     m=massLP(Jt, m0, N);
     T_END(i)=t_end;
     M(i)=m(1)-m(end);
-%     %развернуть направление
-%     if DR(i)>1e+07 && UorR == 'u'
-%         direction = -1*direction
-%         [dr,dV, C, px, sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
-%         if dr<DR(i)
-%             DR(i)=dr;
-%             DV(i)=dV;
-%             CONV(i) =C;
-%             PX(:,i)=px;
-%             SF(i)=sf;
-%         else
-%             direction = -1*direction;
-%         end
-%     end
-% 
-%     %пробуем сходитьс€ в физичеких координатах
-%     if DR(i)>1e+07 && UorR == 'u'
-%         UorR = 'r';
-%         [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f, x0);
-%         if dr<DR(i)
-%             DR(i)=dr;
-%             DV(i)=dV;
-%             CONV(i) =C;
-%             PX(:,i)=px;
-%             SF(i)=sf;
-%         else
-%              UorR = 'u';
-%         end
-%     end
     %пробуем уменьшить масштаб
-%     if DR(i)>1e+07 && UorR == 'u'
-%         modifier_f=1e+06;
-%         [dr,dV, C, px,sf] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0);
-%         if dr<DR(i)
-%             DR(i)=dr;
-%             DV(i)=dV;
-%             CONV(i) =C;
-%             PX(:,i)=px;
-%             SF(i)=sf;
-%         else
-%             modifier_f=1e+08;
-%         end
-%     end
+    if DR(i)>1e+07 && UorR == 'u'
+        modifier_f=1e+06;
+        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] ...
+            = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
+        if dr<DR(i)
+            T(i)=evaluation_time;
+            DR(i)=dr;
+            DV(i)=dV;
+            CONV(i)=C;
+            PX(:,i)=px;
+            SF(i)=s_f;
+            PHI(i)=phi;
+            m=massLP(Jt, m0, N);
+            T_END(i)=t_end;
+            M(i)=m(1)-m(end);
+        else
+            modifier_f=1e+08;
+        end
+    end
+    if DR(i)>1e+07 && UorR == 'u'
+        modifier_f=1e+04;
+        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] ...
+            = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
+        if dr<DR(i)
+            T(i)=evaluation_time;
+            DR(i)=dr;
+            DV(i)=dV;
+            CONV(i)=C;
+            PX(:,i)=px;
+            SF(i)=s_f;
+            PHI(i)=phi;
+            m=massLP(Jt, m0, N);
+            T_END(i)=t_end;
+            M(i)=m(1)-m(end);
+        else
+            modifier_f=1e+08;
+        end
+    end
     
 end
 
@@ -112,7 +108,9 @@ hold on;
 % mars_traj = 1.52*[cos(th), sin(th), zeros(100,1)];
 % earth_traj  = [cos(th), sin(th), zeros(100,1)];
 t0 = t_start;
-r_unit=ae;
+ae = 149597870700;
+T_earth = 365.256363004*3600*24;
+T_mars_days = 365.256363004*1.8808476;
 
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
 V_unit=sqrt(mug_0/ae);
@@ -259,7 +257,7 @@ for i=1:L
     t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
 
     t = t - t(1);
-    [rr_cont, Jt_cont, C_cont, T_cont(i)] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
+    [rr_cont, Jt_cont, C_cont, T_cont(i), dr_cont, dV_cont] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
     functional_cont = Jt_cont(end);
     m_cont=massLP(Jt_cont, m0, N);
     M_cont(i)=m_cont(1)-m_cont(end);

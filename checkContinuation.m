@@ -1,4 +1,4 @@
-function [rr_cont, Jt, C, evaluation_time] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
+function [rr_cont, Jt, C, evaluation_time, dr, dV] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug = 132712.43994*(10^6)*(10^(3*3));
@@ -27,8 +27,8 @@ Vf=Vf'*1e+03;
 mu0 = defineMu0(n,r0,V0,rf,dt*days2sec,mug);
 mu_tau=@(tau)(mu0+(mug-mu0)*tau);
 %mu_tau=@(tau)(mug+0*tau);
-options = odeset('AbsTol',1e-10);
-options = odeset(options,'RelTol',1e-10);   
+options = odeset('AbsTol',1e-14);
+options = odeset(options,'RelTol',1e-14);   
 
 
 r = sym('r', [3 1],'real');
@@ -102,5 +102,11 @@ elseif case_traj == 2
     dfdz = cat(1,drdz,ddrdzdt);
 end
 C = cond(dfdz);
+
+[mars_r_f, mars_v_f]=planetEphemeris(tf,'SolarSystem',planet_end,'430');
+mars_r_f=mars_r_f'*1e+03;
+mars_v_f=mars_v_f'*1e+03;
+dr = norm(rr_cont(end, :)'-mars_r_f);
+dV = norm(y_final(end, 4:6)'-mars_v_f);
 end
 

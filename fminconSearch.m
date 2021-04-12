@@ -6,6 +6,7 @@
 t_start = juliandate(2022,0,0);
 %t_start=0;
 terminal_state = 't';
+UorR = 'u';
 N=1350;
 m0=367;
 eta=0.45;
@@ -13,10 +14,11 @@ eta=0.45;
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
-UorR = 'u';
+
 direction = -1;
 %Начальные условия
 x0=zeros([1, 12]);
+
 x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
 b = [];
@@ -40,18 +42,26 @@ planet_end = 'Mars';
 mug=1;
 
 n=1;
-angle=1.75;
-rad=1/16;
-
-modifier_p=1e-06;
-modifier_f=1e+06;
+angle=0.5;
+rad=0;
+x0(11)=n+angle;
+modifier_p=1e-08;
+modifier_f=1e+08;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state);
-x0_sec = [px s_f phi];
+if terminal_state == 's'
+    x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
+elseif terminal_state == 't'
+    x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
+end
+
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,'u_hat',direction,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state);
+
 functional = Jt(end);
-[rr_cont, Jt_cont, C_cont, evaluation_time] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
+[rr_cont, Jt_cont, C_cont, evaluation_time, dr_cont, dV_cont] =...
+    checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);

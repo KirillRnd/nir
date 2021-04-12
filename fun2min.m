@@ -1,8 +1,8 @@
-function dis = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction,terminal_state)
+function [c, ceq] = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction,terminal_state)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
-
+c =[];
 %Определяем безразмерные переменные
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
 ae = 149597870700;
@@ -44,23 +44,30 @@ elseif terminal_state == 't'
 end
 
 warning('off','all');
-[s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), [0 s_f], y0, options);
+int_s0sf = linspace(0, s_f, 10);
+[s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), int_s0sf, y0, options);
 
+ub_matrix=[y(:, 4), -y(:, 3), y(:, 2), -y(:, 1)];
+v_matrix=[y(:, 5), y(:, 6), y(:, 7), y(:, 8)];
+pv_matrix=[y(:, 15), y(:, 16), y(:, 17), y(:, 18)];
+ubTv=diag(ub_matrix*v_matrix');
+ubTpv=diag(ub_matrix*pv_matrix');
 %Разбираем результат в конечный момент на переменные
-u=y(end, 1:4)';
-u2=u'*u;
-v=y(end, 5:8)';
+u_end=y(end, 1:4)';
+u2=u_end'*u_end;
+v_end=y(end, 5:8)';
 h_end=y(end, 9)'+h0;
 tau=y(end, 10)';
-pv=y(end, 15:18)';
+pu_end=y(end, 11:14)';
+pv_end=y(end, 15:18)';
 ph=y(end, 19)';
 ptau=y(end, 20)';
 
-t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
-r_end=KS(u);
-L_end = L_KS(u);
-V_end = 2*sqrt(-2*h_end)*L_end*v/(norm(u)^2);
-a_ks_end=L_end*(-(u2)*pv/(4*h_end) + v*(2*ph-(1/h_end)*pv'*v)+ptau*(u2)*u/((-2*h_end)^(3/2)));
+t_end = T_unit*(tau-2*(u_end'*v_end)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
+r_end=KS(u_end);
+L_end = L_KS(u_end);
+V_end = 2*sqrt(-2*h_end)*L_end*v_end/(norm(u_end)^2);
+a_ks_end=L_end*(-(u2)*pv_end/(4*h_end) + v_end*(2*ph-(1/h_end)*pv_end'*v_end)+ptau*(u2)*u_end/((-2*h_end)^(3/2)));
 
 %Получаем координату и скорость планеты в эфемеридах и поворачиваем систеу
 %координат
@@ -73,25 +80,96 @@ Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 %Получаем параметрические координату и скорость планеты
 uf=rToU(rf, phi);
 vf=vFromV(Vf,rf,mug,phi);
+hf=norm(Vf)^2/2-mug/norm(rf);
+x=rf(1);
+y=rf(2);
+z=rf(3);
 
+R1=sqrt(0.5*(norm(rf)+x));
+R2=sqrt(0.5*(norm(rf)-x));
+
+phi_end=atan2(u_end(4),u_end(1));
+gamma_end=atan2(u_end(3),u_end(2));
+theta_end=phi_end+gamma_end;
+if theta_end<0
+    theta_end=theta_end+2*pi;
+end
+thetaf = atan2(z,y);
+if thetaf<0
+    thetaf=thetaf+2*pi;
+end
+bil=@(x)[x(4); -x(3); x(2); -x(1)];
+C1=@(x)R1*x(1)+R2*(x(2)*cos(thetaf)+x(3)*sin(thetaf));
+C2=@(x)R1*x(4)+R2*(x(2)*sin(thetaf)-x(3)*cos(thetaf));
+%вычисляем невязку до u_hat
+gu_left=[u_end(1)^2+u_end(4)^2;
+    u_end(2)^2+u_end(3)^2;
+    theta_end];
+gu_right=[R1^2;R2^2;thetaf];
+
+dgdu = get_dgdu(uf);
+ort_u=null(dgdu);
+
+pu_proj_coef=dgdu*dgdu'\dgdu*pu_end;
+pu_proj=dgdu'*pu_proj_coef;
+%вычисляем проекцию на линейное подпространство 
+pu_ort=pu_end-pu_proj;
+%вычисляем невязку до v_hat
+gv_left=get_gv(v_end,V_end)';
+
+theta_end_v=gv_left(3);
+if theta_end_v<0
+    theta_end_v=theta_end_v+2*pi;
+end
+gv_left(3)=theta_end_v;
+gv_right=[Vf'*Vf*norm(rf)/(-8*hf); x/(-8*hf); thetaf];
+dgdv=get_dgdv(vf,Vf);
+ort_v=null(dgdv);
+pv_proj_coef=dgdv*dgdv'\dgdv*pv_end;
+pv_proj=dgdv'*pv_proj_coef;
+%вычисляем проекцию на линейное подпространство 
+pv_ort=pv_end-pv_proj;
+
+F = [[Vf(1) Vf(2) Vf(3) Vf(4)];
+    [Vf(2) -Vf(1) -Vf(4) Vf(3)];
+    [Vf(3) Vf(4) -Vf(1) -Vf(2)];
+    [-Vf(4) Vf(3) -Vf(2) Vf(1)]];
+
+pu_ort_eq=C1(bil(pu_end))^2+C2(bil(pu_end))^2;
+pv_ort_eq=C1(bil(F'*pv_end))^2+C2(bil(F'*pv_end))^2;
 %Оптимизриуем по параметрическим координатам или по физическим
-if UorR == 'u'
+modifier_f_2=modifier_f;
+if strcmp(UorR,'u_hat')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
     if case_traj == 1
-        dis_p = [uf+direction*u; a_ks_end];
+        dis_p = [gu_left-gu_right; a_ks_end];
     elseif case_traj == 2
-        dis_p = [uf+direction*u; vf+direction*v;];
+        %dis_p = [gu_left-gu_right; gv_left-gv_right;pu_ort_eq;pv_ort_eqt];
+        dis_p_eqs = [gu_left-gu_right; gv_left-gv_right];
+        %dis_p_tr = [C1(bil(pu_end));C2(bil(pu_end));C1(bil(F'*pv_end));C2(bil(F'*pv_end))];
+        dis_p_tr=[pu_end'*ort_u;pv_end'*ort_v];
+        dis_p=[modifier_f*dis_p_eqs;modifier_f_2*dis_p_tr];
     end
-elseif  UorR == 'r'
+elseif  strcmp(UorR,'u')
+        %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
+    %direction - выбор положительного или отрицательного семейства
+    if case_traj == 1
+        dis_p = [uf-u_end; a_ks_end];
+    elseif case_traj == 2
+        dis_p = modifier_f*[uf-u_end; vf-v_end];
+    end
+elseif  strcmp(UorR,'r')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     if case_traj == 1
-        dis_p = [rf-r_end; pv;];
+        dis_p = [rf-r_end; pv_end;];
     elseif case_traj == 2
         dis_p = [rf-r_end; Vf-V_end;];
     end
 end
 %Сумма квадратов невязок, modifier_f влияет на сходимость
-dis = modifier_f*norm(dis_p)^2;
+%dis = modifier_f*norm(dis_p)^2;
+
+ceq = dis_p;
 end
 
