@@ -45,22 +45,24 @@ n=1;
 angle=0.5;
 rad=0;
 x0(11)=n+angle;
-modifier_p=1e-08;
-modifier_f=1e+08;
+modifier_p=1e-06;
+modifier_f=1e+8;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state);
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state);
 if terminal_state == 's'
     x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
 elseif terminal_state == 't'
     x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
 end
 
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks] = checkMethod(t_start,n+angle,rad,'u_hat',direction,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state);
-
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,'u_hat',direction,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state);
+evaluation_time=evaluation_time+evaluation_time_2;
+%Коррекция фи для графика
+phi=atan2(uu(end,4),uu(end,1));
 functional = Jt(end);
-[rr_cont, Jt_cont, C_cont, evaluation_time, dr_cont, dV_cont] =...
+[rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont] =...
     checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
@@ -218,6 +220,8 @@ hold off;
 %[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
 d = rr_old(:, 1:3)*ae-rr_cont;
 d_norm = vecnorm(d, 2, 2);
+
+
 
 disp(['Средняя разница в  координатах ', num2str(mean(d_norm),'%10.2e\n'), 'м'])
 disp(['Расход массы в KS-координатах ', num2str(m(1)-m(end)), 'кг'])

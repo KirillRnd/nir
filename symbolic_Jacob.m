@@ -59,7 +59,7 @@ symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,p
 
 y = 2*(u(1)*u(2)-u(3)*u(4));
 z = 2*(u(1)*u(3)+u(2)*u(4));
-g = [u(1)^2+u(4)^2; u(2)^2+u(3)^2; atan2(z,y)];
+g = [u(1)^2+u(4)^2; u(2)^2+u(3)^2; atan2(u(4),u(1))+atan2(u(3),u(2))];
 dgdu=jacobian(g,u);
 symFdgdu = matlabFunction(dgdu,'File','get_dgdu','Optimize',true, 'Vars', {u});
 
@@ -70,26 +70,14 @@ F = [[V(1) V(2) V(3) V(4)];
     [V(3) V(4) -V(1) -V(2)];
     [-V(4) V(3) -V(2) V(1)]];
 Fv = F^-1*v;
-gv(1)=v'*v;
-%gv(1)=simplify(Fv(1)^2+Fv(4)^2)*((V'*V)^2);
-%gv(2)=simplify(Fv(2)^2+Fv(3)^2)*((V'*V)^2);
-gv(2)=simplify(Fv(1)^2-Fv(2)^2-Fv(3)^2+Fv(4)^2);
-gv(3)=atan2(simplify(Fv(4)*(V'*V)), simplify(Fv(1)*(V'*V)))+...
-    atan2(simplify(Fv(3)*(V'*V)), simplify(Fv(2)*(V'*V)));
 
-dgdv=jacobian(gv,v);
-%не получится записать V(4)=0 
-V = sym('V', [1 3],'real')';
-symgv = matlabFunction(gv,'File','get_gv','Optimize', true, 'Vars', {v,V});
-symFdgdv = matlabFunction(dgdv,'File','get_dgdv','Optimize', true, 'Vars', {v,V});
+g=[L*u;L*v;];
+g=[g(1:3);g(5:7)];
+
+dgduv=jacobian(g,[u;v]);
+ortdgduv=null(dgduv);
 
 
-%Вторая формула для параметрической скорости
-L123=L(1:3,:);
-GR=L123*L123';
-v_proj_coef=GR\L123*v;
-v_proj=L123'*v_proj_coef;
-v_ort=simplify(v-v_proj);
-v_ort_norm=simplify(norm(v_ort)^2);
-v_b=[v(4); -v(3); v(2); -v(1)];
-u_v=simplify(F^-1*v);
+matlabFunction(g,'File','get_target_g','Optimize', false, 'Vars', {u,v});
+matlabFunction(dgduv,'File','get_dgduv','Optimize', false, 'Vars', {u,v});
+matlabFunction(ortdgduv,'File','get_ortdgduv','Optimize', false, 'Vars', {u,v});

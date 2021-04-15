@@ -81,64 +81,11 @@ Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 uf=rToU(rf, phi);
 vf=vFromV(Vf,rf,mug,phi);
 hf=norm(Vf)^2/2-mug/norm(rf);
-x=rf(1);
-y=rf(2);
-z=rf(3);
-
-R1=sqrt(0.5*(norm(rf)+x));
-R2=sqrt(0.5*(norm(rf)-x));
-
-phi_end=atan2(u_end(4),u_end(1));
-gamma_end=atan2(u_end(3),u_end(2));
-theta_end=phi_end+gamma_end;
-if theta_end<0
-    theta_end=theta_end+2*pi;
-end
-thetaf = atan2(z,y);
-if thetaf<0
-    thetaf=thetaf+2*pi;
-end
-bil=@(x)[x(4); -x(3); x(2); -x(1)];
-C1=@(x)R1*x(1)+R2*(x(2)*cos(thetaf)+x(3)*sin(thetaf));
-C2=@(x)R1*x(4)+R2*(x(2)*sin(thetaf)-x(3)*cos(thetaf));
-%вычисляем невязку до u_hat
-gu_left=[u_end(1)^2+u_end(4)^2;
-    u_end(2)^2+u_end(3)^2;
-    theta_end];
-gu_right=[R1^2;R2^2;thetaf];
-
-dgdu = get_dgdu(uf);
-ort_u=null(dgdu);
-
-pu_proj_coef=dgdu*dgdu'\dgdu*pu_end;
-pu_proj=dgdu'*pu_proj_coef;
-%вычисляем проекцию на линейное подпространство 
-pu_ort=pu_end-pu_proj;
-%вычисляем невязку до v_hat
-gv_left=get_gv(v_end,V_end)';
-
-theta_end_v=gv_left(3);
-if theta_end_v<0
-    theta_end_v=theta_end_v+2*pi;
-end
-gv_left(3)=theta_end_v;
-gv_right=[Vf'*Vf*norm(rf)/(-8*hf); x/(-8*hf); thetaf];
-dgdv=get_dgdv(vf,Vf);
-ort_v=null(dgdv);
-pv_proj_coef=dgdv*dgdv'\dgdv*pv_end;
-pv_proj=dgdv'*pv_proj_coef;
-%вычисляем проекцию на линейное подпространство 
-pv_ort=pv_end-pv_proj;
-
-F = [[Vf(1) Vf(2) Vf(3) Vf(4)];
-    [Vf(2) -Vf(1) -Vf(4) Vf(3)];
-    [Vf(3) Vf(4) -Vf(1) -Vf(2)];
-    [-Vf(4) Vf(3) -Vf(2) Vf(1)]];
-
-pu_ort_eq=C1(bil(pu_end))^2+C2(bil(pu_end))^2;
-pv_ort_eq=C1(bil(F'*pv_end))^2+C2(bil(F'*pv_end))^2;
+g_left=get_target_g(u_end,v_end);
+g_right=[rf(1:3);0.5*Vf(1:3)*norm(rf)/sqrt(-2*hf)];
+ortdgduv=get_ortdgduv(u_end,v_end);
 %Оптимизриуем по параметрическим координатам или по физическим
-modifier_f_2=0;
+modifier_f_2=modifier_f;
 if strcmp(UorR,'u_hat')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
@@ -146,9 +93,10 @@ if strcmp(UorR,'u_hat')
         dis_p = [gu_left-gu_right; a_ks_end];
     elseif case_traj == 2
         %dis_p = [gu_left-gu_right; gv_left-gv_right;pu_ort_eq;pv_ort_eqt];
-        dis_p_eqs = [gu_left-gu_right; gv_left-gv_right];
+        dis_p_eqs = g_left-g_right;
         %dis_p_tr = [C1(bil(pu_end));C2(bil(pu_end));C1(bil(F'*pv_end));C2(bil(F'*pv_end))];
-        dis_p_tr=[pu_end'*ort_u;pv_end'*ort_v];
+        %dis_p_tr=[pu_end'*ort_u;pv_end'*ort_v];
+        dis_p_tr=[[pu_end;pv_end]'*ortdgduv]';
         dis_p=[modifier_f*dis_p_eqs;modifier_f_2*dis_p_tr];
     end
 elseif  strcmp(UorR,'u')

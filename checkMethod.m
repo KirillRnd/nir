@@ -111,7 +111,9 @@ elseif terminal_state == 't'
 end
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf, y0, options);
+dydy0=reshape(eye(20),[1 400]);
+[s,Y] = ode113(@(s,y) integrateTraectoryWithVariations(s,y,h0),int_s0sf,[y0, dydy0], options);
+y=Y(:,1:20);
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
 Jt = integrateFunctional(s, y, eta, h0);
@@ -146,13 +148,14 @@ end
 t = t - t(1);
 t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
 
-
+dfdy0 = reshape(Y(end,21:420),[20 20]);
 [mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
 mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
 
 dr=norm(ae*rr(end, 1:3)-mars_r_f(1:3)');
 dv=norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)');
-C=norm(x)*norm(grad)/fval;
+C=cond(dfdy0);
+%C=norm(x)*norm(grad)/fval;
 end
 
