@@ -60,14 +60,14 @@ h_end=y(end, 9)'+h0;
 tau=y(end, 10)';
 pu_end=y(end, 11:14)';
 pv_end=y(end, 15:18)';
-ph=y(end, 19)';
+ph_end=y(end, 19)';
 ptau=y(end, 20)';
 
 t_end = T_unit*(tau-2*(u_end'*v_end)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
 r_end=KS(u_end);
 L_end = L_KS(u_end);
 V_end = 2*sqrt(-2*h_end)*L_end*v_end/(norm(u_end)^2);
-a_ks_end=L_end*(-(u2)*pv_end/(4*h_end) + v_end*(2*ph-(1/h_end)*pv_end'*v_end)+ptau*(u2)*u_end/((-2*h_end)^(3/2)));
+a_ks_end=L_end*(-(u2)*pv_end/(4*h_end) + v_end*(2*ph_end-(1/h_end)*pv_end'*v_end)+ptau*(u2)*u_end/((-2*h_end)^(3/2)));
 
 %Получаем координату и скорость планеты в эфемеридах и поворачиваем систеу
 %координат
@@ -81,9 +81,9 @@ Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 uf=rToU(rf, phi);
 vf=vFromV(Vf,rf,mug,phi);
 hf=norm(Vf)^2/2-mug/norm(rf);
-g_left=get_target_g(u_end,v_end);
-g_right=[rf(1:3);0.5*Vf(1:3)*norm(rf)/sqrt(-2*hf)];
-ortdgduv=get_ortdgduv(u_end,v_end);
+g_left=get_target_g(u_end,v_end,h_end);
+g_right=[rf(1:3);Vf(1:3)];
+ortdgduv=get_ortdgduv(u_end,v_end,h_end);
 %Оптимизриуем по параметрическим координатам или по физическим
 modifier_f_2=modifier_f;
 if strcmp(UorR,'u_hat')
@@ -93,7 +93,7 @@ if strcmp(UorR,'u_hat')
         dis_p = [gu_left-gu_right; a_ks_end];
     elseif case_traj == 2
         %dis_p = [gu_left-gu_right; gv_left-gv_right;pu_ort_eq;pv_ort_eqt];
-        dis_p_eqs = g_left-g_right;
+        dis_p_eqs = [g_left-g_right];
         %dis_p_tr = [C1(bil(pu_end));C2(bil(pu_end));C1(bil(F'*pv_end));C2(bil(F'*pv_end))];
         %dis_p_tr=[pu_end'*ort_u;pv_end'*ort_v];
         dis_p_tr=[[pu_end;pv_end]'*ortdgduv]';
