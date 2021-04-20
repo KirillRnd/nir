@@ -1,4 +1,4 @@
-function Jt = integrateFunctional(s, y, eta,h0)
+function Jt = integrateFunctional(t, y, eta,h0)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %summ_J = zeros(length(s),1);
@@ -12,7 +12,6 @@ mug=1;
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
 a_ks=zeros(length(uu),4);
-t=zeros(length(uu),1);
 VV=zeros(length(uu),4);
 for i = 1:length(uu)
     u = uu(i,:)';
@@ -33,9 +32,7 @@ for i = 1:length(uu)
     %aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
     aa_ks=a_reactive(u,v,h,pu,pv,ph,ptau);
     a_ks(i, :)=aa_ks/a_unit;
-    t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
-t = t - t(1);
 %eta=0.45;
 a_vec=vecnorm(a_ks(:,1:3), 2, 2).^2;
 Jt = cumtrapz(t, a_vec)/(2*eta);

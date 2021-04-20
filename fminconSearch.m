@@ -5,14 +5,14 @@
 %end
 t_start = juliandate(2022,0,0);
 %t_start=0;
-terminal_state = 't';
+terminal_state = 's';
 UorR = 'u';
 N=1350;
 m0=367;
 eta=0.45;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=2;
+case_traj=1;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 
 direction = -1;
@@ -45,19 +45,24 @@ n=1;
 angle=0.5;
 rad=0;
 x0(11)=n+angle;
-modifier_p=1e-06;
+modifier_p=1e-04;
 modifier_f=1e+08;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
+terminal_state = 't';
+UorR = 'u';
+rad=1/16;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state);
 if terminal_state == 's'
     x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
 elseif terminal_state == 't'
     x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
 end
-
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,'u_hat',direction,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state);
+terminal_state = 't';
+UorR = 'u_hat';
+rad=0;
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state);
 evaluation_time=evaluation_time+evaluation_time_2;
 %Коррекция фи для графика
 phi=atan2(uu(end,4),uu(end,1));

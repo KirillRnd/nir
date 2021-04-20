@@ -33,7 +33,7 @@ y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
 t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
-acc=1e-10;
+acc=1e-14;
 options = odeset('AbsTol',acc);
 options = odeset(options,'RelTol',acc);
 options = odeset(options,'NonNegative', 10);
@@ -44,7 +44,7 @@ elseif terminal_state == 't'
 end
 
 warning('off','all');
-int_s0sf = linspace(0, s_f, 10);
+int_s0sf = linspace(0, s_f, 100);
 [s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), int_s0sf, y0, options);
 
 ub_matrix=[y(:, 4), -y(:, 3), y(:, 2), -y(:, 1)];
@@ -57,17 +57,17 @@ u_end=y(end, 1:4)';
 u2=u_end'*u_end;
 v_end=y(end, 5:8)';
 h_end=y(end, 9)'+h0;
-tau=y(end, 10)';
+tau_end=y(end, 10)';
 pu_end=y(end, 11:14)';
 pv_end=y(end, 15:18)';
 ph_end=y(end, 19)';
-ptau=y(end, 20)';
+ptau_end=y(end, 20)';
 
-t_end = T_unit*(tau-2*(u_end'*v_end)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
+t_end = T_unit*(tau_end-2*(u_end'*v_end)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
 r_end=KS(u_end);
 L_end = L_KS(u_end);
 V_end = 2*sqrt(-2*h_end)*L_end*v_end/(norm(u_end)^2);
-a_ks_end=L_end*(-(u2)*pv_end/(4*h_end) + v_end*(2*ph_end-(1/h_end)*pv_end'*v_end)+ptau*(u2)*u_end/((-2*h_end)^(3/2)));
+a_ks_end=L_end*(-(u2)*pv_end/(4*h_end) + v_end*(2*ph_end-(1/h_end)*pv_end'*v_end)+ptau_end*(u2)*u_end/((-2*h_end)^(3/2)));
 
 %Получаем координату и скорость планеты в эфемеридах и поворачиваем систеу
 %координат
@@ -81,23 +81,32 @@ Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 uf=rToU(rf, phi);
 vf=vFromV(Vf,rf,mug,phi);
 hf=norm(Vf)^2/2-mug/norm(rf);
-g_left=get_target_g(u_end,v_end,h_end);
-g_right=[rf(1:3);Vf(1:3)];
-ortdgduv=get_ortdgduv(u_end,v_end,h_end);
+if case_traj == 1
+    g_left=get_target_g_u(u_end);
+    g_right=rf(1:3);
+    ortdgdu=get_ortdgdu(u_end);
+elseif case_traj == 2
+    g_left=get_target_g(u_end,v_end,h_end);
+    g_right=[rf(1:3);Vf(1:3)];
+    ortdgduv=get_ortdgduv(u_end,v_end,h_end);
+end
+
 %Оптимизриуем по параметрическим координатам или по физическим
-modifier_f_2=modifier_f;
+
 if strcmp(UorR,'u_hat')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
     if case_traj == 1
-        dis_p = [gu_left-gu_right; a_ks_end];
+        dis_p_eqs = g_left-g_right;
+        dis_p_tr = [pu_end'*ortdgdu]';
+        dis_p = [dis_p_eqs(1:3); dis_p_tr; a_ks_end];
     elseif case_traj == 2
         %dis_p = [gu_left-gu_right; gv_left-gv_right;pu_ort_eq;pv_ort_eqt];
-        dis_p_eqs = [g_left-g_right];
+        dis_p_eqs = g_left-g_right;
         %dis_p_tr = [C1(bil(pu_end));C2(bil(pu_end));C1(bil(F'*pv_end));C2(bil(F'*pv_end))];
         %dis_p_tr=[pu_end'*ort_u;pv_end'*ort_v];
         dis_p_tr=[[pu_end;pv_end]'*ortdgduv]';
-        dis_p=[modifier_f*dis_p_eqs;modifier_f_2*dis_p_tr];
+        dis_p=[dis_p_eqs;dis_p_tr];
     end
 elseif  strcmp(UorR,'u')
         %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
@@ -118,6 +127,6 @@ end
 %Сумма квадратов невязок, modifier_f влияет на сходимость
 %dis = modifier_f*norm(dis_p)^2;
 
-ceq = dis_p;
+ceq = modifier_f*dis_p;
 end
 

@@ -102,8 +102,9 @@ t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60)
 int_s0sf = linspace(0, s_f, 1e+3);
 time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
-options = odeset('AbsTol',1e-14);
-options = odeset(options,'RelTol',1e-14);
+acc=1e-14;
+options = odeset('AbsTol',acc);
+options = odeset(options,'RelTol',acc);
 if terminal_state == 's'
     options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
 elseif terminal_state == 't'
@@ -116,7 +117,7 @@ dydy0=reshape(eye(20),[1 400]);
 y=Y(:,1:20);
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
-Jt = integrateFunctional(s, y, eta, h0);
+
 t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
@@ -146,6 +147,7 @@ for i = 1:length(uu)
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
 t = t - t(1);
+Jt = integrateFunctional(t, y, eta, h0);
 t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
 
 dfdy0 = reshape(Y(end,21:420),[20 20]);
