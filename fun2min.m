@@ -99,7 +99,7 @@ if strcmp(UorR,'u_hat')
     if case_traj == 1
         dis_p_eqs = g_left-g_right;
         dis_p_tr = [pu_end'*ortdgdu]';
-        dis_p = [dis_p_eqs(1:3); dis_p_tr; a_ks_end];
+        dis_p = [dis_p_eqs(1:3); dis_p_tr; pv_end];
     elseif case_traj == 2
         %dis_p = [gu_left-gu_right; gv_left-gv_right;pu_ort_eq;pv_ort_eqt];
         dis_p_eqs = g_left-g_right;
@@ -112,7 +112,7 @@ elseif  strcmp(UorR,'u')
         %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
     if case_traj == 1
-        dis_p = [uf-u_end; a_ks_end];
+        dis_p = [uf-u_end; pv_end];
     elseif case_traj == 2
         dis_p = modifier_f*[uf-u_end; vf-v_end];
     end

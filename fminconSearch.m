@@ -12,7 +12,7 @@ m0=367;
 eta=0.45;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
-case_traj=1;
+case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 
 direction = -1;
@@ -42,7 +42,7 @@ planet_end = 'Mars';
 mug=1;
 
 n=1;
-angle=0.5;
+angle=0.7;
 rad=0;
 x0(11)=n+angle;
 modifier_p=1e-04;
@@ -50,9 +50,9 @@ modifier_f=1e+08;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
-terminal_state = 't';
+terminal_state = 's';
 UorR = 'u';
-rad=1/16;
+rad=1/8;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,n+angle,rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state);
 if terminal_state == 's'
     x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
