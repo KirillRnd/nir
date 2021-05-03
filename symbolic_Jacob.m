@@ -91,8 +91,3 @@ ortdgduv=null(dgduv);
 matlabFunction(g,'File','get_target_g_u','Optimize', true, 'Vars', {u});
 matlabFunction(dgduv,'File','get_dgdu','Optimize', true, 'Vars', {u});
 matlabFunction(ortdgduv,'File','get_ortdgdu','Optimize', true, 'Vars', {u});
-
-
-
-
-

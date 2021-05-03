@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,direction,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,decreaseUnPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -35,7 +35,7 @@ mug=1;
 
 % modifier_p=1e-04;
 % modifier_f=1e+04;
-modifier_b=1e+13;
+modifier_b=1e+14;
 
 s_a = psi-rad;
 s_b = psi+rad;
@@ -60,7 +60,7 @@ end
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,direction,terminal_state);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseUnPsysical,terminal_state,integration_acc);
 
 options = optimoptions('fmincon','UseParallel', true);
 if display == 1
@@ -68,9 +68,9 @@ if display == 1
 end
 options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'StepTolerance', 1e-12);
+options = optimoptions(options, 'StepTolerance', 1e-10);
 options = optimoptions(options, 'ConstraintTolerance', 1e-12);
-options = optimoptions(options, 'MaxIterations', 400);
+options = optimoptions(options, 'MaxIterations', 100);
 options = optimoptions(options,'OutputFcn',@myoutput);
 
 [x,fval,exitflag,output,lambda,grad,hessian] = fmincon(@(x)1, x0, A, b, Aeq, beq, lb, ub, fun, options);
@@ -79,7 +79,7 @@ px = x(1:10)*modifier_p;
 if terminal_state == 's'
     s_f=x(11)*2*pi;
 elseif terminal_state == 't'
-    t_end=x(11)*365.256363004;
+    t_end_0=x(11)*365.256363004;
     s_f=1.5*x(11)*2*pi;
 end
 phi = x(12)*2*pi;
@@ -102,19 +102,23 @@ t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60)
 int_s0sf = linspace(0, s_f, 1e+3);
 time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
-acc=1e-14;
+acc=integration_acc;
 options = odeset('AbsTol',acc);
 options = odeset(options,'RelTol',acc);
+%максимальное время интегрирования
+maxtime=100;
 if terminal_state == 's'
-    options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
+    options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0, maxtime));
 elseif terminal_state == 't'
-    options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0, t_end, h0, t_start_fix));
+    options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0, h0, t_start_fix));
 end
 %Интегрируем, используя сопряженные переменные из fmincon
 
 dydy0=reshape(eye(20),[1 400]);
 [s,Y] = ode113(@(s,y) integrateTraectoryWithVariations(s,y,h0),int_s0sf,[y0, dydy0], options);
 y=Y(:,1:20);
+%[s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf,y0, options);
+
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
 
@@ -148,8 +152,12 @@ for i = 1:length(uu)
 end
 t = t - t(1);
 Jt = integrateFunctional(t, y, eta, h0);
-t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
 
+if terminal_state == 's'
+    t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
+elseif terminal_state == 't'
+    t_end = t_end_0;
+end
 dfdy0 = reshape(Y(end,21:420),[20 20]);
 [mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
 mars_r_f=rotmZYX*mars_r_f'*1e+03;

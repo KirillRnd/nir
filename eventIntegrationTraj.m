@@ -1,8 +1,8 @@
-function [value, isterminal, direction] = eventIntegrationTraj(s, y, time0)
+function [value, isterminal, direction] = eventIntegrationTraj(s, y, time0,maxtime)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-value = 10-toc(time0);
+value = maxtime-toc(time0);
 if value < 0
     value=0;
 end

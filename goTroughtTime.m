@@ -1,13 +1,14 @@
 %Ёот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
-display=0;
+display=1;
 terminal_state = 's';
 UorR='u';
 N=1350;
 m0=367;
 eta=0.45;
-step = 1/8;
-ds = 1/2:step:2/2;
+case_traj = 2;
+step = 1/4;
+ds = 3/2:step:5/2;
 rad = step/2;
 L=length(ds);
 T=zeros([1,L]);
@@ -24,7 +25,7 @@ M_cont=zeros([1,L]);
 %–азница по координатам вдоль траектории
 D=zeros([1,L]);
 PX=zeros([10,L]);
-case_traj = 2;
+
 x0=zeros([1, 12]);
 warning('off');
 planet_start = 'Earth';
@@ -37,11 +38,31 @@ for i=1:L
     %случа€
     i
     ds(i)
-    UorR = 'u';
-    modifier_p=1e-06;
+    x0=zeros([1, 12]);
+    x0(11)=ds(i);
     modifier_f=1e+08;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
-    T(i)=evaluation_time;
+    modifier_p=1e-06;
+    integration_acc=1e-12;
+    terminal_state = 's';
+    UorR = 'u';
+    rad=1/8;
+    initDist=initialDistance(t_start,ds(i)*365.256363004,planet_start,planet_end)/ae;
+    
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+    modifier_p=1e-07;
+    if terminal_state  == 's'
+        x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
+    elseif terminal_state == 't'
+        x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
+    end
+    
+    
+    terminal_state = 't';
+    UorR = 'u_hat';
+    integration_acc=1e-14;
+    rad=0;
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+    evaluation_time=evaluation_time+evaluation_time_2;T(i)=evaluation_time;
     DR(i)=dr;
     DV(i)=dV;
     CONV(i)=C;
@@ -52,44 +73,44 @@ for i=1:L
     T_END(i)=t_end;
     M(i)=m(1)-m(end);
     %пробуем уменьшить масштаб
-    if DR(i)>1e+07 && UorR == 'u'
-        modifier_f=1e+06;
-        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] ...
-            = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
-        if dr<DR(i)
-            T(i)=evaluation_time;
-            DR(i)=dr;
-            DV(i)=dV;
-            CONV(i)=C;
-            PX(:,i)=px;
-            SF(i)=s_f;
-            PHI(i)=phi;
-            m=massLP(Jt, m0, N);
-            T_END(i)=t_end;
-            M(i)=m(1)-m(end);
-        else
-            modifier_f=1e+08;
-        end
-    end
-    if DR(i)>1e+07 && UorR == 'u'
-        modifier_f=1e+04;
-        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] ...
-            = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
-        if dr<DR(i)
-            T(i)=evaluation_time;
-            DR(i)=dr;
-            DV(i)=dV;
-            CONV(i)=C;
-            PX(:,i)=px;
-            SF(i)=s_f;
-            PHI(i)=phi;
-            m=massLP(Jt, m0, N);
-            T_END(i)=t_end;
-            M(i)=m(1)-m(end);
-        else
-            modifier_f=1e+08;
-        end
-    end
+%     if DR(i)>1e+07 && UorR == 'u'
+%         modifier_f=1e+06;
+%         [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] ...
+%             = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
+%         if dr<DR(i)
+%             T(i)=evaluation_time;
+%             DR(i)=dr;
+%             DV(i)=dV;
+%             CONV(i)=C;
+%             PX(:,i)=px;
+%             SF(i)=s_f;
+%             PHI(i)=phi;
+%             m=massLP(Jt, m0, N);
+%             T_END(i)=t_end;
+%             M(i)=m(1)-m(end);
+%         else
+%             modifier_f=1e+08;
+%         end
+%     end
+%     if DR(i)>1e+07 && UorR == 'u'
+%         modifier_f=1e+04;
+%         [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] ...
+%             = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
+%         if dr<DR(i)
+%             T(i)=evaluation_time;
+%             DR(i)=dr;
+%             DV(i)=dV;
+%             CONV(i)=C;
+%             PX(:,i)=px;
+%             SF(i)=s_f;
+%             PHI(i)=phi;
+%             m=massLP(Jt, m0, N);
+%             T_END(i)=t_end;
+%             M(i)=m(1)-m(end);
+%         else
+%             modifier_f=1e+08;
+%         end
+%     end
     
 end
 
@@ -192,6 +213,7 @@ t0=0;
 
 u0 = rToU(r0, 0);
 v0 = vFromV(V0,r0,mug, 0);
+terminal_state = 't';
 disp('--------------------')
 for i=1:L
     px = PX(:,i);
@@ -208,10 +230,11 @@ for i=1:L
     int_s0sf = linspace(0, s_f, 1e+03);
     time0 = tic;
     options = odeset('AbsTol',1e-10);
+    maxtime=100;
     if terminal_state == 's'
-        options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0));
+        options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0,maxtime));
     elseif terminal_state == 't'
-        options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0, t_end, h0, t_start_fix));
+        options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end, h0, t_start_fix));
     end
     options = odeset(options,'RelTol',1e-10);
     %»нтегрируем, использу€ сопр€женные переменные из fmincon
