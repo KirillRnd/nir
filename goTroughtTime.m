@@ -8,7 +8,7 @@ m0=367;
 eta=0.45;
 case_traj = 2;
 step = 1/4;
-ds = 3/2:step:5/2;
+ds = 4/2:step:5/2;
 rad = step/2;
 L=length(ds);
 T=zeros([1,L]);
@@ -30,8 +30,7 @@ x0=zeros([1, 12]);
 warning('off');
 planet_start = 'Earth';
 planet_end = 'Mars';
-%Положительное или отрицательное семейство
-direction = -1;
+decreaseUnPsysical = 0;
 
 for i=1:L
     %Ищем наименьшую невязку по координате среди 4-х методов для каждого
@@ -40,29 +39,30 @@ for i=1:L
     ds(i)
     x0=zeros([1, 12]);
     x0(11)=ds(i);
-    modifier_f=1e+08;
-    modifier_p=1e-06;
+    modifier_p=1e-02;
+    modifier_f=1e+04;
     integration_acc=1e-12;
+    %Одиночный запуск метода и получение всех необходимых для графиков
+    %переменных
+    display = 1;
     terminal_state = 's';
     UorR = 'u';
     rad=1/8;
-    initDist=initialDistance(t_start,ds(i)*365.256363004,planet_start,planet_end)/ae;
-    
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
-    modifier_p=1e-07;
-    if terminal_state  == 's'
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+
+
+    if terminal_state == 's'
         x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
     elseif terminal_state == 't'
         x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
     end
-    
-    
     terminal_state = 't';
     UorR = 'u_hat';
     integration_acc=1e-14;
     rad=0;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
-    evaluation_time=evaluation_time+evaluation_time_2;T(i)=evaluation_time;
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,ds(i),rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+    evaluation_time=evaluation_time+evaluation_time_2;
+    T(i)=evaluation_time;
     DR(i)=dr;
     DV(i)=dV;
     CONV(i)=C;
@@ -180,7 +180,6 @@ th = linspace(0 ,4*pi,1000)';
 
 mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
 mars_traj_ks = cell2mat(mars_traj_ks')';
-mars_traj_ks=-mars_traj_ks*direction;
 earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
 earth_traj_ks = cell2mat(earth_traj_ks')';
 plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
@@ -304,16 +303,16 @@ for i=1:L
     plot3(uu(:, 1), uu(:, 2), uu(:, 3), 'b', 'LineWidth', 2.5);
     plot3(uu(end, 1), uu(end, 2), uu(end, 3), 'bO');
     hold off;
+    d = cmp2Trajectories(rr_old(:, 1:3)*ae,rr_cont)/ae;
     
-    d = rr_old(:, 1:3)*ae-rr_cont;
-    d_norm = mean(vecnorm(d, 2, 2));
-    D(i)=d_norm;
+    D(i)=d;
     disp(['Величина мнимого времени ', num2str(ds(i)*2*pi,'%10.2f\n'), ' рад.'])
     disp(['Невязка по координате предложенного метода ', num2str(DR(i),'%10.2e\n'), 'м.'])
+    disp(['Невязка по скорости предложенного метода ', num2str(DV(i),'%10.2e\n'), 'м/с'])
     disp(['Время работы предложенного метода ', num2str(T(i),'%10.2f\n'), 'сек.'])
     disp(['Время работы метода продолжения по параметру ', num2str(T_cont(i),'%10.2f\n'), 'сек.'])
     disp(['Затраты массы предложенного метода ', num2str(M(i),'%10.2f\n'), 'кг.'])
     disp(['Затраты массы метода продолжения по параметру ', num2str(M_cont(i),'%10.2f\n'), 'кг.'])
-    disp(['Средняя разница в координатах ', num2str(D(i),'%10.2e\n'), 'м.'])
+    disp(['Средняя разница в координатах ', num2str(D(i),'%10.2e\n'), 'а.е.'])
     disp('--------------------')
 end

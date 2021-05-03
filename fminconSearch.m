@@ -42,10 +42,10 @@ planet_end = 'Mars';
 mug=1;
 
 n=2;
-angle=0;
+angle=0.5;
 x0(11)=n+angle;
-modifier_p=1e-06;
-modifier_f=1e+08;
+modifier_p=1e-02;
+modifier_f=1e+04;
 integration_acc=1e-12;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
@@ -61,7 +61,7 @@ if terminal_state == 's'
 elseif terminal_state == 't'
     x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
 end
-modifier_p=1e-08;
+%modifier_p=1e-08;
 terminal_state = 't';
 UorR = 'u_hat';
 integration_acc=1e-14;
