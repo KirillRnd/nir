@@ -1,14 +1,13 @@
 %Эот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,0,0);
 display=1;
-terminal_state = 's';
 UorR='u';
 N=1350;
 m0=367;
 eta=0.45;
 case_traj = 2;
 step = 1/4;
-ds = 4/2:step:5/2;
+ds = 1/2:step:10/2;
 rad = step/2;
 L=length(ds);
 T=zeros([1,L]);
@@ -17,6 +16,7 @@ T_END=zeros([1,L]);
 DR=zeros([1,L]);
 DV=zeros([1,L]);
 CONV=zeros([1,L]);
+CONV_CONT=zeros([1,L]);
 SF=zeros([1,L]);
 PHI=zeros([1,L]);
 %Затраты массы
@@ -25,6 +25,7 @@ M_cont=zeros([1,L]);
 %Разница по координатам вдоль траектории
 D=zeros([1,L]);
 PX=zeros([10,L]);
+S=zeros([1,L]);
 
 x0=zeros([1, 12]);
 warning('off');
@@ -44,10 +45,11 @@ for i=1:L
     integration_acc=1e-12;
     %Одиночный запуск метода и получение всех необходимых для графиков
     %переменных
-    display = 1;
     terminal_state = 's';
     UorR = 'u';
     rad=1/8;
+    decreaseUnPsysical=0;
+    %delta_s=1.23*ds(i)-0.24;
     [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
 
 
@@ -56,13 +58,16 @@ for i=1:L
     elseif terminal_state == 't'
         x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
     end
-    terminal_state = 't';
+    terminal_state = 's';
     UorR = 'u_hat';
     integration_acc=1e-14;
     rad=0;
+    decreaseUnPsysical=0;
     [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,ds(i),rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
     evaluation_time=evaluation_time+evaluation_time_2;
+    
     T(i)=evaluation_time;
+    S(i)=s(end);
     DR(i)=dr;
     DV(i)=dV;
     CONV(i)=C;
@@ -72,46 +77,6 @@ for i=1:L
     m=massLP(Jt, m0, N);
     T_END(i)=t_end;
     M(i)=m(1)-m(end);
-    %пробуем уменьшить масштаб
-%     if DR(i)>1e+07 && UorR == 'u'
-%         modifier_f=1e+06;
-%         [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] ...
-%             = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
-%         if dr<DR(i)
-%             T(i)=evaluation_time;
-%             DR(i)=dr;
-%             DV(i)=dV;
-%             CONV(i)=C;
-%             PX(:,i)=px;
-%             SF(i)=s_f;
-%             PHI(i)=phi;
-%             m=massLP(Jt, m0, N);
-%             T_END(i)=t_end;
-%             M(i)=m(1)-m(end);
-%         else
-%             modifier_f=1e+08;
-%         end
-%     end
-%     if DR(i)>1e+07 && UorR == 'u'
-%         modifier_f=1e+04;
-%         [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] ...
-%             = checkMethod(t_start,ds(i),rad,UorR,direction,modifier_p,modifier_f,x0,eta, case_traj,planet_end,display,terminal_state);
-%         if dr<DR(i)
-%             T(i)=evaluation_time;
-%             DR(i)=dr;
-%             DV(i)=dV;
-%             CONV(i)=C;
-%             PX(:,i)=px;
-%             SF(i)=s_f;
-%             PHI(i)=phi;
-%             m=massLP(Jt, m0, N);
-%             T_END(i)=t_end;
-%             M(i)=m(1)-m(end);
-%         else
-%             modifier_f=1e+08;
-%         end
-%     end
-    
 end
 
 %нанесём получивщиеся траектории
@@ -215,6 +180,9 @@ v0 = vFromV(V0,r0,mug, 0);
 terminal_state = 't';
 disp('--------------------')
 for i=1:L
+    if DR(i)>1e+02
+        continue
+    end
     px = PX(:,i);
     if terminal_state == 's'
         s_f=SF(i);
@@ -261,7 +229,7 @@ for i=1:L
         pu=y(j, 11:14)';
         pv=y(j, 15:18)';
         ph=y(j, 19)';
-        ptau=y(i, 20)';
+        ptau=y(j, 20)';
         dtds=u2/sqrt(-2*h);
         aa_ks=L_tmp*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
         a_ks(j, :)=aa_ks/(ae/sqrt(mug_0)).^2;
@@ -280,6 +248,7 @@ for i=1:L
 
     t = t - t(1);
     [rr_cont, Jt_cont, C_cont, T_cont(i), dr_cont, dV_cont] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
+    CONV_CONT(i)=C_cont;
     functional_cont = Jt_cont(end);
     m_cont=massLP(Jt_cont, m0, N);
     M_cont(i)=m_cont(1)-m_cont(end);
@@ -313,6 +282,8 @@ for i=1:L
     disp(['Время работы метода продолжения по параметру ', num2str(T_cont(i),'%10.2f\n'), 'сек.'])
     disp(['Затраты массы предложенного метода ', num2str(M(i),'%10.2f\n'), 'кг.'])
     disp(['Затраты массы метода продолжения по параметру ', num2str(M_cont(i),'%10.2f\n'), 'кг.'])
-    disp(['Средняя разница в координатах ', num2str(D(i),'%10.2e\n'), 'а.е.'])
+    disp(['Максимальная разница в координатах ', num2str(D(i),'%10.2e\n'), 'а.е.'])
+    disp(['Число обусловленности в KS-переменных ', num2str(CONV(i),'%10.2e\n')])
+    disp(['Число обусловленности в методе продолжения ', num2str(CONV_CONT(i),'%10.2e\n')])
     disp('--------------------')
 end

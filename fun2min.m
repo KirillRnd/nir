@@ -21,9 +21,9 @@ pt0=x(10);
 if terminal_state == 's'
     s_f=x(11)*2*pi;
 elseif terminal_state == 't'
-    t_end_0=x(11)*365.256363004;
     s_f=15*x(11)*2*pi;
 end
+t_end_0=x(11)*365.256363004;
 phi=x(12)*2*pi;
 phi0=0;
 u0 = rToU(r0, phi0);
@@ -135,7 +135,7 @@ elseif  strcmp(UorR,'u')
     if case_traj == 1
         dis_p = [uf-u_end; pv_end];
     elseif case_traj == 2
-        dis_p = [uf-u_end; vf-v_end];
+        dis_p = [uf-u_end; vf-v_end;];
     end
 elseif  strcmp(UorR,'r')
     %ÇÀÄÀ×À ÏĞÎË¨ÒÀ èëè ÇÀÄÀ×À ÑÎÏĞÎÂÎÆÄÅÍÈß

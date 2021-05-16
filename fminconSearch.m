@@ -41,7 +41,7 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=2;
+n=1;
 angle=0.5;
 x0(11)=n+angle;
 modifier_p=1e-02;
@@ -53,7 +53,10 @@ display = 1;
 terminal_state = 's';
 UorR = 'u';
 rad=1/8;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,n+angle,rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+%delta_s=1.23*(n+angle)-0.24;
+%delta_s=1.2*(n+angle)-0.2;
+delta_s=n+angle;
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
 
 
 if terminal_state == 's'
@@ -62,12 +65,15 @@ elseif terminal_state == 't'
     x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
 end
 %modifier_p=1e-08;
-terminal_state = 't';
+terminal_state = 's';
 UorR = 'u_hat';
 integration_acc=1e-14;
 rad=0;
+decreaseUnPsysical=1;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
 evaluation_time=evaluation_time+evaluation_time_2;
+
+
 
 %убрать четвёртые координаты
 

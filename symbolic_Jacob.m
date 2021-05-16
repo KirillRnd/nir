@@ -22,7 +22,8 @@ dLudu = jacobian(L*u, u');
 
 dtds=u2/sqrt(-2*h);
 a = sym('a', [1 4],'real')';
-%a=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
+%Данная запись управления совпадает с находимой дальше
+%a=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*((u2)*u+8*(u'*v)*v)/((-2*h)^(3/2)))/dtds;
 
 duds=v;
 dhds=2*v'*L'*a;
