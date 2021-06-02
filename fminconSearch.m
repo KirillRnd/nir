@@ -15,11 +15,11 @@ eta=0.45;
 case_traj=2;
 %¬ыбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 
-decreaseUnPsysical = 0;
+decreaseNonPsysical = 0;
 %Ќачальные услови€
 x0=zeros([1, 12]);
 
-x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
+%x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
 b = [];
 Aeq = [];
@@ -44,6 +44,7 @@ mug=1;
 n=1;
 angle=0.5;
 x0(11)=n+angle;
+%x0(12)=x0(11)/2;
 modifier_p=1e-02;
 modifier_f=1e+04;
 integration_acc=1e-12;
@@ -56,7 +57,7 @@ rad=1/8;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
 
 
 if terminal_state == 's'
@@ -69,8 +70,8 @@ terminal_state = 's';
 UorR = 'u_hat';
 integration_acc=1e-14;
 rad=0;
-decreaseUnPsysical=1;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+decreaseNonPsysical=1;
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
 evaluation_time=evaluation_time+evaluation_time_2;
 
 
@@ -83,8 +84,8 @@ evaluation_time=evaluation_time+evaluation_time_2;
 %     x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
 % end
 % 
-% decreaseUnPsysical = 1;
-% [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_3] = checkMethod(t_start,n+angle,rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+% decreaseNonPsysical = 1;
+% [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_3] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
 % evaluation_time=evaluation_time+evaluation_time_3;
 
 

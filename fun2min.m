@@ -1,4 +1,4 @@
-function [c, ceq] = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseUnPsysical,terminal_state, integration_acc)
+function [c, ceq] = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state, integration_acc)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -147,7 +147,7 @@ elseif  strcmp(UorR,'r')
 end
 %Сумма квадратов невязок, modifier_f влияет на сходимость
 %dis = modifier_f*norm(dis_p)^2;
-if decreaseUnPsysical == 1
+if decreaseNonPsysical == 1
     % time0 = tic;
     %максимальное время интегрирования
     maxtime=10;
