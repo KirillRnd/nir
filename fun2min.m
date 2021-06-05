@@ -120,10 +120,7 @@ if strcmp(UorR,'u_hat')
         dis_p_tr = [pu_end'*ortdgdu]';
         dis_p = [dis_p_eqs(1:3); dis_p_tr; pv_end];
     elseif case_traj == 2
-        %dis_p = [gu_left-gu_right; gv_left-gv_right;pu_ort_eq;pv_ort_eqt];
         dis_p_eqs = g_left-g_right;
-        %dis_p_tr = [C1(bil(pu_end));C2(bil(pu_end));C1(bil(F'*pv_end));C2(bil(F'*pv_end))];
-        %dis_p_tr=[pu_end'*ort_u;pv_end'*ort_v];
         dis_p_tr=[[pu_end;pv_end]'*ortdgduv]';
        
         dis_p=[dis_p_eqs;dis_p_tr];
