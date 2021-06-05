@@ -287,3 +287,17 @@ for i=1:L
     disp(['Число обусловленности в методе продолжения ', num2str(CONV_CONT(i),'%10.2e\n')])
     disp('--------------------')
 end
+
+figure(6);
+hold on;
+
+plot(S/(2*pi),M,'*')
+plot(S/(2*pi),M_cont,'+')
+plot([0, 5.5],[m0, m0],'k')
+
+xlim([0 5.5])
+
+xlabel("Число витков")
+ylabel("Расход топлива, dm, кг,")
+set(gca,'FontSize',14)
+hold off;
