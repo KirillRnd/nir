@@ -4,6 +4,8 @@ function v = vFromV(V, r, mug, phi)
 u = rToU(r, phi);
 L = L_KS(u); 
 h = (norm(V)^2)/2-mug/norm(r);
-v = L'*V/(2*sqrt(-2*h));
+dtds=u'*u/sqrt(-2*h);
+dxds=V*dtds;
+v = L'*dxds/(2*u'*u);
 end
 

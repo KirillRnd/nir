@@ -42,7 +42,7 @@ planet_end = 'Mars';
 mug=1;
 
 n=1;
-angle=0.5;
+angle=0.0;
 x0(11)=n+angle;
 %x0(12)=x0(11)/2;
 modifier_p=1e-02;
@@ -70,7 +70,7 @@ terminal_state = 's';
 UorR = 'u_hat';
 integration_acc=1e-14;
 rad=0;
-decreaseNonPsysical=1;
+decreaseNonPsysical=0;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
 evaluation_time=evaluation_time+evaluation_time_2;
 
