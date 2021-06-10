@@ -75,17 +75,16 @@ F = [[V(1) V(2) V(3) V(4)];
     [V(3) V(4) -V(1) -V(2)];
     [-V(4) V(3) -V(2) V(1)]];
 Fv = F^-1*v;
-%h=-mug/(u'*u+4*v'*v);
-g=[L*u;2*sqrt(-2*h)*L*v/(u'*u)];
-g=[g(1:3);g(5:7)];
+g=[L*u;2*sqrt(-2*h)*L*v/(u'*u);h];
+g=[g(1:3);g(5:7);g(9)];
 
-dgduv=jacobian(g,[u;v]);
-ortdgduv=null(dgduv);
+dgduvh=jacobian(g,[u;v;h]);
+ortdgduvh=null(dgduvh);
 
 
-matlabFunction(g,'File','get_target_g','Optimize', true, 'Vars', {u,v,h});
-matlabFunction(dgduv,'File','get_dgduv','Optimize', true, 'Vars', {u,v,h});
-matlabFunction(ortdgduv,'File','get_ortdgduv','Optimize', true, 'Vars', {u,v,h});
+matlabFunction(g,'File','get_target_gh','Optimize', true, 'Vars', {u,v,h});
+matlabFunction(dgduvh,'File','get_dgduvh','Optimize', true, 'Vars', {u,v,h});
+matlabFunction(ortdgduvh,'File','get_ortdgduvh','Optimize', true, 'Vars', {u,v,h});
 
 g=g(1:3);
 

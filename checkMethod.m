@@ -96,9 +96,9 @@ L = L_KS(u0);
 v0 = vFromV(V0,r0,mug,0);
 
 tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-y0 = cat(1, u0, v0, 0, tau0,  px')';
+y0 = cat(1, u0, v0, h0, tau0,  px')';
 
-t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60);
+t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 int_s0sf = linspace(0, s_f, 1e+3);
 time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
@@ -122,7 +122,7 @@ dydy0=reshape(eye(20),[1 400]);
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
 
-t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
+t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)')))/(24*60*60);
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
 
@@ -136,7 +136,7 @@ for i = 1:length(uu)
     L=L_KS(u);
     u2=norm(u)^2;
     v=y(i, 5:8)';
-    h=y(i, 9)'+h0;
+    h=y(i, 9)';
     tau=y(i ,10)';
     pu=y(i, 11:14)';
     pv=y(i, 15:18)';
@@ -151,7 +151,7 @@ for i = 1:length(uu)
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
 t = t - t(1);
-Jt = integrateFunctional(t, y, eta, h0);
+Jt = integrateFunctional(t, y, eta);
 
 if terminal_state == 's'
     t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;

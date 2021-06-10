@@ -1,4 +1,4 @@
-function Jt = integrateFunctional(t, y, eta,h0)
+function Jt = integrateFunctional(t, y, eta)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %summ_J = zeros(length(s),1);
@@ -20,7 +20,7 @@ for i = 1:length(uu)
     L=L_KS(u);
     u2=norm(u)^2;
     v=y(i, 5:8)';
-    h=y(i, 9)'+h0;
+    h=y(i, 9)';
     tau=y(i ,10)';
     pu=y(i, 11:14)';
     pv=y(i, 15:18)';

@@ -30,9 +30,10 @@ u0 = rToU(r0, phi0);
 u_b0=[u0(4); -u0(3);u0(2);-u0(1)];
 h0 = (norm(V0)^2)/2-mug/norm(r0);
 v0 = vFromV(V0,r0,mug, phi0);
+%h0=-mug/(u0'*u0+4*v0'*v0)
 t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-y0 = cat(1, u0, v0, 0, t0, pu0, pv0, ph0, pt0)';
-t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60);
+y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
+t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
 %acc=1e-14;
@@ -72,7 +73,7 @@ u_end=y(end, 1:4)';
 u_b_end=[u_end(4); -u_end(3);u_end(2);-u_end(1)];
 u2=u_end'*u_end;
 v_end=y(end, 5:8)';
-h_end=y(end, 9)'+h0;
+h_end=y(end, 9)';
 tau_end=y(end, 10)';
 pu_end=y(end, 11:14)';
 pv_end=y(end, 15:18)';
@@ -107,9 +108,9 @@ if case_traj == 1
     g_right=rf(1:3);
     ortdgdu=get_ortdgdu(u_end);
 elseif case_traj == 2
-    g_left=get_target_g(u_end,v_end,h_end);
-    g_right=[rf(1:3);Vf(1:3)];
-    ortdgduv=get_ortdgduv(u_end,v_end,h_end);
+    g_left=get_target_gh(u_end,v_end,h_end);
+    g_right=[rf(1:3);Vf(1:3);hf];
+    ortdgduvh=get_ortdgduvh(u_end,v_end,h_end);
 end
 
 %Оптимизриуем по параметрическим координатам или по физическим
@@ -123,9 +124,8 @@ if strcmp(UorR,'u_hat')
         dis_p = [dis_p_eqs(1:3); dis_p_tr; pv_end];
     elseif case_traj == 2
         dis_p_eqs = g_left-g_right;
-        dis_p_tr=[[pu_end;pv_end]'*ortdgduv]';
-        dis_p=[dis_p_eqs;dis_p_tr];
-              
+        dis_p_tr=[[pu_end;pv_end;ph_end]'*ortdgduvh]';
+        dis_p=[dis_p_eqs;dis_p_tr];        
     end
 elseif  strcmp(UorR,'u')
         %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
