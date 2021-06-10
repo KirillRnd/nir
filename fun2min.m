@@ -27,6 +27,7 @@ t_end_0=x(11)*365.256363004;
 phi=x(12)*2*pi;
 phi0=0;
 u0 = rToU(r0, phi0);
+u_b0=[u0(4); -u0(3);u0(2);-u0(1)];
 h0 = (norm(V0)^2)/2-mug/norm(r0);
 v0 = vFromV(V0,r0,mug, phi0);
 t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
@@ -68,6 +69,7 @@ int_s0sf = linspace(0, s(end), 100);
 % ubTpv=diag(ub_matrix*pv_matrix');
 %Разбираем результат в конечный момент на переменные
 u_end=y(end, 1:4)';
+u_b_end=[u_end(4); -u_end(3);u_end(2);-u_end(1)];
 u2=u_end'*u_end;
 v_end=y(end, 5:8)';
 h_end=y(end, 9)'+h0;
@@ -122,7 +124,6 @@ if strcmp(UorR,'u_hat')
     elseif case_traj == 2
         dis_p_eqs = g_left-g_right;
         dis_p_tr=[[pu_end;pv_end]'*ortdgduv]';
-       
         dis_p=[dis_p_eqs;dis_p_tr];
               
     end
@@ -161,9 +162,9 @@ if decreaseNonPsysical == 1
     pv_matrix=[y(:, 15), y(:, 16), y(:, 17), y(:, 18)];
     ubTv=diag(ub_matrix*v_matrix');
     ubTpv=diag(ub_matrix*pv_matrix');
-    dis_ubT = zeros(200,1);
-    dis_ubT(1:length(ubTv))=ubTv;
-    dis_ubT(101:length(ubTpv)+100)=ubTpv;
+    dis_ubT = zeros(100,1);
+    dis_ubT(1:length(ubTv))=ubTpv;
+    %dis_ubT(101:length(ubTpv)+100)=ubTpv;
     dis_p=[dis_p;dis_ubT];
 end   
 ceq = modifier_f*[dis_p;];

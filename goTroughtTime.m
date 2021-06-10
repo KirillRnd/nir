@@ -7,7 +7,7 @@ m0=367;
 eta=0.45;
 case_traj = 2;
 step = 1/4;
-ds = 1/2:step:10/2;
+ds = 1/2:step:6/2;
 rad = step/2;
 L=length(ds);
 T=zeros([1,L]);
@@ -47,7 +47,7 @@ for i=1:L
     %переменных
     terminal_state = 's';
     UorR = 'u';
-    rad=1/8;
+    rad=1/32;
     decreaseUnPsysical=0;
     %delta_s=1.23*ds(i)-0.24;
     [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);

@@ -67,7 +67,7 @@ elseif case_traj == 2
     b=cat(1,rf_0,Vf_0)-cat(1,rf,Vf*sqrt(mu_tau(0)/mu_tau(1)));
 end
 
-%оптимизируем траекторию
+%РѕРїС‚РёРјРёР·РёСЂСѓРµРј С‚СЂР°РµРєС‚РѕСЂРёСЋ
 z0=zeros([1, 6]);
 tic;
 [tau,z] = ode113(@(t,z) externalIntegration(t,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf, case_traj),[0 1],z0,options);
@@ -76,14 +76,14 @@ y0_final=y0;
 y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);
 [t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0_final,options);
-%Координаты
+%РљРѕРѕСЂРґРёРЅР°С‚С‹
 rr_cont = y_final(:, 1:3);
-%Ускорение (pV)
+%РЈСЃРєРѕСЂРµРЅРёРµ (pV)
 a=y_final(:, 7:9);
 a_vec=vecnorm(a, 2, 2).^2;
-%Функционал
+%Р¤СѓРЅРєС†РёРѕРЅР°Р»
 Jt = cumtrapz(t, a_vec)/(2*eta);
-%Матрица чувствительности
+%РњР°С‚СЂРёС†Р° С‡СѓРІСЃС‚РІРёС‚РµР»СЊРЅРѕСЃС‚Рё
 drdpv=reshape(y_final(end,13:21),[3,3]);
 drddpvdt=reshape(y_final(end,22:30),[3,3]);
 drdz=cat(2,drdpv,drddpvdt);

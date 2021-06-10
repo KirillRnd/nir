@@ -21,27 +21,32 @@ dLvdu = jacobian(L*v, u');
 dLudu = jacobian(L*u, u');
 
 dtds=u2/sqrt(-2*h);
-a = sym('a', [1 4],'real')';
+%a = sym('a', [1 4],'real')';
 %Данная запись управления совпадает с находимой дальше
-%a=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*((u2)*u+8*(u'*v)*v)/((-2*h)^(3/2)))/dtds;
-
+Lambda=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*((u2)*u+8*(u'*v)*v)/((-2*h)^(3/2)));
+g=bil(u)'*L'*a;
+m=Lambda(4)/u2;
+a=(Lambda-m*L*bil(u))/dtds;
+a=simplify(a);
+%a(4)=0;
 duds=v;
 dhds=2*v'*L'*a;
 dvds=-u/4-(u2)/(4*h)*L'*a-(dhds/(2*h))*v;
 dtauds=(mug+4*(u'*v)*dhds+u2*u'*L'*a)/((-2*h)^(3/2));
 
-H=-dtds*(a'*a)/2+pu'*duds+pv'*dvds+ph'*dhds+ptau'*dtauds;
+H=-dtds*(a'*a)/2+pu'*duds+pv'*dvds+ph'*dhds+ptau'*dtauds-m*g;
 
-a_solved = solve(gradient(H,a)==0,a);
-a_S=simplify([a_solved.a1;a_solved.a2;a_solved.a3;a_solved.a4;]);
-matlabFunction(a_S,'File','a_reactive','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
+%a_solved = solve(gradient(H,a)==0,a);
+%a_S=simplify([a_solved.a1;a_solved.a2;a_solved.a3;a_solved.a4;]);
+%a_S(4)=0;
+matlabFunction(a,'File','a_reactive','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 
-duds=v;
-dhds=2*v'*L'*a_S;
-dvds=-u/4-(u2)/(4*h)*L'*a_S-(dhds/(2*h))*v;
-dtauds=(mug+4*(u'*v)*dhds+u2*u'*L'*a_S)/((-2*h)^(3/2));
+%duds=v;
+%dhds=2*v'*L'*a_S;
+%dvds=-u/4-(u2)/(4*h)*L'*a_S-(dhds/(2*h))*v;
+%dtauds=(mug+4*(u'*v)*dhds+u2*u'*L'*a_S)/((-2*h)^(3/2));
 
-H=-dtds*(a_S'*a_S)/2+pu'*duds+pv'*dvds+ph'*dhds+ptau'*dtauds;
+%H=-dtds*(a_S'*a_S)/2+pu'*duds+pv'*dvds+ph'*dhds+ptau'*dtauds;
 
 
 dpuds=-simplify(gradient(H, u'));
@@ -52,10 +57,9 @@ dptauds=-simplify(gradient(H, tau));
 y = [u', v', h, tau, pu', pv', ph, ptau];
 
 f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
+symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 
 J = jacobian(f, y);
-
-symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 
 y = 2*(u(1)*u(2)-u(3)*u(4));
