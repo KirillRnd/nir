@@ -7,7 +7,7 @@ m0=367;
 eta=0.45;
 case_traj = 2;
 step = 1/4;
-ds = 1/2:step:6/2;
+ds = 1/2:step:2/2;
 rad = step/2;
 L=length(ds);
 T=zeros([1,L]);
@@ -40,7 +40,7 @@ for i=1:L
     ds(i)
     x0=zeros([1, 12]);
     x0(11)=ds(i);
-    modifier_p=1e-02;
+    modifier_p=1e-01;
     modifier_f=1e+04;
     integration_acc=1e-12;
     %Одиночный запуск метода и получение всех необходимых для графиков
@@ -50,7 +50,8 @@ for i=1:L
     rad=1/32;
     decreaseUnPsysical=0;
     %delta_s=1.23*ds(i)-0.24;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,ds(i),rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+    calculate_condition=0;
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
 
 
     if terminal_state == 's'
@@ -63,7 +64,7 @@ for i=1:L
     integration_acc=1e-14;
     rad=0;
     decreaseUnPsysical=0;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,ds(i),rad,UorR,decreaseUnPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc);
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
     evaluation_time=evaluation_time+evaluation_time_2;
     
     T(i)=evaluation_time;
@@ -191,9 +192,9 @@ for i=1:L
         s_f=1.5*SF(i);
     end
     tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-    y0 = cat(1, u0, v0, 0, tau0,  px)';
+    y0 = cat(1, u0, v0, h0, tau0,  px)';
     
-    t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)'+h0)))/(24*60*60);
+    t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
     int_s0sf = linspace(0, s_f, 1e+03);
     time0 = tic;
     options = odeset('AbsTol',1e-10);
@@ -215,7 +216,7 @@ for i=1:L
     a_ks=zeros(length(uu),4);
     t=zeros(length(uu),1);
     VV=zeros(length(uu),4);
-    t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)'+h0)))/(24*60*60);
+    t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)')))/(24*60*60);
 
     for j = 1:length(uu)
         u = uu(j,:)';
@@ -224,7 +225,7 @@ for i=1:L
         L_tmp=L_KS(u);
         u2=norm(u)^2;
         v=y(j, 5:8)';
-        h=y(j, 9)'+h0;
+        h=y(j, 9)';
         tau=y(j ,10)';
         pu=y(j, 11:14)';
         pv=y(j, 15:18)';
@@ -291,7 +292,7 @@ end
 figure(6);
 hold on;
 
-plot(S/(2*pi),M,'*')
+plot(S/(2*pi),M,'O')
 plot(S/(2*pi),M_cont,'+')
 plot([0, 5.5],[m0, m0],'k')
 

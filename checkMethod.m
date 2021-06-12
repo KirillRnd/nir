@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,decreaseNonPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,decreaseNonPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc, calculate_condition)
 %UNTITLED9 Summary of this function goes here
 %   ¬ычисл€ет нев€зку в зависимости от входных параметров
 %услови€ на fmincon
@@ -106,7 +106,7 @@ acc=integration_acc;
 options = odeset('AbsTol',acc);
 options = odeset(options,'RelTol',acc);
 %максимальное врем€ интегрировани€
-maxtime=100;
+maxtime=1000;
 if terminal_state == 's'
     options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0, maxtime));
 elseif terminal_state == 't'
@@ -115,10 +115,12 @@ end
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
 dydy0=reshape(eye(20),[1 400]);
-%[s,Y] = ode113(@(s,y) integrateTraectoryWithVariations(s,y,h0),int_s0sf,[y0, dydy0], options);
-%y=Y(:,1:20);
-[s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf,y0, options);
-
+if calculate_condition == 1
+    [s,Y] = ode113(@(s,y) integrateTraectoryWithVariations(s,y,h0),int_s0sf,[y0, dydy0], options);
+    y=Y(:,1:20);
+else
+    [s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf,y0, options);
+end
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
 
@@ -158,15 +160,22 @@ if terminal_state == 's'
 elseif terminal_state == 't'
     t_end = t_end_0;
 end
-%dfdy0 = reshape(Y(end,21:420),[20 20]);
+
 [mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
 mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
 
 dr=norm(ae*rr(end, 1:3)-mars_r_f(1:3)');
 dv=norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)');
-%C=cond(dfdy0);
-C=1;
+
+if calculate_condition == 1
+    dfdy0 = reshape(Y(end,21:420),[20 20]);
+    C=cond(dfdy0);
+else
+    C=1;
+end
+
+%C=1;
 %C=norm(x)*norm(grad)/fval;
 end
 

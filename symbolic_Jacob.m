@@ -24,10 +24,10 @@ dtds=u2/sqrt(-2*h);
 %a = sym('a', [1 4],'real')';
 %Данная запись управления совпадает с находимой дальше
 Lambda=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*((u2)*u+8*(u'*v)*v)/((-2*h)^(3/2)));
-g=bil(u)'*L'*a;
 m=Lambda(4)/u2;
 a=(Lambda-m*L*bil(u))/dtds;
 a=simplify(a);
+g=bil(u)'*L'*a;
 %a(4)=0;
 duds=v;
 dhds=2*v'*L'*a;
@@ -57,10 +57,10 @@ dptauds=-simplify(gradient(H, tau));
 y = [u', v', h, tau, pu', pv', ph, ptau];
 
 f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
-symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
+%symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
 
 J = jacobian(f, y);
-symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,v,h,pu,pv,ph,ptau});
+symJ = matlabFunction(J,'File','symJ','Optimize',false, 'Vars', {u,v,h,pu,pv,ph,ptau});
 
 y = 2*(u(1)*u(2)-u(3)*u(4));
 z = 2*(u(1)*u(3)+u(2)*u(4));

@@ -1,4 +1,4 @@
-function res = integrateTraectoryWithVariations(~, Y, h0)
+function res = integrateTraectoryWithVariations(~, Y, ~)
 %integrateTraectory интегрирует от начальной 
 %точки до времени tf
 %s - фиктивное время, tau - временной элемент
@@ -15,7 +15,7 @@ v=y(5:8);
 %v_til = u_alt*(u_alt'*v)/(u_alt'*u_alt);
 %v_alt=norm(v)*(v-v_til)/norm(v-v_til);
 
-h=y(9)+h0;
+h=y(9);
 tau=y(10);
 pu=y(11:14);
 pv=y(15:18);
