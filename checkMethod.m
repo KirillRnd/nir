@@ -35,7 +35,7 @@ mug=1;
 
 % modifier_p=1e-04;
 % modifier_f=1e+04;
-modifier_b=1e+14;
+modifier_b=1e+03;
 
 s_a = psi-rad;
 s_b = psi+rad;
@@ -51,8 +51,8 @@ ub(11) = s_b;
 
 
 if strcmp(UorR,'u') || strcmp(UorR,'r')
-    lb(12) = 0;
-    ub(12) = 1;
+    lb(12) = 0.0;
+    ub(12) = 1.0;
 elseif strcmp(UorR,'u_hat')
     lb(12) = x0(12);
     ub(12) = x0(12);
@@ -71,6 +71,9 @@ options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-10);
 options = optimoptions(options, 'ConstraintTolerance', 1e-12);
 options = optimoptions(options, 'MaxIterations', 250);
+options = optimoptions(options, 'FiniteDifferenceType', 'central');
+%options = optimoptions(options, 'Algorithm', 'sqp');
+
 options = optimoptions(options,'OutputFcn',@myoutput);
 
 [x,fval,exitflag,output,lambda,grad,hessian] = fmincon(@(x)1, x0, A, b, Aeq, beq, lb, ub, fun, options);
@@ -93,12 +96,14 @@ h0=(norm(V0)^2)/2-mug/norm(r0);
 
 u0 = rToU(r0, 0);
 L = L_KS(u0); 
-v0 = vFromV(V0,r0,mug,0);
+w0 = vFromV(V0,r0,mug,0);
 
-tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-y0 = cat(1, u0, v0, h0, tau0,  px')';
+%tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
+%tau0=0;
+tau0=2*u0'*w0/sqrt(-2*h0);
+y0 = cat(1, u0, w0, h0, tau0,  px')';
 
-t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
+%t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 int_s0sf = linspace(0, s_f, 1e+3);
 time0 = tic;
 %options = odeset('Events', @(s, y) eventIntegrationTraj(s, y, tf));
@@ -124,7 +129,7 @@ end
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
 
-t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)')))/(24*60*60);
+%t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)')))/(24*60*60);
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
 
@@ -156,7 +161,7 @@ t = t - t(1);
 Jt = integrateFunctional(t, y, eta);
 
 if terminal_state == 's'
-    t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
+    t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60);
 elseif terminal_state == 't'
     t_end = t_end_0;
 end

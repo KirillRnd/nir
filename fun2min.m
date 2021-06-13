@@ -15,7 +15,7 @@ mug=1;
 
 %Задаём начальные условия на левом конце 
 pu0=x(1:4)';
-pv0=x(5:8)';
+pw0=x(5:8)';
 ph0=x(9);
 pt0=x(10);
 if terminal_state == 's'
@@ -29,11 +29,13 @@ phi0=0;
 u0 = rToU(r0, phi0);
 u_b0=[u0(4); -u0(3);u0(2);-u0(1)];
 h0 = (norm(V0)^2)/2-mug/norm(r0);
-v0 = vFromV(V0,r0,mug, phi0);
+w0 = vFromV(V0,r0,mug, phi0);
 %h0=-mug/(u0'*u0+4*v0'*v0)
-t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-y0 = cat(1, u0, v0, h0, t0, pu0, pv0, ph0, pt0)';
-t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
+%t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
+%tau0=0;
+tau0=2*u0'*w0/sqrt(-2*h0);
+y0 = cat(1, u0, w0, h0, tau0, pu0, pw0, ph0, pt0)';
+%t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
 %acc=1e-14;
@@ -80,7 +82,7 @@ pv_end=y(end, 15:18)';
 ph_end=y(end, 19)';
 ptau_end=y(end, 20)';
 
-t_end = T_unit*(tau_end-2*(u_end'*v_end)/sqrt(-2*h_end))/(24*60*60)-t_start_fix;
+t_end = T_unit*(tau_end-2*(u_end'*v_end)/sqrt(-2*h_end))/(24*60*60);
 r_end=KS(u_end);
 L_end = L_KS(u_end);
 V_end = 2*sqrt(-2*h_end)*L_end*v_end/(norm(u_end)^2);

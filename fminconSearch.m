@@ -3,7 +3,7 @@
 %5if exist('symF','var') ~= 1
 %    symbolic_Jacob
 %end
-t_start = juliandate(2022,0,0);
+t_start = juliandate(2022,1,1);
 %t_start=0;
 terminal_state = 's';
 UorR = 'u';
@@ -41,19 +41,19 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=0;
-angle=0.8;
+n=1;
+angle=0.5;
 x0(11)=n+angle;
 %x0(12)=x0(11)/2;
 modifier_p=1e-01;
-modifier_f=1e+04;
-integration_acc=1e-12;
+modifier_f=1e+10;
+integration_acc=1e-14;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
 terminal_state = 's';
 UorR = 'u';
-rad=1/32;
+rad=1/16;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
@@ -72,7 +72,7 @@ UorR = 'u_hat';
 integration_acc=1e-14;
 rad=0;
 decreaseNonPsysical=0;
-calculate_condition=0;
+calculate_condition=1;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
 evaluation_time=evaluation_time+evaluation_time_2;
 

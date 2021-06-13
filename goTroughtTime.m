@@ -26,12 +26,13 @@ M_cont=zeros([1,L]);
 D=zeros([1,L]);
 PX=zeros([10,L]);
 S=zeros([1,L]);
-
+modifier_p=1e-01;
+modifier_f=1e+10;
 x0=zeros([1, 12]);
 warning('off');
 planet_start = 'Earth';
 planet_end = 'Mars';
-decreaseUnPsysical = 0;
+decreaseNonPsysical = 0;
 
 for i=1:L
     %Ищем наименьшую невязку по координате среди 4-х методов для каждого
@@ -40,15 +41,15 @@ for i=1:L
     ds(i)
     x0=zeros([1, 12]);
     x0(11)=ds(i);
-    modifier_p=1e-01;
-    modifier_f=1e+04;
-    integration_acc=1e-12;
+    delta_s=ds(i);
+
+    integration_acc=1e-14;
     %Одиночный запуск метода и получение всех необходимых для графиков
     %переменных
     terminal_state = 's';
     UorR = 'u';
-    rad=1/32;
-    decreaseUnPsysical=0;
+    rad=1/16;
+    decreaseNonPsysical=0;
     %delta_s=1.23*ds(i)-0.24;
     calculate_condition=0;
     [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
@@ -63,12 +64,13 @@ for i=1:L
     UorR = 'u_hat';
     integration_acc=1e-14;
     rad=0;
-    decreaseUnPsysical=0;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+    decreaseNonPsysical=0;
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
     evaluation_time=evaluation_time+evaluation_time_2;
     
     T(i)=evaluation_time;
-    S(i)=s(end);
+    %S(i)=s(end);
+    S(i)=delta_s;
     DR(i)=dr;
     DV(i)=dV;
     CONV(i)=C;
@@ -177,8 +179,8 @@ h0=(norm(V0)^2)/2-mug/norm(r0);
 t0=0;
 
 u0 = rToU(r0, 0);
-v0 = vFromV(V0,r0,mug, 0);
-terminal_state = 't';
+w0 = vFromV(V0,r0,mug, 0);
+terminal_state = 's';
 disp('--------------------')
 for i=1:L
     if DR(i)>1e+02
@@ -191,10 +193,12 @@ for i=1:L
         t_end=T_END(i);
         s_f=1.5*SF(i);
     end
-    tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
-    y0 = cat(1, u0, v0, h0, tau0,  px)';
+    %tau0= getEccentricAnomaly(r0(1:3),V0(1:3),mug);
+    %tau0=0;
+    tau0=2*u0'*w0/sqrt(-2*h0);
+    y0 = cat(1, u0, w0, h0, tau0,  px)';
     
-    t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
+    %t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
     int_s0sf = linspace(0, s_f, 1e+03);
     time0 = tic;
     options = odeset('AbsTol',1e-10);
@@ -216,7 +220,7 @@ for i=1:L
     a_ks=zeros(length(uu),4);
     t=zeros(length(uu),1);
     VV=zeros(length(uu),4);
-    t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)')))/(24*60*60);
+    %t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)')))/(24*60*60);
 
     for j = 1:length(uu)
         u = uu(j,:)';
@@ -245,7 +249,7 @@ for i=1:L
         t(j) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
     end
 
-    t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
+    t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60);
 
     t = t - t(1);
     [rr_cont, Jt_cont, C_cont, T_cont(i), dr_cont, dV_cont] = checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
@@ -290,10 +294,9 @@ for i=1:L
 end
 
 figure(6);
+plot(S,M,'O')
 hold on;
-
-plot(S/(2*pi),M,'O')
-plot(S/(2*pi),M_cont,'+')
+plot(S,M_cont,'+')
 plot([0, 5.5],[m0, m0],'k')
 
 xlim([0 5.5])
