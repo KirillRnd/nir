@@ -35,7 +35,7 @@ mug=1;
 
 % modifier_p=1e-04;
 % modifier_f=1e+04;
-modifier_b=1e+03;
+modifier_b=1e+13;
 
 s_a = psi-rad;
 s_b = psi+rad;

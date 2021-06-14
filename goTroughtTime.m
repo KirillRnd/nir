@@ -1,5 +1,5 @@
 %Эот скрипт перебирает угловые дальности с заданным радиусом поиска
-t_start = juliandate(2022,0,0);
+t_start = juliandate(2022,1,1);
 display=1;
 UorR='u';
 N=1350;
@@ -7,7 +7,7 @@ m0=367;
 eta=0.45;
 case_traj = 2;
 step = 1/4;
-ds = 1/2:step:2/2;
+ds = 1/2:step:10/2;
 rad = step/2;
 L=length(ds);
 T=zeros([1,L]);
@@ -26,14 +26,14 @@ M_cont=zeros([1,L]);
 D=zeros([1,L]);
 PX=zeros([10,L]);
 S=zeros([1,L]);
-modifier_p=1e-01;
+modifier_p=1e-06;
 modifier_f=1e+10;
 x0=zeros([1, 12]);
 warning('off');
 planet_start = 'Earth';
 planet_end = 'Mars';
 decreaseNonPsysical = 0;
-
+terminal_state = 's';
 for i=1:L
     %Ищем наименьшую невязку по координате среди 4-х методов для каждого
     %случая
@@ -43,28 +43,31 @@ for i=1:L
     x0(11)=ds(i);
     delta_s=ds(i);
 
-    integration_acc=1e-14;
+    integration_acc=1e-16;
     %Одиночный запуск метода и получение всех необходимых для графиков
     %переменных
-    terminal_state = 's';
+
     UorR = 'u';
-    rad=1/16;
-    decreaseNonPsysical=0;
+    rad=1/32;
     %delta_s=1.23*ds(i)-0.24;
     calculate_condition=0;
     [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
-
+    
+    
+    if dr > 1e+03
+        rad=1/8;
+        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+        x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
+    end
 
     if terminal_state == 's'
         x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
     elseif terminal_state == 't'
         x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
     end
-    terminal_state = 's';
     UorR = 'u_hat';
-    integration_acc=1e-14;
     rad=0;
-    decreaseNonPsysical=0;
+    calculate_condition=1;
     [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
     evaluation_time=evaluation_time+evaluation_time_2;
     
@@ -183,9 +186,9 @@ w0 = vFromV(V0,r0,mug, 0);
 terminal_state = 's';
 disp('--------------------')
 for i=1:L
-    if DR(i)>1e+02
-        continue
-    end
+    %if DR(i)>1e+02
+    %    continue
+    %end
     px = PX(:,i);
     if terminal_state == 's'
         s_f=SF(i);
@@ -301,7 +304,38 @@ plot([0, 5.5],[m0, m0],'k')
 
 xlim([0 5.5])
 
-xlabel("Число витков")
-ylabel("Расход топлива, dm, кг,")
+xlabel("Фиктивное время, число витков")
+ylabel("Расход топлива, ?m, кг")
+set(gca,'FontSize',14)
+text(3,380,'Начальная масса КА','FontSize',14)
+hold off;
+
+figure(7);
+pareto=[1, 2, 3, 11, 19];
+pareto_cont=[1,2,3,4,5,12];
+plot(S(pareto),M(pareto),'O')
+hold on;
+plot(S(pareto_cont),M_cont(pareto_cont),'+')
+plot([0, 5.5],[m0, m0],'k')
+
+xlim([0 5.5])
+
+xlabel("Фиктивное время, число витков")
+ylabel("Расход топлива, ?m, кг")
+set(gca,'FontSize',14)
+text(3,380,'Начальная масса КА','FontSize',14)
+hold off;
+
+figure(8);
+pareto=T<100;
+pareto_cont=T_cont<100;
+plot(S(pareto),T(pareto),'O')
+hold on;
+plot(S(pareto_cont),T_cont(pareto_cont),'+')
+
+xlim([0 5.5])
+
+xlabel("Фиктивное время, число витков")
+ylabel("Время вычислений, секунды")
 set(gca,'FontSize',14)
 hold off;

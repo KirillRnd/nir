@@ -42,12 +42,12 @@ planet_end = 'Mars';
 mug=1;
 
 n=1;
-angle=0.5;
+angle=0.0;
 x0(11)=n+angle;
 %x0(12)=x0(11)/2;
-modifier_p=1e-01;
+modifier_p=1e-06;
 modifier_f=1e+10;
-integration_acc=1e-14;
+integration_acc=1e-16;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
@@ -60,7 +60,6 @@ delta_s=n+angle;
 calculate_condition=0;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
 
-
 if terminal_state == 's'
     x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
 elseif terminal_state == 't'
@@ -69,7 +68,7 @@ end
 %modifier_p=1e-08;
 terminal_state = 's';
 UorR = 'u_hat';
-integration_acc=1e-14;
+integration_acc=1e-16;
 rad=0;
 decreaseNonPsysical=0;
 calculate_condition=1;
@@ -96,10 +95,10 @@ box off;
 set(gca,'FontSize',14)
 
 figure(3);
-plot(t/(24*3600), s, 'LineWidth', 3);
+plot(t/T_earth, s/(2*pi), 'LineWidth', 3);
 title('Зависимость мнимого времени от физического')
-xlabel('t, время, дни')
-ylabel('s, мнимое время')
+xlabel('Физическое время, витки')
+ylabel('Фиктивное время, витки')
 box off;
 set(gca,'FontSize',14)
 
