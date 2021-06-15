@@ -147,28 +147,7 @@ elseif  strcmp(UorR,'r')
 end
 %Сумма квадратов невязок, modifier_f влияет на сходимость
 %dis = modifier_f*norm(dis_p)^2;
-if decreaseNonPsysical == 1
-    % time0 = tic;
-    %максимальное время интегрирования
-    maxtime=10;
-    if terminal_state == 's'
-        options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0,maxtime));
-    elseif terminal_state == 't'
-        options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0, h0, t_start_fix));
-    end
-    
-    [s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), int_s0sf, y0, options);
-
-    ub_matrix=[y(:, 4), -y(:, 3), y(:, 2), -y(:, 1)];
-    v_matrix=[y(:, 5), y(:, 6), y(:, 7), y(:, 8)];
-    pv_matrix=[y(:, 15), y(:, 16), y(:, 17), y(:, 18)];
-    ubTv=diag(ub_matrix*v_matrix');
-    ubTpv=diag(ub_matrix*pv_matrix');
-    dis_ubT = zeros(100,1);
-    dis_ubT(1:length(ubTv))=ubTpv;
-    %dis_ubT(101:length(ubTpv)+100)=ubTpv;
-    dis_p=[dis_p;dis_ubT];
-end   
+   
 ceq = modifier_f*[dis_p;];
 end
 
