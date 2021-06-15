@@ -1,4 +1,4 @@
-function Jt = integrateFunctional(t, y, eta)
+function Jt = integrateFunctional(t, y, eta,amax)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %summ_J = zeros(length(s),1);
@@ -30,7 +30,7 @@ for i = 1:length(uu)
     VV(i, :)=V;
     dtds=u2/sqrt(-2*h);
     %aa_ks=L*(-(u2)*pv/(4*h) + v*(2*ph-(1/h)*pv'*v)+ptau*(u2)*u/((-2*h)^(3/2)))/dtds;
-    aa_ks=a_reactive(u,v,h,pu,pv,ph,ptau);
+    aa_ks=a_reactive(u,v,h,pu,pv,ph,ptau,amax);
     a_ks(i, :)=aa_ks/a_unit;
 end
 %eta=0.45;

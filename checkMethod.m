@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,decreaseNonPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc, calculate_condition)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,decreaseNonPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc, calculate_condition,amax)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -60,7 +60,7 @@ end
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state,integration_acc);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state,integration_acc,amax);
 
 options = optimoptions('fmincon','UseParallel', true);
 if display == 1
@@ -124,7 +124,7 @@ if calculate_condition == 1
     [s,Y] = ode113(@(s,y) integrateTraectoryWithVariations(s,y,h0),int_s0sf,[y0, dydy0], options);
     y=Y(:,1:20);
 else
-    [s,y] = ode113(@(s,y) integrateTraectory(s,y,h0),int_s0sf,y0, options);
+    [s,y] = ode113(@(s,y) integrateTraectory(s,y,amax),int_s0sf,y0, options);
 end
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
@@ -150,7 +150,7 @@ for i = 1:length(uu)
     ph=y(i, 19)';
     ptau=y(i, 20)';
     dtds=u2/sqrt(-2*h);
-    aa_ks=a_reactive(u,v,h,pu,pv,ph,ptau);
+    aa_ks=a_reactive(u,v,h,pu,pv,ph,ptau,amax);
     a_ks(i, :)=aa_ks/(ae/sqrt(mug_0)).^2;
 
     V = 2*sqrt(-2*h)*L*v/(u2);
@@ -158,7 +158,7 @@ for i = 1:length(uu)
     t(i) = T_unit*(tau-2*(u'*v)/sqrt(-2*h));
 end
 t = t - t(1);
-Jt = integrateFunctional(t, y, eta);
+Jt = integrateFunctional(t, y, eta,amax);
 
 if terminal_state == 's'
     t_end = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60);

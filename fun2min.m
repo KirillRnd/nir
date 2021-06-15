@@ -1,4 +1,4 @@
-function [c, ceq] = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state, integration_acc)
+function [c, ceq] = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state, integration_acc,amax)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -52,7 +52,7 @@ end
 
 warning('off','all');
 
-[s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), [0 s_f], y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s, y, amax), [0 s_f], y0, options);
 int_s0sf = linspace(0, s(end), 100);
 % time0 = tic;
 % %максимальное время интегрирования

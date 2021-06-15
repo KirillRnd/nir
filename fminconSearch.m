@@ -10,6 +10,7 @@ UorR = 'u';
 N=1350;
 m0=367;
 eta=0.45;
+amax=5e-02;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
@@ -18,7 +19,7 @@ case_traj=2;
 decreaseNonPsysical = 0;
 %Начальные условия
 x0=zeros([1, 12]);
-
+x0(:)=1e-06;
 %x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
 b = [];
@@ -58,7 +59,7 @@ rad=1/16;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
 calculate_condition=0;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,amax);
 
 if terminal_state == 's'
     x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
@@ -71,8 +72,8 @@ UorR = 'u_hat';
 integration_acc=1e-16;
 rad=0;
 decreaseNonPsysical=0;
-calculate_condition=1;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+calculate_condition=0;
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,amax);
 evaluation_time=evaluation_time+evaluation_time_2;
 
 %убрать четвёртые координаты
@@ -80,10 +81,10 @@ evaluation_time=evaluation_time+evaluation_time_2;
 %Коррекция фи для графика
 phi=atan2(uu(end,4),uu(end,1));
 functional = Jt(end);
-[rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont] =...
-    checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
-functional_cont = Jt_cont(end);
-m_cont=massLP(Jt_cont, m0, N);
+% [rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont] =...
+%     checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
+% functional_cont = Jt_cont(end);
+% m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);
 
 figure(2);
@@ -169,7 +170,7 @@ end
 plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
 plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
 
-plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
+%plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
 %эти две точки должны находиться рядом
 %plot3(rr_cont(500, 1)/ae, rr_cont(500, 2)/ae, rr_cont(500, 3)/ae, 'gO', 'LineWidth', 2.5);
 %plot3(rr_old(500, 1), rr_old(500, 2), rr_old(500, 3), 'bO', 'LineWidth', 2.5);
@@ -236,15 +237,15 @@ ax.YAxisLocation = 'origin';
 box off;
 hold off;
 %[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
-d = cmp2Trajectories(rr_old(:, 1:3)*ae,rr_cont)/ae;
+%d = cmp2Trajectories(rr_old(:, 1:3)*ae,rr_cont)/ae;
 
-disp(['Максимальная разница в  координатах ', num2str(d,'%10.2e\n'), 'a.e.'])
+%disp(['Максимальная разница в  координатах ', num2str(d,'%10.2e\n'), 'a.e.'])
 disp(['Расход массы в KS-координатах ', num2str(m(1)-m(end)), 'кг'])
-disp(['Расход массы методом продолжения ', num2str(m_cont(1)-m_cont(end)), 'кг'])
+%disp(['Расход массы методом продолжения ', num2str(m_cont(1)-m_cont(end)), 'кг'])
 disp(['Невязка координаты ', num2str(norm(ae*rr_old(end, 1:3)-mars_r_f(1:3)'),'%10.2e\n'),',м'])
 disp(['Невязка скорости ', num2str((norm(V_unit*VV_old(end, 1:3)-mars_v_f(1:3)')),'%10.2e\n'),',м/с'])
 % относительное число обусловленности
 disp(['Число обусловленности в KS-переменных ', num2str(C,'%10.2e\n')])
-disp(['Число обусловленности в методе продолжения ', num2str(C_cont,'%10.2e\n')])
+%disp(['Число обусловленности в методе продолжения ', num2str(C_cont,'%10.2e\n')])
 % абсолютное число обусловленности
 %disp(['Абсолютное число обусловленности ', num2str(1/norm(grad),'%10.2e\n')])

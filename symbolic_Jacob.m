@@ -4,7 +4,7 @@ u = sym('u', [1 4],'real')';
 w = sym('w', [1 4],'real')';
 h = sym('h','real');
 tau = sym('tau','real');
-
+amax = sym('amax','real')';
 pu = sym('pu', [1 4],'real')';
 pw = sym('pw', [1 4],'real')';
 ph = sym('ph','real');
@@ -27,7 +27,7 @@ Lambda=L*(-(u2)*pw/(4*h) + w*(2*ph-(1/h)*pw'*w)+ptau*((u2)*u+8*(u'*w)*w)/((-2*h)
 m=Lambda(4)/u2;
 LambdaTilde=Lambda-m*L*bil(u);
 LambdaTilde=simplify(LambdaTilde);
-a=LambdaTilde/dtds;
+a=amax*LambdaTilde/norm(LambdaTilde);
 
 g=bil(u)'*L'*a;
 %a(4)=0;
@@ -38,11 +38,11 @@ dtauds=(mug+4*(u'*w)*dhds+u2*u'*L'*a)/((-2*h)^(3/2));
 
 %H=-dtds*(a'*a)/2+pu'*duds+pw'*dvds+ph'*dhds+ptau'*dtauds-m*g;
 
-H_opt=LambdaTilde'*LambdaTilde/(dtds*2)+pu'*w-pw'*u/4+ptau*mug/((-2*h)^(3/2));
+H_opt=-dtds + LambdaTilde'*a+pu'*w-pw'*u/4+ptau*mug/((-2*h)^(3/2));
 %a_solved = solve(gradient(H,a)==0,a);
 %a_S=simplify([a_solved.a1;a_solved.a2;a_solved.a3;a_solved.a4;]);
 %a_S(4)=0;
-matlabFunction(a,'File','a_reactive','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau});
+matlabFunction(a,'File','a_reactive','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau,amax});
 
 %duds=v;
 %dhds=2*v'*L'*a_S;
@@ -60,10 +60,10 @@ dptauds=-simplify(gradient(H_opt, tau));
 y = [u', w', h, tau, pu', pw', ph, ptau];
 
 f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
-symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau});
+symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau,amax});
 
 J = jacobian(f, y);
-symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau});
+symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau,amax});
 
 y = 2*(u(1)*u(2)-u(3)*u(4));
 z = 2*(u(1)*u(3)+u(2)*u(4));

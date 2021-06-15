@@ -1,4 +1,4 @@
-function res = integrateTraectory(s, y, h0)
+function res = integrateTraectory(s, y, amax)
 %integrateTraectory интегрирует от начальной 
 %точки до времени tf
 %s - фиктивное время, tau - временной элемент
@@ -18,6 +18,6 @@ pv=y(15:18);
 ph=y(19);
 ptau=y(20);
 %Сохрняем провизводные
-res=symF(u,v,h,pu,pv,ph,ptau);
+res=symF(u,v,h,pu,pv,ph,ptau,amax);
 end
 
