@@ -1,4 +1,4 @@
-function [c, ceq] = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state, integration_acc,amax)
+function [c, ceq] = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state, integration_acc)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -25,6 +25,7 @@ elseif terminal_state == 't'
 end
 t_end_0=x(11)*365.256363004;
 phi=x(12)*2*pi;
+amax=x(13);
 phi0=0;
 u0 = rToU(r0, phi0);
 u_b0=[u0(4); -u0(3);u0(2);-u0(1)];

@@ -19,7 +19,8 @@ case_traj=2;
 decreaseNonPsysical = 0;
 %Начальные условия
 x0=zeros([1, 12]);
-x0(:)=1e-06;
+x0(:)=1e-05;
+x0(13)=amax;
 %x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
 b = [];
@@ -59,10 +60,10 @@ rad=1/16;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
 calculate_condition=0;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,amax);
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time,amax] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,amax);
 
 if terminal_state == 's'
-    x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
+    x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi) amax];
 elseif terminal_state == 't'
     x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
 end
@@ -73,7 +74,7 @@ integration_acc=1e-16;
 rad=0;
 decreaseNonPsysical=0;
 calculate_condition=0;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,amax);
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2, amax] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,amax);
 evaluation_time=evaluation_time+evaluation_time_2;
 
 %убрать четвёртые координаты

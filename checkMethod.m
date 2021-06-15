@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,decreaseNonPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc, calculate_condition,amax)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time,amax] = checkMethod(t_start,psi,rad, UorR,decreaseNonPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc, calculate_condition,amax0)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -43,12 +43,14 @@ s_b = psi+rad;
 %x0(11)=psi;
 
 
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0]*modifier_b;
 ub = -lb;
 
 lb(11) = s_a;
 ub(11) = s_b;
 
+lb(13)= 5e-04;
+ub(13)= 1e-01;
 
 if strcmp(UorR,'u') || strcmp(UorR,'r')
     lb(12) = 0.0;
@@ -60,7 +62,7 @@ end
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state,integration_acc,amax);
+fun=@(x)fun2min([x(1:10)*modifier_p x(11), x(12), x(13)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state,integration_acc);
 
 options = optimoptions('fmincon','UseParallel', true);
 if display == 1
@@ -86,6 +88,7 @@ elseif terminal_state == 't'
     s_f=1.5*x(11)*2*pi;
 end
 phi = x(12)*2*pi;
+amax= x(13);
 %задаем начальные условия
 %options = optimoptions(options,'OutputFcn',@myoutput);
 %options = optimoptions(options, 'Algorithm', 'sqp');
