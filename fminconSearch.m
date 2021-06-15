@@ -19,9 +19,11 @@ case_traj=2;
 decreaseNonPsysical = 0;
 %Начальные условия
 x0=zeros([1, 12]);
-x0(:)=1e-05;
+x0(1:4)=1e-06;
+x0(5:8)=1e-06;
 x0(13)=amax;
-%x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
+%x0_2=1.0e+04 * [1.2682 , 0.1363  ,  0.8532 ,   1.0233 ,  -0.8854  , -3.6959 ,  -2.9713 ,  -1.2795  , -3.0076 ,-0.8347  ,  0.0001  , -0.0000];
+%x0_2(13)=amax;
 A = [];
 b = [];
 Aeq = [];
@@ -47,7 +49,7 @@ n=1;
 angle=0.0;
 x0(11)=n+angle;
 %x0(12)=x0(11)/2;
-modifier_p=1e-06;
+modifier_p=1e-02;
 modifier_f=1e+10;
 integration_acc=1e-16;
 %Одиночный запуск метода и получение всех необходимых для графиков
@@ -74,8 +76,8 @@ integration_acc=1e-16;
 rad=0;
 decreaseNonPsysical=0;
 calculate_condition=0;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2, amax] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,amax);
-evaluation_time=evaluation_time+evaluation_time_2;
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2, amax] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,amax);
+%evaluation_time=evaluation_time+evaluation_time_2;
 
 %убрать четвёртые координаты
 

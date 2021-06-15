@@ -72,7 +72,7 @@ options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-10);
 options = optimoptions(options, 'ConstraintTolerance', 1e-12);
-options = optimoptions(options, 'MaxIterations', 250);
+options = optimoptions(options, 'MaxIterations', 400);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
