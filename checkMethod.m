@@ -43,7 +43,7 @@ s_b = psi+rad;
 %x0(11)=psi;
 
 
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0]*modifier_b;
 ub = -lb;
 
 lb(11) = s_a;
@@ -68,8 +68,8 @@ if display == 1
 end
 options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'StepTolerance', 1e-10);
-options = optimoptions(options, 'ConstraintTolerance', 1e-12);
+options = optimoptions(options, 'StepTolerance', 1e-14);
+options = optimoptions(options, 'ConstraintTolerance', 1e-20);
 options = optimoptions(options, 'MaxIterations', 250);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
 %options = optimoptions(options, 'Algorithm', 'sqp');

@@ -12,17 +12,17 @@ options = odeset(options,'RelTol',1e-10);
 [t,y] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,tau),tspan,y0_z,options);
 %plot(y(:,1),y(:,2));
 %axis equal
-drdpv=reshape(y(end,13:21),[3,3]);
-drddpvdt=reshape(y(end,22:30),[3,3]);
-drdz=cat(2,drdpv,drddpvdt);
+drdpr=reshape(y(end,13:21),[3,3]);
+drdpv=reshape(y(end,22:30),[3,3]);
+drdz=cat(2,drdpr,drdpv);
 
-ddrdpvdt=reshape(y(end,49:57),[3,3]);
-ddVdpvdt=reshape(y(end,58:66),[3,3]);
-ddrdzdt=cat(2,ddrdpvdt,ddVdpvdt);
+ddrdprdt=reshape(y(end,31:39),[3,3]);
+ddrdpvdt=reshape(y(end,40:48),[3,3]);
+ddrdzdt=cat(2,ddrdprdt,ddrdpvdt);
 
-dpvdpv=reshape(y(31:39),[3,3]);
-dPvdpv=reshape(y(40:48),[3,3]);
-dpvdz=cat(2,dpvdpv,dPvdpv);
+dpvdpr=reshape(y(49:57),[3,3]);
+dpvdpv=reshape(y(58:66),[3,3]);
+dpvdz=cat(2,dpvdpr,dpvdpv);
 
 drdtau = y(end,85:87)';
 dvdtau = y(end,88:90)';
@@ -36,7 +36,7 @@ elseif case_traj == 2
     dfdtau = cat(1,drdtau,dvdtau-0.5*sqrt(mu_tau(1)/mu_tau(tau))*(1-mu_tau(0)/mu_tau(1))*Vf);
 end
 res=-dfdz\(dfdtau+b);
-% tau
+tau
 % if tau == 1.0
 %     cond(dfdz)
 end

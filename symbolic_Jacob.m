@@ -94,7 +94,6 @@ g=g(1:3);
 dgdu=jacobian(g,u);
 ortdgdu=null(dgdu);
 
-
 matlabFunction(g,'File','get_target_g_u','Optimize', true, 'Vars', {u});
 matlabFunction(dgdu,'File','get_dgdu','Optimize', true, 'Vars', {u});
 matlabFunction(ortdgdu,'File','get_ortdgdu','Optimize', true, 'Vars', {u});

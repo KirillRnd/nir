@@ -14,7 +14,6 @@ eta=0.45;
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
-
 decreaseNonPsysical = 0;
 %Начальные условия
 x0=zeros([1, 12]);
@@ -41,11 +40,11 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=1;
-angle=0.0;
+n=0;
+angle=0.75;
 x0(11)=n+angle;
 %x0(12)=x0(11)/2;
-modifier_p=1e-06;
+modifier_p=1e-4;
 modifier_f=1e+10;
 integration_acc=1e-16;
 %Одиночный запуск метода и получение всех необходимых для графиков
@@ -85,22 +84,25 @@ functional = Jt(end);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);
-
 figure(2);
 plot(t/(24*3600), vecnorm(a_ks, 2, 2)*1e+03, 'LineWidth', 3);
 %title('Зависимость ускорения силы тяги от времени')
-xlabel('t, время, дни','FontSize',14)
+xlabel('Физичекое время, дни','FontSize',14)
 ylabel('Реактивное ускорение, мм/c^2','FontSize',14)
 box off;
 set(gca,'FontSize',14)
+set(gca,'TickLabelInterpreter', 'latex')
+grid on;
 
 figure(3);
 plot(t/T_earth, s/(2*pi), 'LineWidth', 3);
 title('Зависимость мнимого времени от физического')
-xlabel('Физическое время, витки')
+xlabel('Физическое время, годы')
 ylabel('Фиктивное время, витки')
 box off;
 set(gca,'FontSize',14)
+set(gca,'TickLabelInterpreter', 'latex')
+grid on;
 
 figure(4);
 m=massLP(Jt, m0, N);
@@ -110,6 +112,8 @@ xlabel('t, время, дни')
 ylabel('m, масса, кг')
 box off;
 set(gca,'FontSize',14)
+set(gca,'TickLabelInterpreter', 'latex')
+grid on;
 
 %Проверка "на глаз"
 figure(1);

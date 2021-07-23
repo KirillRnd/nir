@@ -16,7 +16,8 @@ tau=y(10);
 pu=y(11:14);
 pv=y(15:18);
 ph=y(19);
-ptau=y(20);
+%ptau=y(20);
+ptau=0;
 %Сохрняем провизводные
 res=symF(u,v,h,pu,pv,ph,ptau);
 end

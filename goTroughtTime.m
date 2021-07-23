@@ -26,7 +26,7 @@ M_cont=zeros([1,L]);
 D=zeros([1,L]);
 PX=zeros([10,L]);
 S=zeros([1,L]);
-modifier_p=1e-06;
+modifier_p=1e-11;
 modifier_f=1e+10;
 x0=zeros([1, 12]);
 warning('off');
@@ -52,13 +52,6 @@ for i=1:L
     %delta_s=1.23*ds(i)-0.24;
     calculate_condition=0;
     [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
-    
-    
-    if dr > 1e+03
-        rad=1/8;
-        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
-        x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
-    end
 
     if terminal_state == 's'
         x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];

@@ -14,10 +14,10 @@ T_unit = T_earth/(2*pi);
 mug=1;
 
 %Задаём начальные условия на левом конце 
-pu0=x(1:4)';
-pw0=x(5:8)';
-ph0=x(9);
-pt0=x(10);
+pu_0=x(1:4)';
+pw_0=x(5:8)';
+ph_0=x(9);
+pt_0=x(10);
 if terminal_state == 's'
     s_f=x(11)*2*pi;
 elseif terminal_state == 't'
@@ -26,15 +26,20 @@ end
 t_end_0=x(11)*365.256363004;
 phi=x(12)*2*pi;
 phi0=0;
-u0 = rToU(r0, phi0);
-u_b0=[u0(4); -u0(3);u0(2);-u0(1)];
-h0 = (norm(V0)^2)/2-mug/norm(r0);
-w0 = vFromV(V0,r0,mug, phi0);
+u_0 = rToU(r0, phi0);
+u_b0=[u_0(4); -u_0(3);u_0(2);-u_0(1)];
+h_0 = (norm(V0)^2)/2-mug/norm(r0);
+w_0 = vFromV(V0,r0,mug, phi0);
+%Условия трансверсальности на левом конце
+f_left=get_target_gh(u_0,w_0,h_0);
+f_right=[r0(1:3);V0(1:3);h_0];
+f_ortdgduvh=get_ortdgduvh(u_0,w_0,h_0);
+
 %h0=-mug/(u0'*u0+4*v0'*v0)
 %t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 %tau0=0;
-tau0=2*u0'*w0/sqrt(-2*h0);
-y0 = cat(1, u0, w0, h0, tau0, pu0, pw0, ph0, pt0)';
+tau0=2*u_0'*w_0/sqrt(-2*h_0);
+y0 = cat(1, u_0, w_0, h_0, tau0, pu_0, pw_0, ph_0, pt_0)';
 %t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
@@ -47,12 +52,12 @@ maxtime=10;
 if terminal_state == 's'
     options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0,maxtime));
 elseif terminal_state == 't'
-    options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0, h0, t_start_fix));
+    options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0, h_0, t_start_fix));
 end
 
 warning('off','all');
 
-[s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), [0 s_f], y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s, y, h_0), [0 s_f], y0, options);
 int_s0sf = linspace(0, s(end), 100);
 % time0 = tic;
 % %максимальное время интегрирования
@@ -78,7 +83,7 @@ v_end=y(end, 5:8)';
 h_end=y(end, 9)';
 tau_end=y(end, 10)';
 pu_end=y(end, 11:14)';
-pv_end=y(end, 15:18)';
+pw_end=y(end, 15:18)';
 ph_end=y(end, 19)';
 ptau_end=y(end, 20)';
 
@@ -122,25 +127,28 @@ if strcmp(UorR,'u_hat')
     %direction - выбор положительного или отрицательного семейства
     if case_traj == 1
         dis_p_eqs = g_left-g_right;
-        dis_p_tr = [pu_end'*ortdgdu]';
-        dis_p = [dis_p_eqs(1:3); dis_p_tr; pv_end];
+        dis_p_tr = [pu_end'*ortdgdu; pw_end; ph_end];
+        dis_p = [dis_p_eqs; dis_p_tr;];
     elseif case_traj == 2
         dis_p_eqs = g_left-g_right;
-        dis_p_tr=[[pu_end;pv_end;ph_end]'*ortdgduvh]';
+        dis_p_eqs_left = f_left-f_right;
+        dis_p_tr=[[pu_end;pw_end;ph_end]'*ortdgduvh, [pu_0;pw_0;ph_0]'*f_ortdgduvh]';
         dis_p=[dis_p_eqs;dis_p_tr];        
     end
 elseif  strcmp(UorR,'u')
         %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
     if case_traj == 1
-        dis_p = [uf-u_end; pv_end];
+        dis_p = [uf-u_end; pw_end];
     elseif case_traj == 2
-        dis_p = [uf-u_end; vf-v_end;];
+        
+        dis_p_tr=[[pu_0;pw_0;ph_0]'*f_ortdgduvh]';
+        dis_p = [uf-u_end; vf-v_end;dis_p_tr];
     end
 elseif  strcmp(UorR,'r')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     if case_traj == 1
-        dis_p = [rf-r_end; pv_end;];
+        dis_p = [rf-r_end; pw_end;];
     elseif case_traj == 2
         dis_p = [rf-r_end; Vf-V_end;];
     end
