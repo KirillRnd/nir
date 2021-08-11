@@ -1,14 +1,14 @@
-function [value, isterminal, direction] = eventIntegrationTrajStopTime(~, y, time0,maxtime, t_end, h0, t_start_fix)
+function [value, isterminal, direction] = eventIntegrationTrajStopTime(~, y, time0,maxtime, t_end)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
 T_earth = 365.256363004*3600*24;
 T_unit = T_earth/(2*pi);
 u=y(1:4);
-v=y(5:8);
-h=y(9)+h0;
+w=y(5:8);
+h=y(9);
 tau=y(10);
-t_end_tmp = T_unit*(tau-2*(u'*v)/sqrt(-2*h))/(24*60*60)-t_start_fix;
+t_end_tmp = T_unit*(tau-2*(u'*w)/sqrt(-2*h))/(24*60*60);
 
 value(1) = maxtime-toc(time0);
 if value < 0

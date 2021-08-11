@@ -5,8 +5,6 @@
 %end
 t_start = juliandate(2022,1,1);
 %t_start=0;
-terminal_state = 's';
-UorR = 'u';
 N=1350;
 m0=367;
 eta=0.45;
@@ -16,7 +14,7 @@ case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 decreaseNonPsysical = 0;
 %Начальные условия
-x0=zeros([1, 12]);
+x0=zeros([1, 11]);
 
 %x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
@@ -40,19 +38,19 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=0;
-angle=0.75;
-x0(11)=n+angle;
+n=1;
+angle=0.0;
+x0(10)=n+angle;
 %x0(12)=x0(11)/2;
-modifier_p=1e-4;
+modifier_p=1e-06;
 modifier_f=1e+10;
 integration_acc=1e-16;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
 terminal_state = 's';
-UorR = 'u';
-rad=1/16;
+UorR = 'r';
+rad=1/8;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
@@ -70,7 +68,7 @@ UorR = 'u_hat';
 integration_acc=1e-16;
 rad=0;
 decreaseNonPsysical=0;
-calculate_condition=1;
+calculate_condition=0;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
 evaluation_time=evaluation_time+evaluation_time_2;
 
@@ -78,6 +76,7 @@ evaluation_time=evaluation_time+evaluation_time_2;
 
 %Коррекция фи для графика
 phi=atan2(uu(end,4),uu(end,1));
+phi0=atan2(uu(1,4),uu(1,1));
 functional = Jt(end);
 [rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont] =...
     checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
@@ -201,12 +200,11 @@ th = linspace(0 ,4*pi,1000)';
 mars_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], phi), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
 mars_traj_ks = cell2mat(mars_traj_ks')';
 
-mars_traj_ks_zero = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
+mars_traj_ks_zero = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], phi0), mars_traj_New(:, 1),mars_traj_New(:, 2),mars_traj_New(:, 3),'UniformOutput',false);
 mars_traj_ks_zero = cell2mat(mars_traj_ks_zero')';
 
-mars_traj_ks=mars_traj_ks;
 %phi === 0
-earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], 0), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
+earth_traj_ks = arrayfun(@(r1, r2, r3) rToU([r1,r2,r3], phi0), earth_traj_New(:, 1),earth_traj_New(:, 2),earth_traj_New(:, 3),'UniformOutput',false);
 earth_traj_ks = cell2mat(earth_traj_ks')';
 plot3(earth_traj_ks(:, 1), earth_traj_ks(:, 2), earth_traj_ks(:, 3), 'k')
 plot3(mars_traj_ks(:, 1), mars_traj_ks(:, 2), mars_traj_ks(:, 3), 'r')

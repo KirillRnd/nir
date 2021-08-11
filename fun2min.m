@@ -17,15 +17,15 @@ mug=1;
 pu_0=x(1:4)';
 pw_0=x(5:8)';
 ph_0=x(9);
-pt_0=x(10);
 if terminal_state == 's'
-    s_f=x(11)*2*pi;
+    s_f=x(10)*2*pi;
 elseif terminal_state == 't'
-    s_f=15*x(11)*2*pi;
+    s_f=15*x(10)*2*pi;
 end
-t_end_0=x(11)*365.256363004;
-phi=x(12)*2*pi;
+t_end_0=x(10)*365.256363004;
+phi=x(11)*2*pi;
 phi0=0;
+%phi0=phi;
 u_0 = rToU(r0, phi0);
 u_b0=[u_0(4); -u_0(3);u_0(2);-u_0(1)];
 h_0 = (norm(V0)^2)/2-mug/norm(r0);
@@ -39,7 +39,7 @@ f_ortdgduvh=get_ortdgduvh(u_0,w_0,h_0);
 %t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 %tau0=0;
 tau0=2*u_0'*w_0/sqrt(-2*h_0);
-y0 = cat(1, u_0, w_0, h_0, tau0, pu_0, pw_0, ph_0, pt_0)';
+y0 = cat(1, u_0, w_0, h_0, tau0, pu_0, pw_0, ph_0)';
 %t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
@@ -52,12 +52,12 @@ maxtime=10;
 if terminal_state == 's'
     options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0,maxtime));
 elseif terminal_state == 't'
-    options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0, h_0, t_start_fix));
+    options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0));
 end
 
 warning('off','all');
 
-[s,y] = ode113(@(s,y) integrateTraectory(s, y, h_0), [0 s_f], y0, options);
+[s,y] = ode113(@(s,y) integrateTraectory(s, y), [0 s_f], y0, options);
 int_s0sf = linspace(0, s(end), 100);
 % time0 = tic;
 % %максимальное время интегрирования
@@ -78,19 +78,18 @@ int_s0sf = linspace(0, s(end), 100);
 %Разбираем результат в конечный момент на переменные
 u_end=y(end, 1:4)';
 u_b_end=[u_end(4); -u_end(3);u_end(2);-u_end(1)];
-u2=u_end'*u_end;
-v_end=y(end, 5:8)';
+w_end=y(end, 5:8)';
 h_end=y(end, 9)';
 tau_end=y(end, 10)';
 pu_end=y(end, 11:14)';
 pw_end=y(end, 15:18)';
 ph_end=y(end, 19)';
-ptau_end=y(end, 20)';
+%ptau_end=y(end, 20)';
 
-t_end = T_unit*(tau_end-2*(u_end'*v_end)/sqrt(-2*h_end))/(24*60*60);
+t_end = T_unit*(tau_end-2*(u_end'*w_end)/sqrt(-2*h_end))/(24*60*60);
 r_end=KS(u_end);
 L_end = L_KS(u_end);
-V_end = 2*sqrt(-2*h_end)*L_end*v_end/(norm(u_end)^2);
+V_end = 2*sqrt(-2*h_end)*L_end*w_end/(norm(u_end)^2);
 %a_ks_end=L_end*(-(u2)*pv_end/(4*h_end) + v_end*(2*ph_end-(1/h_end)*pv_end'*v_end)+ptau_end*(u2)*u_end/((-2*h_end)^(3/2)));
 
 %Получаем координату и скорость планеты в эфемеридах и поворачиваем систеу
@@ -102,22 +101,29 @@ elseif terminal_state == 't'
 end
 
 
+
 eul = [0 pi/4 0];
 rotmZYX = eul2rotm(eul);
 rf = [rotmZYX*rf'; 0]/ae*1e+03;
 Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
+
+%Положение и скорость Земли для отладки
+[rf_e, Vf_e] = planetEphemeris(t_start+t_end,'SolarSystem','Earth','430');
+rf_e = [rotmZYX*rf_e'; 0]/ae*1e+03;
+Vf_e = [rotmZYX*Vf_e'; 0]/V_unit*1e+03;
+
 %Получаем параметрические координату и скорость планеты
 uf=rToU(rf, phi);
-vf=vFromV(Vf,rf,mug,phi);
+wf=vFromV(Vf,rf,mug,phi);
 hf=norm(Vf)^2/2-mug/norm(rf);
 if case_traj == 1
     g_left=get_target_g_u(u_end);
     g_right=rf(1:3);
     ortdgdu=get_ortdgdu(u_end);
 elseif case_traj == 2
-    g_left=get_target_gh(u_end,v_end,h_end);
+    g_left=get_target_gh(u_end,w_end,h_end);
     g_right=[rf(1:3);Vf(1:3);hf];
-    ortdgduvh=get_ortdgduvh(u_end,v_end,h_end);
+    ortdgduvh=get_ortdgduvh(u_end,w_end,h_end);
 end
 
 %Оптимизриуем по параметрическим координатам или по физическим
@@ -130,10 +136,13 @@ if strcmp(UorR,'u_hat')
         dis_p_tr = [pu_end'*ortdgdu; pw_end; ph_end];
         dis_p = [dis_p_eqs; dis_p_tr;];
     elseif case_traj == 2
-        dis_p_eqs = g_left-g_right;
-        dis_p_eqs_left = f_left-f_right;
-        dis_p_tr=[[pu_end;pw_end;ph_end]'*ortdgduvh, [pu_0;pw_0;ph_0]'*f_ortdgduvh]';
-        dis_p=[dis_p_eqs;dis_p_tr];        
+        dis_p_eqs_right = g_left-g_right;
+        %dis_p_eqs_left = f_left-f_right;
+        
+        dis_p_tr_left=[[pu_0;pw_0;ph_0]'*f_ortdgduvh]';
+        dis_p_tr_right=[[pu_end;pw_end;ph_end]'*ortdgduvh]';
+        dis_p=[dis_p_eqs_right;dis_p_tr_right];  
+        %dis_p=dis_p_eqs_right;
     end
 elseif  strcmp(UorR,'u')
         %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
@@ -142,8 +151,9 @@ elseif  strcmp(UorR,'u')
         dis_p = [uf-u_end; pw_end];
     elseif case_traj == 2
         
-        dis_p_tr=[[pu_0;pw_0;ph_0]'*f_ortdgduvh]';
-        dis_p = [uf-u_end; vf-v_end;dis_p_tr];
+        dis_p_tr_left=[[pu_0;pw_0;ph_0]'*f_ortdgduvh]';
+        %dis_p = [uf-u_end; vf-v_end;dis_p_tr_left];
+        dis_p = [uf-u_end; wf-w_end];
     end
 elseif  strcmp(UorR,'r')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ

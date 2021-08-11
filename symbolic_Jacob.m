@@ -8,22 +8,18 @@ tau = sym('tau','real');
 pu = sym('pu', [1 4],'real')';
 pw = sym('pw', [1 4],'real')';
 ph = sym('ph','real');
-ptau = sym('ptau','real');
 %билинейное соотношение
 bil=@(x)[x(4); -x(3); x(2); -x(1)];
 
 u2 = u'*u;
-L = [[u(1) -u(2) -u(3) u(4)];
-    [u(2) u(1) -u(4) -u(3)];
-    [u(3) u(4) u(1) u(2)];
-    [u(4) -u(3) u(2) -u(1)]]; 
+L = L_KS(u);
 dLvdu = jacobian(L*w, u');
 dLudu = jacobian(L*u, u');
 
 dtds=u2/sqrt(-2*h);
 %a = sym('a', [1 4],'real')';
 %Данная запись управления совпадает с находимой дальше
-Lambda=L*(-(u2)*pw/(4*h) + w*(2*ph-(1/h)*pw'*w)+ptau*((u2)*u+8*(u'*w)*w)/((-2*h)^(3/2)));
+Lambda=L*(-(u2)*pw/(4*h) + w*(2*ph-(1/h)*pw'*w));
 m=Lambda(4)/u2;
 LambdaTilde=Lambda-m*L*bil(u);
 LambdaTilde=simplify(LambdaTilde);
@@ -38,12 +34,12 @@ dtauds=(mug+4*(u'*w)*dhds+u2*u'*L'*a)/((-2*h)^(3/2));
 
 %H=-dtds*(a'*a)/2+pu'*duds+pw'*dvds+ph'*dhds+ptau'*dtauds-m*g;
 
-H_opt=LambdaTilde'*LambdaTilde/(dtds*2)+pu'*w-pw'*u/4+ptau*mug/((-2*h)^(3/2));
+H_opt=LambdaTilde'*LambdaTilde/(dtds*2)+pu'*w-pw'*u/4;
 %a_solved = solve(gradient(H,a)==0,a);
 %a_S=simplify([a_solved.a1;a_solved.a2;a_solved.a3;a_solved.a4;]);
 %a_S(4)=0;
-matlabFunction(a,'File','a_reactive','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau});
-
+matlabFunction(a,'File','a_reactive','Optimize',true, 'Vars', {u,w,h,pu,pw,ph});
+matlabFunction(H_opt,'File','calculateHamiltonian','Optimize',true, 'Vars', {u,w,h,pu,pw,ph});
 %duds=v;
 %dhds=2*v'*L'*a_S;
 %dvds=-u/4-(u2)/(4*h)*L'*a_S-(dhds/(2*h))*v;
@@ -55,15 +51,14 @@ matlabFunction(a,'File','a_reactive','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,pt
 dpuds=-simplify(gradient(H_opt, u'));
 dpvds=-simplify(gradient(H_opt, w'));
 dphds=-simplify(gradient(H_opt, h));
-dptauds=-simplify(gradient(H_opt, tau));
 
-y = [u', w', h, tau, pu', pw', ph, ptau];
+y = [u', w', h, tau, pu', pw', ph];
 
-f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds,  dptauds]';
-symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau});
+f = [duds', dvds', dhds, dtauds, dpuds', dpvds', dphds]';
+symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,w,h,pu,pw,ph});
 
 J = jacobian(f, y);
-symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,w,h,pu,pw,ph,ptau});
+symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,w,h,pu,pw,ph});
 
 y = 2*(u(1)*u(2)-u(3)*u(4));
 z = 2*(u(1)*u(3)+u(2)*u(4));
