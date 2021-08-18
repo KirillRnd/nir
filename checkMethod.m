@@ -35,7 +35,7 @@ mug=1;
 
 % modifier_p=1e-04;
 % modifier_f=1e+04;
-modifier_b=1e+10;
+modifier_b=1e+12;
 
 s_a = psi-rad;
 s_b = psi+rad;
@@ -70,9 +70,9 @@ if display == 1
 end
 options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'StepTolerance', 1e-14);
+options = optimoptions(options, 'StepTolerance', 1e-18);
 options = optimoptions(options, 'ConstraintTolerance', 1e-20);
-options = optimoptions(options, 'MaxIterations', 250);
+options = optimoptions(options, 'MaxIterations', 1000);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
