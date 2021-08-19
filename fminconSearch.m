@@ -14,7 +14,7 @@ case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 decreaseNonPsysical = 0;
 %Начальные условия
-x0=zeros([1, 11]);
+x0=zeros([1, 10]);
 
 %x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
@@ -38,17 +38,17 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=1;
-angle=0.25;
-x0(10)=n+angle;
+n=0;
+angle=0.75;
+x0(9)=n+angle;
 %x0(12)=x0(11)/2;
-modifier_p=1e-8;
+modifier_p=1e-06;
 modifier_f=1e+10;
 integration_acc=1e-16;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
-terminal_state = 's';
+terminal_state = 't';
 UorR = 'r';
 rad=1/8;
 %delta_s=1.23*(n+angle)-0.24;
@@ -63,7 +63,7 @@ elseif terminal_state == 't'
     x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
 end
 %modifier_p=1e-08;
-terminal_state = 's';
+terminal_state = 't';
 UorR = 'u_hat';
 integration_acc=1e-16;
 rad=0;

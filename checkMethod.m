@@ -35,7 +35,7 @@ mug=1;
 
 % modifier_p=1e-04;
 % modifier_f=1e+04;
-modifier_b=1e+12;
+modifier_b=1e+13;
 
 s_a = psi-rad;
 s_b = psi+rad;
@@ -43,26 +43,26 @@ s_b = psi+rad;
 %x0(11)=psi;
 
 
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
+lb = -[1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
 ub = -lb;
 
-lb(10) = s_a;
-ub(10) = s_b;
+lb(9) = s_a;
+ub(9) = s_b;
 
 
 if strcmp(UorR,'u') || strcmp(UorR,'r')
-    lb(11) = 0.0;
-    ub(11) = 1.0;
+    lb(10) = 0.0;
+    ub(10) = 1.0;
 elseif strcmp(UorR,'u_hat')
     %lb(11) = x0(11);
     %ub(11) = x0(11);
-    lb(11) = 0.0;
-    ub(11) = 1.0;
+    lb(10) = 0.0;
+    ub(10) = 1.0;
 end
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
 tic;
-fun=@(x)fun2min([x(1:9)*modifier_p, x(10), x(11)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state,integration_acc);
+fun=@(x)fun2min([x(1:8)*modifier_p, x(9), x(10)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state,integration_acc);
 
 options = optimoptions('fmincon','UseParallel', true);
 if display == 1
@@ -72,7 +72,7 @@ options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-18);
 options = optimoptions(options, 'ConstraintTolerance', 1e-20);
-options = optimoptions(options, 'MaxIterations', 1000);
+options = optimoptions(options, 'MaxIterations', 250);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
@@ -80,14 +80,14 @@ options = optimoptions(options,'OutputFcn',@myoutput);
 
 [x,fval,exitflag,output,lambda,grad,hessian] = fmincon(@(x)1, x0, A, b, Aeq, beq, lb, ub, fun, options);
 evaluation_time = toc;
-px = x(1:9)*modifier_p;
+px = x(1:8)*modifier_p;
 if terminal_state == 's'
-    s_f=x(10)*2*pi;
+    s_f=x(9)*2*pi;
 elseif terminal_state == 't'
-    s_f=1.5*x(10)*2*pi;
+    s_f=1.5*x(9)*2*pi;
 end
-t_end_0=x(10)*365.256363004;
-phi = x(11)*2*pi;
+t_end_0=x(9)*365.256363004;
+phi = x(10)*2*pi;
 %задаем начальные условия
 %options = optimoptions(options,'OutputFcn',@myoutput);
 %options = optimoptions(options, 'Algorithm', 'sqp');
@@ -101,7 +101,7 @@ w0 = vFromV(V0,r0,mug,phi0);
 %tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 %tau0=0;
 tau0=2*u0'*w0/sqrt(-2*h0);
-y0 = cat(1, u0, w0, h0, tau0,  px')';
+y0 = cat(1, u0, w0, tau0,  px')';
 
 %t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 int_s0sf = linspace(0, s_f, 1e+3);
@@ -144,20 +144,20 @@ for i = 1:length(uu)
     L=L_KS(u);
     u2=norm(u)^2;
     w=y(i, 5:8)';
-    h=y(i, 9)';
-    tau=y(i ,10)';
-    pu=y(i, 11:14)';
-    pw=y(i, 15:18)';
-    ph=y(i, 19)';
+    h=-mug/(u'*u+4*w'*w);
+    tau=y(i ,9)';
+    pu=y(i, 10:13)';
+    pw=y(i, 14:17)';
+    %ph=y(i, 19)';
     %ptau=y(i, 20)';
     dtds=u2/sqrt(-2*h);
-    aa_ks=a_reactive(u,w,h,pu,pw,ph);
+    aa_ks=a_reactive(u,w,pu,pw);
     a_ks(i, :)=aa_ks/(ae/sqrt(mug_0)).^2;
 
     V = 2*sqrt(-2*h)*L*w/(u2);
     VV(i, :)=V;
     t(i) = T_unit*(tau-2*(u'*w)/sqrt(-2*h));
-    H=calculateHamiltonian(u,w,h,pu,pw,ph);
+    H=calculateHamiltonian(u,w,pu,pw);
     HH(i)=H;
 end
 t = t - t(1);

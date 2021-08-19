@@ -16,14 +16,14 @@ mug=1;
 %Задаём начальные условия на левом конце 
 pu_0=x(1:4)';
 pw_0=x(5:8)';
-ph_0=x(9);
+%ph_0=x(9);
 if terminal_state == 's'
-    s_f=x(10)*2*pi;
+    s_f=x(9)*2*pi;
 elseif terminal_state == 't'
-    s_f=15*x(10)*2*pi;
+    s_f=15*x(9)*2*pi;
 end
-t_end_0=x(10)*365.256363004;
-phi=x(11)*2*pi;
+t_end_0=x(9)*365.256363004;
+phi=x(10)*2*pi;
 phi0=0;
 %phi0=phi;
 u_0 = rToU(r0, phi0);
@@ -31,22 +31,22 @@ u_b0=[u_0(4); -u_0(3);u_0(2);-u_0(1)];
 h_0 = (norm(V0)^2)/2-mug/norm(r0);
 w_0 = vFromV(V0,r0,mug, phi0);
 %Условия трансверсальности на левом конце
-f_left=get_target_gh(u_0,w_0,h_0);
-f_right=[r0(1:3);V0(1:3);h_0];
-f_ortdgduvh=get_ortdgduvh(u_0,w_0,h_0);
+f_left=get_target_g(u_0,w_0);
+f_right=[r0(1:3);V0(1:3)];
+f_ortdgduv=get_ortdgduv(u_0,w_0);
 
 %h0=-mug/(u0'*u0+4*v0'*v0)
 %t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 %tau0=0;
 tau0=2*u_0'*w_0/sqrt(-2*h_0);
-y0 = cat(1, u_0, w_0, h_0, tau0, pu_0, pw_0, ph_0)';
+y0 = cat(1, u_0, w_0, tau0, pu_0, pw_0)';
 %t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
 %acc=1e-14;
 options = odeset('AbsTol',integration_acc);
 options = odeset(options,'RelTol',integration_acc);
-options = odeset(options,'NonNegative', 10);
+options = odeset(options,'NonNegative', 9);
 %максимальное время интегрирования
 maxtime=10;
 if terminal_state == 's'
@@ -79,11 +79,12 @@ int_s0sf = linspace(0, s(end), 100);
 u_end=y(end, 1:4)';
 u_b_end=[u_end(4); -u_end(3);u_end(2);-u_end(1)];
 w_end=y(end, 5:8)';
-h_end=y(end, 9)';
-tau_end=y(end, 10)';
-pu_end=y(end, 11:14)';
-pw_end=y(end, 15:18)';
-ph_end=y(end, 19)';
+%h_end=y(end, 9)';
+h_end=-mug/(u_end'*u_end+4*w_end'*w_end);
+tau_end=y(end, 9)';
+pu_end=y(end, 10:13)';
+pw_end=y(end, 14:17)';
+%ph_end=y(end, 19)';
 %ptau_end=y(end, 20)';
 
 t_end = T_unit*(tau_end-2*(u_end'*w_end)/sqrt(-2*h_end))/(24*60*60);
@@ -121,9 +122,9 @@ if case_traj == 1
     g_right=rf(1:3);
     ortdgdu=get_ortdgdu(u_end);
 elseif case_traj == 2
-    g_left=get_target_gh(u_end,w_end,h_end);
-    g_right=[rf(1:3);Vf(1:3);hf];
-    ortdgduvh=get_ortdgduvh(u_end,w_end,h_end);
+    g_left=get_target_g(u_end,w_end);
+    g_right=[rf(1:3);Vf(1:3)];
+    ortdgduv=get_ortdgduv(u_end,w_end);
 end
 
 %Оптимизриуем по параметрическим координатам или по физическим
@@ -139,8 +140,8 @@ if strcmp(UorR,'u_hat')
         dis_p_eqs_right = g_left-g_right;
         %dis_p_eqs_left = f_left-f_right;
         
-        dis_p_tr_left=[[pu_0;pw_0;ph_0]'*f_ortdgduvh]';
-        dis_p_tr_right=[[pu_end;pw_end;ph_end]'*ortdgduvh]';
+        dis_p_tr_left=[[pu_0;pw_0]'*f_ortdgduv]';
+        dis_p_tr_right=[[pu_end;pw_end]'*ortdgduv]';
         dis_p=[dis_p_eqs_right;dis_p_tr_right];  
         %dis_p=dis_p_eqs_right;
     end
@@ -151,7 +152,7 @@ elseif  strcmp(UorR,'u')
         dis_p = [uf-u_end; pw_end];
     elseif case_traj == 2
         
-        dis_p_tr_left=[[pu_0;pw_0;ph_0]'*f_ortdgduvh]';
+        dis_p_tr_left=[[pu_0;pw_0]'*f_ortdgduv]';
         %dis_p = [uf-u_end; vf-v_end;dis_p_tr_left];
         dis_p = [uf-u_end; wf-w_end];
     end
