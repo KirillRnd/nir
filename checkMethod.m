@@ -72,7 +72,7 @@ options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-18);
 options = optimoptions(options, 'ConstraintTolerance', 1e-20);
-options = optimoptions(options, 'MaxIterations', 250);
+options = optimoptions(options, 'MaxIterations', 10);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
@@ -135,6 +135,7 @@ rr=zeros(length(uu),4);
 
 t=zeros(length(uu),1);
 HH=zeros(length(uu),1);
+P_TR=zeros(length(uu),2);
 VV=zeros(length(uu),4);
 a_ks=zeros(length(uu),4);
 for i = 1:length(uu)
@@ -148,6 +149,8 @@ for i = 1:length(uu)
     tau=y(i ,9)';
     pu=y(i, 10:13)';
     pw=y(i, 14:17)';
+    f_ortdgduv=get_ortdgduv(u,w);
+    p_tr=[[pu;pw]'*f_ortdgduv]';
     %ph=y(i, 19)';
     %ptau=y(i, 20)';
     dtds=u2/sqrt(-2*h);
@@ -159,6 +162,7 @@ for i = 1:length(uu)
     t(i) = T_unit*(tau-2*(u'*w)/sqrt(-2*h));
     H=calculateHamiltonian(u,w,pu,pw);
     HH(i)=H;
+    P_TR(i,:)=p_tr;
 end
 t = t - t(1);
 Jt = integrateFunctional(t, y, eta);

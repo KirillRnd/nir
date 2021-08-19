@@ -34,7 +34,7 @@ w_0 = vFromV(V0,r0,mug, phi0);
 f_left=get_target_g(u_0,w_0);
 f_right=[r0(1:3);V0(1:3)];
 f_ortdgduv=get_ortdgduv(u_0,w_0);
-
+dis_p_tr_left=[[pu_0;pw_0]'*f_ortdgduv]';
 %h0=-mug/(u0'*u0+4*v0'*v0)
 %t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 %tau0=0;
@@ -139,10 +139,8 @@ if strcmp(UorR,'u_hat')
     elseif case_traj == 2
         dis_p_eqs_right = g_left-g_right;
         %dis_p_eqs_left = f_left-f_right;
-        
-        dis_p_tr_left=[[pu_0;pw_0]'*f_ortdgduv]';
         dis_p_tr_right=[[pu_end;pw_end]'*ortdgduv]';
-        dis_p=[dis_p_eqs_right;dis_p_tr_right];  
+        dis_p=[dis_p_eqs_right;dis_p_tr_right;dis_p_tr_left];  
         %dis_p=dis_p_eqs_right;
     end
 elseif  strcmp(UorR,'u')
@@ -150,11 +148,9 @@ elseif  strcmp(UorR,'u')
     %direction - выбор положительного или отрицательного семейства
     if case_traj == 1
         dis_p = [uf-u_end; pw_end];
-    elseif case_traj == 2
-        
-        dis_p_tr_left=[[pu_0;pw_0]'*f_ortdgduv]';
-        %dis_p = [uf-u_end; vf-v_end;dis_p_tr_left];
-        dis_p = [uf-u_end; wf-w_end];
+    elseif case_traj == 2   
+        dis_p = [uf-u_end; wf-w_end;dis_p_tr_left];
+        %dis_p = [uf-u_end; wf-w_end];
     end
 elseif  strcmp(UorR,'r')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ

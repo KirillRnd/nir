@@ -49,7 +49,7 @@ integration_acc=1e-16;
 %переменных
 display = 1;
 terminal_state = 't';
-UorR = 'r';
+UorR = 'u';
 rad=1/8;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
