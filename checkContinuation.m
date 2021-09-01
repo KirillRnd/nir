@@ -1,4 +1,4 @@
-function [rr_cont, Jt, C, evaluation_time, dr, dV] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
+function [rr_cont, Jt, C, evaluation_time, dr, dV,pr0,pv0] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
@@ -13,12 +13,15 @@ mug=1;
 
 tf=t0+dt;
 
+eul = [0 pi/4 0];
+rotmZYX = eul2rotm(eul);
+
 [r0, V0] = planetEphemeris(t0,'SolarSystem','Earth','430');
 [rf, Vf] = planetEphemeris(tf,'SolarSystem',planet_end,'430');
-r0=r0'/ae*1e+03;
-V0=V0'/V_unit*1e+03;
-rf=rf'/ae*1e+03;
-Vf=Vf'/V_unit*1e+03;
+r0=rotmZYX*r0'/ae*1e+03;
+V0=rotmZYX*V0'/V_unit*1e+03;
+rf=rotmZYX*rf'/ae*1e+03;
+Vf=rotmZYX*Vf'/V_unit*1e+03;
 % 
 % phi = getAngleRoRf(r0,rf,V0);
 % 
@@ -79,9 +82,13 @@ evaluation_time = toc;
 y0_final=y0;
 y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);
+pr0=z(end,1:3)';
+pv0=z(end,4:6)';
 [t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0_final,options);
 %Координаты
-rr_cont = ae*y_final(:, 1:3);
+rr_cont_rot = ae*y_final(:, 1:3);
+rr_cont = arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', rr_cont_rot(:, 1),rr_cont_rot(:, 2),rr_cont_rot(:, 3),'UniformOutput',false);
+rr_cont = cell2mat(rr_cont')';
 %Ускорение (pV)
 a=y_final(:, 7:9)/a_unit;
 a_vec=vecnorm(a, 2, 2).^2;
@@ -108,8 +115,8 @@ end
 C = cond(dfdz);
 
 [mars_r_f, mars_v_f]=planetEphemeris(tf,'SolarSystem',planet_end,'430');
-mars_r_f=mars_r_f'*1e+03;
-mars_v_f=mars_v_f'*1e+03;
+mars_r_f=rotmZYX*mars_r_f'*1e+03;
+mars_v_f=rotmZYX*mars_v_f'*1e+03;
 dr = norm(ae*rr_cont(end, :)'-mars_r_f);
 dV = norm(V_unit*y_final(end, 4:6)'-mars_v_f);
 end

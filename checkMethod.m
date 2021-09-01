@@ -32,7 +32,7 @@ V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 %nonlcon = @(x)ubOrtPv(x, rToU(r0, 0));
 nonlcon=[];
 mug=1;
-
+x0(1:8)=x0(1:8)/modifier_p;
 % modifier_p=1e-04;
 % modifier_f=1e+04;
 modifier_b=1e+13;
@@ -72,7 +72,7 @@ options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-18);
 options = optimoptions(options, 'ConstraintTolerance', 1e-20);
-options = optimoptions(options, 'MaxIterations', 1);
+options = optimoptions(options, 'MaxIterations', 10);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
 %options = optimoptions(options, 'Algorithm', 'sqp');
 

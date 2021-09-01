@@ -14,11 +14,11 @@ w=y(5:8);
 %h=y(9);
 tau=y(9);
 pu=y(10:13);
-pv=y(14:17);
+pw=y(14:17);
 %ph=y(19);
 %ptau=y(20);
 %ptau=0;
 %Сохрняем провизводные
-res=symF(u,w,pu,pv);
+res=symF(u,w,pu,pw);
 end
 

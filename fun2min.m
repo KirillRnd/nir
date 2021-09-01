@@ -88,8 +88,9 @@ pw_end=y(end, 14:17)';
 %ptau_end=y(end, 20)';
 
 t_end = T_unit*(tau_end-2*(u_end'*w_end)/sqrt(-2*h_end))/(24*60*60);
-r_end=KS(u_end);
+
 L_end = L_KS(u_end);
+r_end = L_end*u_end;
 V_end = 2*sqrt(-2*h_end)*L_end*w_end/(norm(u_end)^2);
 %a_ks_end=L_end*(-(u2)*pv_end/(4*h_end) + v_end*(2*ph_end-(1/h_end)*pv_end'*v_end)+ptau_end*(u2)*u_end/((-2*h_end)^(3/2)));
 

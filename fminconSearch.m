@@ -14,7 +14,7 @@ case_traj=2;
 %¬ыбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 decreaseNonPsysical = 0;
 %Ќачальные услови€
-x0=zeros([1, 10]);
+%x0=zeros([1, 10]);
 
 %x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
@@ -49,7 +49,7 @@ integration_acc=1e-16;
 %переменных
 display = 1;
 terminal_state = 't';
-UorR = 'u';
+UorR = 'r';
 rad=1/8;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
@@ -76,7 +76,7 @@ calculate_condition=0;
 phi=atan2(uu(end,4),uu(end,1));
 phi0=atan2(uu(1,4),uu(1,1));
 functional = Jt(end);
-[rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont] =...
+[rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
     checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);

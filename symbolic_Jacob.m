@@ -14,13 +14,13 @@ bil=@(x)[x(4); -x(3); x(2); -x(1)];
 
 u2 = u'*u;
 L = L_KS(u);
-dLvdu = jacobian(L*w, u');
-dLudu = jacobian(L*u, u');
+%dLvdu = jacobian(L*w, u');
+%dLudu = jacobian(L*u, u');
 
 dtds=u2/sqrt(-2*h);
 %a = sym('a', [1 4],'real')';
 %Данная запись управления совпадает с находимой дальше
-Lambda=L*(-(u2)*pw/(4*h) - w*(1/h)*pw'*w);
+Lambda=L*(-(u2)*pw/(4*h) - w*(1/h)*(pw'*w));
 m=Lambda(4)/u2;
 LambdaTilde=Lambda-m*L*bil(u);
 LambdaTilde=simplify(LambdaTilde);
@@ -29,13 +29,14 @@ a=LambdaTilde/dtds;
 g=bil(u)'*L'*a;
 %a(4)=0;
 duds=w;
-dhds=2*w'*L'*a;
-dvds=-u/4-(u2)/(4*h)*L'*a-(dhds/(2*h))*w;
-dtauds=(mug+4*(u'*w)*dhds+u2*u'*L'*a)/((-2*h)^(3/2));
+dhds=2*w'*(L'*a);
+dwds=-u/4-(L'*a)*(u2)/(4*h)-(dhds/(2*h))*w;
+dtauds=(mug+4*(u'*w)*dhds+u2*u'*(L'*a))/((-2*h)^(3/2));
 
-%H=-dtds*(a'*a)/2+pu'*duds+pw'*dvds+ph'*dhds+ptau'*dtauds-m*g;
-
+%H=-dtds*(a'*a)/2+pu'*duds+pw'*dwds-m*g;
+%H_opt=simplify(H);
 H_opt=LambdaTilde'*LambdaTilde/(dtds*2)+pu'*w-pw'*u/4;
+
 %a_solved = solve(gradient(H,a)==0,a);
 %a_S=simplify([a_solved.a1;a_solved.a2;a_solved.a3;a_solved.a4;]);
 %a_S(4)=0;
@@ -50,12 +51,12 @@ matlabFunction(H_opt,'File','calculateHamiltonian','Optimize',true, 'Vars', {u,w
 
 
 dpuds=-simplify(gradient(H_opt, u'));
-dpvds=-simplify(gradient(H_opt, w'));
+dpwds=-simplify(gradient(H_opt, w'));
 %dphds=-simplify(gradient(H_opt, h));
 
 y = [u', w', tau, pu', pw'];
 
-f = [duds', dvds', dtauds, dpuds', dpvds']';
+f = [duds', dwds', dtauds, dpuds', dpwds']';
 symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,w,pu,pw});
 
 J = jacobian(f, y);
