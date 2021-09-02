@@ -3,7 +3,7 @@ mug=1;
 u = sym('u', [1 4],'real')';
 w = sym('w', [1 4],'real')';
 %h = sym('h','real');
-h=-mug/(u'*u+4*w'*w);
+h=-mug/(u'*u+4*(w'*w));
 tau = sym('tau','real');
 
 pu = sym('pu', [1 4],'real')';
@@ -33,9 +33,9 @@ dhds=2*w'*(L'*a);
 dwds=-u/4-(L'*a)*(u2)/(4*h)-(dhds/(2*h))*w;
 dtauds=(mug+4*(u'*w)*dhds+u2*u'*(L'*a))/((-2*h)^(3/2));
 
-%H=-dtds*(a'*a)/2+pu'*duds+pw'*dwds-m*g;
-%H_opt=simplify(H);
-H_opt=LambdaTilde'*LambdaTilde/(dtds*2)+pu'*w-pw'*u/4;
+H=-dtds*(a'*a)/2+pu'*duds+pw'*dwds-m*g;
+H_opt=H;
+%H_opt=LambdaTilde'*LambdaTilde/(dtds*2)+pu'*w-pw'*u/4;
 
 %a_solved = solve(gradient(H,a)==0,a);
 %a_S=simplify([a_solved.a1;a_solved.a2;a_solved.a3;a_solved.a4;]);
@@ -50,47 +50,54 @@ matlabFunction(H_opt,'File','calculateHamiltonian','Optimize',true, 'Vars', {u,w
 %H=-dtds*(a_S'*a_S)/2+pu'*duds+pv'*dvds+ph'*dhds+ptau'*dtauds;
 
 
-dpuds=-simplify(gradient(H_opt, u'));
-dpwds=-simplify(gradient(H_opt, w'));
+dpuds=-gradient(H_opt, u');
+dpwds=-gradient(H_opt, w');
 %dphds=-simplify(gradient(H_opt, h));
 
-y = [u', w', tau, pu', pw'];
+y = [u', w', pu', pw', tau];
 
-f = [duds', dwds', dtauds, dpuds', dpwds']';
+f = [duds', dwds', dpuds', dpwds',dtauds]';
 symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,w,pu,pw});
 
-J = jacobian(f, y);
-symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,w,pu,pw});
+%J = jacobian(f, y);
+%symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,w,pu,pw});
 
-y = 2*(u(1)*u(2)-u(3)*u(4));
-z = 2*(u(1)*u(3)+u(2)*u(4));
-g = [u(1)^2+u(4)^2; u(2)^2+u(3)^2; atan2(u(4),u(1))+atan2(u(3),u(2))];
-dgdu=jacobian(g,u);
-symFdgdu = matlabFunction(dgdu,'File','get_dgdu','Optimize',true, 'Vars', {u});
+%y = 2*(u(1)*u(2)-u(3)*u(4));
+%z = 2*(u(1)*u(3)+u(2)*u(4));
+%g = [u(1)^2+u(4)^2; u(2)^2+u(3)^2; atan2(u(4),u(1))+atan2(u(3),u(2))];
+%dgdu=jacobian(g,u);
+%symFdgdu = matlabFunction(dgdu,'File','get_dgdu','Optimize',true, 'Vars', {u});
+%%
+% V = sym('V', [1 4],'real')';
+% V(4)=0;
+% F = [[V(1) V(2) V(3) V(4)];
+%     [V(2) -V(1) -V(4) V(3)];
+%     [V(3) V(4) -V(1) -V(2)];
+%     [-V(4) V(3) -V(2) V(1)]];
+% Fv = F^-1*w;
+Lt=L(1:3,:);
+F=[Lt*u;2*sqrt(-2*h)*Lt*w/(u'*u)];
+%g=[g(1:3);g(5:7)];
 
-V = sym('V', [1 4],'real')';
-V(4)=0;
-F = [[V(1) V(2) V(3) V(4)];
-    [V(2) -V(1) -V(4) V(3)];
-    [V(3) V(4) -V(1) -V(2)];
-    [-V(4) V(3) -V(2) V(1)]];
-Fv = F^-1*w;
-g=[L*u;2*sqrt(-2*h)*L*w/(u'*u)];
-g=[g(1:3);g(5:7)];
+pr = sym('pr', [1 3],'real')';
+pV = sym('pV', [1 3],'real')';
 
-dgduv=jacobian(g,[u;w]);
-ortdgduv=null(dgduv);
+dgduw=jacobian(F,[u;w]);
+ortdgduw=null(dgduw);
+prpV2pupw=[pr;pV]'*dgduw;
 
+matlabFunction(F,'File','get_target_g','Optimize', true, 'Vars', {u,w});
+matlabFunction(dgduw,'File','get_dgduv','Optimize', true, 'Vars', {u,w});
+matlabFunction(ortdgduw,'File','get_ortdgduv','Optimize', true, 'Vars', {u,w});
+matlabFunction(prpV2pupw,'File','prpV2pupw','Optimize', true, 'Vars', {u,w,pr,pV});
 
-matlabFunction(g,'File','get_target_g','Optimize', true, 'Vars', {u,w});
-matlabFunction(dgduv,'File','get_dgduv','Optimize', true, 'Vars', {u,w});
-matlabFunction(ortdgduv,'File','get_ortdgduv','Optimize', true, 'Vars', {u,w});
+F=F(1:3);
 
-g=g(1:3);
-
-dgdu=jacobian(g,u);
+dgdu=jacobian(F,u);
 ortdgdu=null(dgdu);
 
-matlabFunction(g,'File','get_target_g_u','Optimize', true, 'Vars', {u});
+matlabFunction(F,'File','get_target_g_u','Optimize', true, 'Vars', {u});
 matlabFunction(dgdu,'File','get_dgdu','Optimize', true, 'Vars', {u});
 matlabFunction(ortdgdu,'File','get_ortdgdu','Optimize', true, 'Vars', {u});
+%%
+a_pV = simplify(subs(a, [pu;pw], prpV2pupw'))

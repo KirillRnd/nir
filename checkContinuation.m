@@ -1,4 +1,4 @@
-function [rr_cont, Jt, C, evaluation_time, dr, dV,pr0,pv0] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
+function [rr_cont, Jt, C, evaluation_time, dr, dV,PR,PV, t_cont] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
@@ -82,10 +82,12 @@ evaluation_time = toc;
 y0_final=y0;
 y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);
-pr0=z(end,1:3)';
-pv0=z(end,4:6)';
+pr0=-z(end,4:6)';
+pv0=z(end,1:3)';
 [t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0_final,options);
 %Координаты
+PV=y_final(:, 7:9);
+PR=-y_final(:, 10:12); %он же dpvdt
 rr_cont_rot = ae*y_final(:, 1:3);
 rr_cont = arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', rr_cont_rot(:, 1),rr_cont_rot(:, 2),rr_cont_rot(:, 3),'UniformOutput',false);
 rr_cont = cell2mat(rr_cont')';
@@ -119,5 +121,7 @@ mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
 dr = norm(ae*rr_cont(end, :)'-mars_r_f);
 dV = norm(V_unit*y_final(end, 4:6)'-mars_v_f);
+
+t_cont=t*T_unit;
 end
 

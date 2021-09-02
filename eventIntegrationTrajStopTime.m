@@ -7,7 +7,7 @@ T_unit = T_earth/(2*pi);
 u=y(1:4);
 w=y(5:8);
 h=-mug/(u'*u+4*w'*w);
-tau=y(9);
+tau=y(17);
 t_end_tmp = T_unit*(tau-2*(u'*w)/sqrt(-2*h))/(24*60*60);
 
 value(1) = maxtime-toc(time0);

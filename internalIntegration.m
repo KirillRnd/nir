@@ -11,6 +11,9 @@ V=y(4:6);
 pv=y(7:9);
 dpvdt=y(10:12);%dpv/dt
 
+%pv=y(7:9);
+%dpvdt=y(10:12);%dpv/dt
+
 drdpr=reshape(y(13:21),[3,3]);
 drdpv=reshape(y(22:30),[3,3]);
 
