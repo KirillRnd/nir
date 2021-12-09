@@ -38,7 +38,7 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=1;
+n=0;
 angle=0.75;
 x0(9)=n+angle;
 %x0(12)=x0(11)/2;
