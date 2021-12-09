@@ -51,13 +51,13 @@ ub(9) = s_b;
 
 
 if strcmp(UorR,'u') || strcmp(UorR,'r')
-    lb(10) = 0.0;
+    lb(10) = -1.0;
     ub(10) = 1.0;
 elseif strcmp(UorR,'u_hat')
-    %lb(11) = x0(11);
-    %ub(11) = x0(11);
-    lb(10) = 0.0;
-    ub(10) = 1.0;
+    lb(10) = x0(10);
+    ub(10) = x0(10);
+%     lb(10) = 0.0;
+%     ub(10) = 1.0;
 end
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
@@ -68,11 +68,11 @@ options = optimoptions('fmincon','UseParallel', true);
 if display == 1
     options = optimoptions(options, 'Display', 'iter');
 end
-options = optimoptions(options, 'OptimalityTolerance', 1e-10);
+options = optimoptions(options, 'OptimalityTolerance', 1e-12);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'StepTolerance', 1e-18);
-options = optimoptions(options, 'ConstraintTolerance', 1e-20);
-options = optimoptions(options, 'MaxIterations', 10);
+options = optimoptions(options, 'StepTolerance', 1e-12);
+options = optimoptions(options, 'ConstraintTolerance', 1e-12);
+options = optimoptions(options, 'MaxIterations', 250);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
@@ -91,8 +91,8 @@ phi = x(10)*2*pi;
 %задаем начальные условия
 %options = optimoptions(options,'OutputFcn',@myoutput);
 %options = optimoptions(options, 'Algorithm', 'sqp');
-%phi0=phi;
-phi0=0;
+phi0=phi;
+%phi0=0;
 h0=(norm(V0)^2)/2-mug/norm(r0);
 
 u0 = rToU(r0, phi0);
@@ -101,7 +101,7 @@ w0 = vFromV(V0,r0,mug,phi0);
 %tau0=getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 %tau0=0;
 tau0=2*u0'*w0/sqrt(-2*h0);
-y0 = cat(1, u0, w0, tau0,  px')';
+y0 = cat(1, u0, w0, px', tau0)';
 
 %t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 int_s0sf = linspace(0, s_f, 1e+3);
@@ -146,9 +146,9 @@ for i = 1:length(uu)
     u2=norm(u)^2;
     w=y(i, 5:8)';
     h=-mug/(u'*u+4*w'*w);
-    tau=y(i ,9)';
-    pu=y(i, 10:13)';
-    pw=y(i, 14:17)';
+    tau=y(i ,17)';
+    pu=y(i, 9:12)';
+    pw=y(i, 13:16)';
     f_ortdgduv=get_ortdgduv(u,w);
     p_tr=[[pu;pw]'*f_ortdgduv]';
     %ph=y(i, 19)';

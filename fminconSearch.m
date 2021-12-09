@@ -14,8 +14,8 @@ case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 decreaseNonPsysical = 0;
 %Начальные условия
-%x0=zeros([1, 10]);
-
+x0=zeros([1, 10]);
+%x0(1:8)=[-0.081312208804168  -0.165241434409968  -0.137910347360105  -0.029456685044885  -0.151663938192582  -0.306939705835856  -0.241150551359049  -0.080582966706315];
 %x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
 A = [];
 b = [];
@@ -38,19 +38,19 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=0;
+n=1;
 angle=0.75;
 x0(9)=n+angle;
 %x0(12)=x0(11)/2;
-modifier_p=1e-06;
+modifier_p=1e-01;
 modifier_f=1e+10;
-integration_acc=1e-16;
+integration_acc=1e-14;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
-terminal_state = 't';
-UorR = 'r';
-rad=1/8;
+terminal_state = 's';
+UorR = 'u_hat';
+rad=1/32;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
@@ -58,18 +58,18 @@ calculate_condition=0;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
 
 if terminal_state == 's'
-    x0_sec = [px/modifier_p s_f/(2*pi) phi/(2*pi)];
+    x0_sec = [px s_f/(2*pi) phi/(2*pi)];
 elseif terminal_state == 't'
-    x0_sec = [px/modifier_p t_end/365.256363004 phi/(2*pi)];
+    x0_sec = [px t_end/365.256363004 phi/(2*pi)];
 end
 %modifier_p=1e-08;
-terminal_state = 't';
+terminal_state = 's';
 UorR = 'u_hat';
 integration_acc=1e-16;
 rad=0;
 decreaseNonPsysical=0;
 calculate_condition=0;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+%[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
 %evaluation_time=evaluation_time+evaluation_time_2;
 
 %Коррекция фи для графика
@@ -236,11 +236,11 @@ ax.YAxisLocation = 'origin';
 box off;
 hold off;
 %[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
-d = cmp2Trajectories(rr_old(:, 1:3)*ae,rr_cont)/ae;
+d = cmp2Trajectories(rr_old(:, 1:3)*ae,rr_cont);
 
-disp(['Максимальная разница в  координатах ', num2str(d,'%10.2e\n'), 'a.e.'])
-disp(['Расход массы в KS-координатах ', num2str(m(1)-m(end)), 'кг'])
-disp(['Расход массы методом продолжения ', num2str(m_cont(1)-m_cont(end)), 'кг'])
+disp(['Максимальная разница в  координатах ', num2str(d,'%10.2e\n'), 'м.'])
+disp(['Расход массы в KS-координатах ', num2str(m(1)-m(end),'%10.5e\n'), 'кг'])
+disp(['Расход массы методом продолжения ', num2str(m_cont(1)-m_cont(end),'%10.6e\n'), 'кг'])
 disp(['Невязка координаты ', num2str(norm(ae*rr_old(end, 1:3)-mars_r_f(1:3)'),'%10.2e\n'),',м'])
 disp(['Невязка скорости ', num2str((norm(V_unit*VV_old(end, 1:3)-mars_v_f(1:3)')),'%10.2e\n'),',м/с'])
 % относительное число обусловленности

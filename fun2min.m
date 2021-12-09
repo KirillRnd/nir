@@ -24,8 +24,8 @@ elseif terminal_state == 't'
 end
 t_end_0=x(9)*365.256363004;
 phi=x(10)*2*pi;
-phi0=0;
-%phi0=phi;
+%phi0=0;
+phi0=phi;
 u_0 = rToU(r0, phi0);
 u_b0=[u_0(4); -u_0(3);u_0(2);-u_0(1)];
 h_0 = (norm(V0)^2)/2-mug/norm(r0);
@@ -39,14 +39,14 @@ dis_p_tr_left=[[pu_0;pw_0]'*f_ortdgduv]';
 %t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
 %tau0=0;
 tau0=2*u_0'*w_0/sqrt(-2*h_0);
-y0 = cat(1, u_0, w_0, tau0, pu_0, pw_0)';
+y0 = cat(1, u_0, w_0, pu_0, pw_0, tau0)';
 %t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
 %acc=1e-14;
 options = odeset('AbsTol',integration_acc);
 options = odeset(options,'RelTol',integration_acc);
-options = odeset(options,'NonNegative', 9);
+options = odeset(options,'NonNegative', 17);
 %максимальное время интегрирования
 maxtime=10;
 if terminal_state == 's'
@@ -81,13 +81,17 @@ u_b_end=[u_end(4); -u_end(3);u_end(2);-u_end(1)];
 w_end=y(end, 5:8)';
 %h_end=y(end, 9)';
 h_end=-mug/(u_end'*u_end+4*w_end'*w_end);
-tau_end=y(end, 9)';
-pu_end=y(end, 10:13)';
-pw_end=y(end, 14:17)';
+tau_end=y(end, 17)';
+pu_end=y(end, 9:12)';
+pw_end=y(end, 13:16)';
 %ph_end=y(end, 19)';
 %ptau_end=y(end, 20)';
 
 t_end = T_unit*(tau_end-2*(u_end'*w_end)/sqrt(-2*h_end))/(24*60*60);
+
+if t_end > 10000
+    t_end=10000;
+end
 
 L_end = L_KS(u_end);
 r_end = L_end*u_end;
@@ -110,9 +114,9 @@ rf = [rotmZYX*rf'; 0]/ae*1e+03;
 Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 
 %Положение и скорость Земли для отладки
-[rf_e, Vf_e] = planetEphemeris(t_start+t_end,'SolarSystem','Earth','430');
-rf_e = [rotmZYX*rf_e'; 0]/ae*1e+03;
-Vf_e = [rotmZYX*Vf_e'; 0]/V_unit*1e+03;
+% [rf_e, Vf_e] = planetEphemeris(t_start+t_end,'SolarSystem','Earth','430');
+% rf_e = [rotmZYX*rf_e'; 0]/ae*1e+03;
+% Vf_e = [rotmZYX*Vf_e'; 0]/V_unit*1e+03;
 
 %Получаем параметрические координату и скорость планеты
 uf=rToU(rf, phi);
@@ -141,7 +145,7 @@ if strcmp(UorR,'u_hat')
         dis_p_eqs_right = g_left-g_right;
         %dis_p_eqs_left = f_left-f_right;
         dis_p_tr_right=[[pu_end;pw_end]'*ortdgduv]';
-        dis_p=[dis_p_eqs_right;dis_p_tr_right;dis_p_tr_left];  
+        dis_p=[dis_p_eqs_right;dis_p_tr_left];  
         %dis_p=dis_p_eqs_right;
     end
 elseif  strcmp(UorR,'u')
