@@ -82,8 +82,8 @@ evaluation_time = toc;
 y0_final=y0;
 y0_final(4:6)=V0;
 y0_final(7:12)=z(end,:);
-pr0=-z(end,4:6)';
-pv0=z(end,1:3)';
+% pr0=-z(end,4:6)';
+% pv0=z(end,1:3)';
 %Отключим ненадолго весь метод
 %y0_final(7:12)=zeros(1,6);
 [t,y_final] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,1),tspan,y0_final,options);

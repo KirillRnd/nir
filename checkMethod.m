@@ -68,10 +68,10 @@ options = optimoptions('fmincon','UseParallel', true);
 if display == 1
     options = optimoptions(options, 'Display', 'iter');
 end
-options = optimoptions(options, 'OptimalityTolerance', 1e-12);
+options = optimoptions(options, 'OptimalityTolerance', 1e-10);
 options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-options = optimoptions(options, 'StepTolerance', 1e-12);
-options = optimoptions(options, 'ConstraintTolerance', 1e-12);
+options = optimoptions(options, 'StepTolerance', 1e-10);
+options = optimoptions(options, 'ConstraintTolerance', 1e-10);
 options = optimoptions(options, 'MaxIterations', 250);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
 %options = optimoptions(options, 'Algorithm', 'sqp');
@@ -119,10 +119,10 @@ elseif terminal_state == 't'
 end
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
-dydy0=reshape(eye(20),[1 400]);
+dydy0=reshape(eye(17),[1 289]);
 if calculate_condition == 1
     [s,Y] = ode113(@(s,y) integrateTraectoryWithVariations(s,y),int_s0sf,[y0, dydy0], options);
-    y=Y(:,1:20);
+    y=Y(:,1:17);
 else
     [s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf,y0, options);
 end
@@ -181,7 +181,7 @@ dr=norm(ae*rr(end, 1:3)-mars_r_f(1:3)');
 dv=norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)');
 
 if calculate_condition == 1
-    dfdy0 = reshape(Y(end,21:420),[20 20]);
+    dfdy0 = reshape(Y(end,18:306),[17 17]);
     C=cond(dfdy0);
 else
     C=1;

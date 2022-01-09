@@ -1,31 +1,27 @@
-function res = integrateTraectoryWithVariations(~, Y, ~)
+function res = integrateTraectoryWithVariations(~, Y)
 %integrateTraectory интегрирует от начальной 
 %точки до времени tf
 %s - фиктивное время, tau - временной элемент
 %Известные значения
 %s
-res=zeros(420,1);
-y=Y(1:20);
-dydy0=reshape(Y(21:420), [20 20]);
-
-u=y(1:4);
-v=y(5:8);
+res=zeros(306,1);
+y=Y(1:17);
+dydy0=reshape(Y(18:306), [17 17]);
 
 %u_alt = [u(4) -u(3) u(2) -u(1)]';
 %v_til = u_alt*(u_alt'*v)/(u_alt'*u_alt);
 %v_alt=norm(v)*(v-v_til)/norm(v-v_til);
 
-h=y(9);
-tau=y(10);
-pu=y(11:14);
-pv=y(15:18);
-ph=y(19);
-ptau=y(20);
+u=y(1:4);
+w=y(5:8);
+pu=y(9:12);
+pw=y(13:16);
+tau=y(17);
 
-dfdy=symJ(u,v,h,pu,pv,ph,ptau);
+dfdy=symJ(u,w,pu,pw);
 ddudy0dt=dfdy*dydy0;
 %Сохраняем провизводные
-res(1:20)=symF(u,v,h,pu,pv,ph,ptau);
-res(21:420)=reshape(ddudy0dt, [400 1]);
+res(1:17)=symF(u,w,pu,pw);
+res(18:306)=reshape(ddudy0dt, [289 1]);
 end
 

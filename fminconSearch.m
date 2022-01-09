@@ -39,36 +39,36 @@ planet_end = 'Mars';
 mug=1;
 
 n=0;
-angle=0.75;
+angle=0.950;
 x0(9)=n+angle;
 %x0(12)=x0(11)/2;
-modifier_p=1e-01;
+modifier_p=1e-04;
 modifier_f=1e+10;
-integration_acc=1e-14;
+integration_acc=1e-10;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
 terminal_state = 's';
 UorR = 'u_hat';
-rad=1/32;
+rad=0;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
-calculate_condition=0;
+calculate_condition=1;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
-
-if terminal_state == 's'
-    x0_sec = [px s_f/(2*pi) phi/(2*pi)];
-elseif terminal_state == 't'
-    x0_sec = [px t_end/365.256363004 phi/(2*pi)];
-end
+% 
+% if terminal_state == 's'
+%     x0_sec = [px s_f/(2*pi) phi/(2*pi)];
+% elseif terminal_state == 't'
+%     x0_sec = [px t_end/365.256363004 phi/(2*pi)];
+% end
 %modifier_p=1e-08;
-terminal_state = 's';
-UorR = 'u_hat';
-integration_acc=1e-16;
-rad=0;
-decreaseNonPsysical=0;
-calculate_condition=0;
+% terminal_state = 's';
+% UorR = 'u_hat';
+% integration_acc=1e-16;
+% rad=0;
+% decreaseNonPsysical=0;
+% calculate_condition=0;
 %[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
 %evaluation_time=evaluation_time+evaluation_time_2;
 
