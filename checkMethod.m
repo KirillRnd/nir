@@ -182,7 +182,8 @@ dv=norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)');
 
 if calculate_condition == 1
     dfdy0 = reshape(Y(end,18:306),[17 17]);
-    C=cond(dfdy0);
+    dfdz0 = dfdy0(9:16,1:8);
+    C=cond(dfdz0);
 else
     C=1;
 end
