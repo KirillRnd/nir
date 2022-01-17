@@ -16,7 +16,7 @@ decreaseNonPsysical = 0;
 %Начальные условия
 x0=zeros([1, 10]);
 %x0(1:8)=[-0.081312208804168  -0.165241434409968  -0.137910347360105  -0.029456685044885  -0.151663938192582  -0.306939705835856  -0.241150551359049  -0.080582966706315];
-%x0_2=1e+04*[0.7427   -0.1764 0 0 0.4659 1.3269 0 0 1.6874 0.0511 0];
+%x0=[0.0103    0.0048    0.0046    0.0048   -0.0036    0.0065    0.0162    0.0104    1.7770         0];
 A = [];
 b = [];
 Aeq = [];
@@ -38,11 +38,12 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=0;
-angle=0.950;
+n=1;
+angle=0.25;
 x0(9)=n+angle;
 %x0(12)=x0(11)/2;
-modifier_p=1e-04;
+%modifier_p=1e-08;
+modifier_p=10^(-4-sqrt(x0(9)));
 modifier_f=1e+10;
 integration_acc=1e-10;
 %Одиночный запуск метода и получение всех необходимых для графиков
@@ -50,27 +51,27 @@ integration_acc=1e-10;
 display = 1;
 terminal_state = 's';
 UorR = 'u_hat';
-rad=0;
+rad=1/4;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
-calculate_condition=1;
+calculate_condition=0;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
 % 
-% if terminal_state == 's'
-%     x0_sec = [px s_f/(2*pi) phi/(2*pi)];
-% elseif terminal_state == 't'
-%     x0_sec = [px t_end/365.256363004 phi/(2*pi)];
-% end
+if terminal_state == 's'
+    x0_sec = [px s_f/(2*pi) phi/(2*pi)];
+elseif terminal_state == 't'
+    x0_sec = [px t_end/365.256363004 phi/(2*pi)];
+end
 %modifier_p=1e-08;
 % terminal_state = 's';
 % UorR = 'u_hat';
 % integration_acc=1e-16;
-% rad=0;
+rad=0;
 % decreaseNonPsysical=0;
-% calculate_condition=0;
-%[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
-%evaluation_time=evaluation_time+evaluation_time_2;
+calculate_condition=1;
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+evaluation_time=evaluation_time+evaluation_time_2;
 
 %Коррекция фи для графика
 phi=atan2(uu(end,4),uu(end,1));
@@ -84,7 +85,7 @@ m_cont=massLP(Jt_cont, m0, N);
 figure(2);
 plot(t/(24*3600), vecnorm(a_ks, 2, 2)*1e+03, 'LineWidth', 3);
 %title('Зависимость ускорения силы тяги от времени')
-xlabel('Физичекое время, дни','FontSize',14)
+xlabel('Физическое время, дни','FontSize',14)
 ylabel('Реактивное ускорение, мм/c^2','FontSize',14)
 box off;
 set(gca,'FontSize',14)

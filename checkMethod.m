@@ -37,7 +37,8 @@ x0(1:8)=x0(1:8)/modifier_p;
 % modifier_f=1e+04;
 modifier_b=1e+13;
 
-s_a = psi-rad;
+%s_a = psi-rad;
+s_a = psi;
 s_b = psi+rad;
 
 %x0(11)=psi;
@@ -74,6 +75,7 @@ options = optimoptions(options, 'StepTolerance', 1e-10);
 options = optimoptions(options, 'ConstraintTolerance', 1e-10);
 options = optimoptions(options, 'MaxIterations', 250);
 options = optimoptions(options, 'FiniteDifferenceType', 'central');
+options = optimoptions(options, 'EnableFeasibilityMode', true);
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
 options = optimoptions(options,'OutputFcn',@myoutput);
@@ -111,7 +113,7 @@ acc=integration_acc;
 options = odeset('AbsTol',acc);
 options = odeset(options,'RelTol',acc);
 %максимальное время интегрирования
-maxtime=1000;
+maxtime=100;
 if terminal_state == 's'
     options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0, maxtime));
 elseif terminal_state == 't'
@@ -128,7 +130,21 @@ else
 end
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
-
+%на случай, если всё сломается
+if length(s)<=100
+    uu=zeros(length(s),4);
+    rr=zeros(length(s),4);
+    VV=zeros(length(s),4);
+    t=zeros(length(s),1);
+    VV=zeros(length(s),4);
+    a_ks=zeros(length(s),4);
+    Jt=zeros(length(s),1);
+    C=1;
+    dr=ae;
+    dv=ae;
+    t_end=T_earth;
+    return
+end
 %t_start_fix=T_unit*(y(1, 10)-2*(y(1, 1:4)*y(1, 5:8)')/sqrt(-2*(y(1, 9)')))/(24*60*60);
 uu = y(:, 1:4);
 rr=zeros(length(uu),4);
