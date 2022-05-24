@@ -1,4 +1,4 @@
-function [rr_cont, Jt, C, evaluation_time, dr, dV,PR,PV, t_cont] = checkContinuation(t0, dt, t_nonlinear, case_traj,planet_end, eta,n)
+function [rr_cont, Jt, C, evaluation_time, dr, dV,PR,PV, t_cont] = checkContinuation(t0, dt, t_nonlinear,z0, case_traj,planet_end, eta,n)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
@@ -61,6 +61,7 @@ y0 = cat(2,r0',V0'*sqrt(mu_tau(0)/mu_tau(1)),zeros([1, 3]),zeros([1, 3]),...
     zeros([1, 3]), 0.5*sqrt(mu_tau(1)/mu_tau(0))*(1-mu_tau(0)/mu_tau(1))*V0',...
     zeros([1, 3]), zeros([1, 3])...
     )';
+y0(7:12)=z0;
 %tspan=[0 dt*days2sec];
 tspan = t_nonlinear/T_unit;
 [t,y_initial] = ode113(@(t,y) internalIntegration(t,y,dUdr,ddUdrdr,jac_ddUdrdr,mu_tau,0),tspan,y0,options);
@@ -75,7 +76,7 @@ elseif case_traj == 2
 end
 
 %оптимизируем траекторию
-z0=zeros([1, 6]);
+%z0=zeros([1, 6]);
 tic;
 [tau,z] = ode113(@(t,z) externalIntegration(t,z,b,dUdr,ddUdrdr,jac_ddUdrdr,y0,tspan,mu_tau,V0,Vf, case_traj),[0 1],z0,options);
 evaluation_time = toc;

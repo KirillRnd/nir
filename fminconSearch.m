@@ -15,6 +15,7 @@ case_traj=2;
 decreaseNonPsysical = 0;
 %Начальные условия
 x0=zeros([1, 10]);
+x0(1:8)=PX(:,41)';
 %x0(1:8)=[-0.081312208804168  -0.165241434409968  -0.137910347360105  -0.029456685044885  -0.151663938192582  -0.306939705835856  -0.241150551359049  -0.080582966706315];
 %x0=[0.0103    0.0048    0.0046    0.0048   -0.0036    0.0065    0.0162    0.0104    1.7770         0];
 A = [];
@@ -38,20 +39,20 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=1;
-angle=0.25;
+n=2;
+angle=0.0;
 x0(9)=n+angle;
 %x0(12)=x0(11)/2;
 %modifier_p=1e-08;
 modifier_p=10^(-4-sqrt(x0(9)));
 modifier_f=1e+10;
-integration_acc=1e-10;
+integration_acc=1e-14;
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
 terminal_state = 's';
 UorR = 'u_hat';
-rad=1/4;
+rad=0;
 %delta_s=1.23*(n+angle)-0.24;
 %delta_s=1.2*(n+angle)-0.2;
 delta_s=n+angle;
@@ -77,15 +78,16 @@ evaluation_time=evaluation_time+evaluation_time_2;
 phi=atan2(uu(end,4),uu(end,1));
 phi0=atan2(uu(1,4),uu(1,1));
 functional = Jt(end);
+z0=zeros([1, 6]);
 [rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
-    checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, n);
+    checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, n);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);
 figure(2);
-plot(t/(24*3600), vecnorm(a_ks, 2, 2)*1e+03, 'LineWidth', 3);
+plot(t/T_earth, vecnorm(a_ks, 2, 2)*1e+03, 'LineWidth', 3);
 %title('Зависимость ускорения силы тяги от времени')
-xlabel('Физическое время, дни','FontSize',14)
+xlabel('Физическое время, годы','FontSize',14)
 ylabel('Реактивное ускорение, мм/c^2','FontSize',14)
 box off;
 set(gca,'FontSize',14)
@@ -96,7 +98,7 @@ figure(3);
 plot(t/T_earth, s/(2*pi), 'LineWidth', 3);
 title('Зависимость мнимого времени от физического')
 xlabel('Физическое время, годы')
-ylabel('Фиктивное время, витки')
+ylabel('Фиктивное время, 2\pi радиан')
 box off;
 set(gca,'FontSize',14)
 set(gca,'TickLabelInterpreter', 'latex')
@@ -104,9 +106,9 @@ grid on;
 
 figure(4);
 m=massLP(Jt, m0, N);
-plot(t/(24*3600), m, 'LineWidth', 3);
+plot(t/T_earth, m, 'LineWidth', 3);
 title('Зависимость массы от времени')
-xlabel('t, время, дни')
+xlabel('Физическое время, годы')
 ylabel('m, масса, кг')
 box off;
 set(gca,'FontSize',14)
@@ -115,7 +117,7 @@ grid on;
 
 %Проверка "на глаз"
 figure(1);
-plot3(0, 0, 0, 'y--o')
+plot3(0, 0, 0, 'k--o')
 set(gca,'FontSize',14)
 hold on;
 
@@ -171,7 +173,7 @@ end
 plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
 plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
 
-plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
+%plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
 %эти две точки должны находиться рядом
 %plot3(rr_cont(500, 1)/ae, rr_cont(500, 2)/ae, rr_cont(500, 3)/ae, 'gO', 'LineWidth', 2.5);
 %plot3(rr_old(500, 1), rr_old(500, 2), rr_old(500, 3), 'bO', 'LineWidth', 2.5);
@@ -185,12 +187,13 @@ view(0,90)
 ax = gca;
 ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
+grid on;
 box off;
 hold off;
 
 %Выводим траекторию в параметрических переменных"
 figure(5);
-plot3(0, 0, 0, 'y--o')
+plot3(0, 0, 0, 'k--o')
 set(gca,'FontSize',14)
 hold on;
 
@@ -230,7 +233,7 @@ title('Траектория КА KS')
 xlabel('u1')
 ylabel('u2')
 zlabel('u3')
-
+grid on;
 ax = gca;
 ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
@@ -239,7 +242,7 @@ hold off;
 %[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end/(24*3600)],'SolarSystem',planet_end,'430');
 d = cmp2Trajectories(rr_old(:, 1:3)*ae,rr_cont);
 
-disp(['Максимальная разница в  координатах ', num2str(d,'%10.2e\n'), 'м.'])
+disp(['Максимальная разница в  координатах ', num2str(d/ae,'%10.2e\n'), 'а.е.'])
 disp(['Расход массы в KS-координатах ', num2str(m(1)-m(end),'%10.5e\n'), 'кг'])
 disp(['Расход массы методом продолжения ', num2str(m_cont(1)-m_cont(end),'%10.6e\n'), 'кг'])
 disp(['Невязка координаты ', num2str(norm(ae*rr_old(end, 1:3)-mars_r_f(1:3)'),'%10.2e\n'),',м'])

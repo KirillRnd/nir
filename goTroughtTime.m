@@ -1,4 +1,4 @@
-%Эот скрипт перебирает угловые дальности с заданным радиусом поиска
+    %Эот скрипт перебирает угловые дальности с заданным радиусом поиска
 t_start = juliandate(2022,1,1);
 display=1;
 UorR='u_hat';
@@ -137,7 +137,7 @@ end
 px_new=zeros([1, 8]);
 phi_new=0;
 
-for i=L:-1:1
+for i=1:1:169
     if skipPoint(i) < 1
         px_new=PX(:,i)';
         phi_new=PHI(i);
@@ -151,7 +151,7 @@ for i=L:-1:1
     %Одиночный запуск метода и получение всех необходимых для графиков
     %переменных
 
-    display = 0;
+    display = 1;
     terminal_state = 's';
     UorR = 'u_hat';
     
@@ -161,15 +161,15 @@ for i=L:-1:1
     [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
     %evaluation_time=evaluation_time+evaluation_time_2;
 
-    if dr < 10000
-        skipPoint(i)=-1;
-        px_new=px;
-        phi_new=phi;
-        s_f_new=s_f;
-        t_end_new=t_end;
-    else
-        continue
-    end
+%     if dr < 10000
+%         skipPoint(i)=-1;
+%         px_new=px;
+%         phi_new=phi;
+%         s_f_new=s_f;
+%         t_end_new=t_end;
+%     else
+%         continue
+%     end
     T_NONLINEAR(:,i) = t;
     T(i)=evaluation_time;
     %S(i)=s(end);
@@ -194,7 +194,7 @@ eul = [0 pi/4 0];
 rotmZYX = eul2rotm(eul);
 %Проверка "на глаз"
 figure(1);
-plot3(0, 0, 0, 'y--o')
+plot3(0, 0, 0, 'k--o','HandleVisibility','off')
 set(gca,'FontSize',14)
 hold on;
 
@@ -225,8 +225,8 @@ mars_traj=mars_traj*1e+03/ae;
 mars_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', mars_traj(:, 1),mars_traj(:, 2),mars_traj(:, 3),'UniformOutput',false);
 mars_traj_New = cell2mat(mars_traj_New')';
 
-plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
-plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
+plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k','HandleVisibility','off')
+plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r','HandleVisibility','off')
 
 axis equal
 
@@ -234,11 +234,12 @@ axis equal
 xlabel('x, a.e.')
 ylabel('y, a.e.')
 zlabel('z, a.e.')
-
+legend;
 ax = gca;
 ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
 view(0,90);
+grid on;
 box off;
 hold off;
 
@@ -275,7 +276,8 @@ hold off;
 
 eul = [0 pi/4 0];
 rotmZYX = eul2rotm(eul);
-
+%i=95 точка бифуркации
+z0=zeros([1, 6]);
 disp('--------------------')
 for i=1:L
     if skipPoint(i)>0
@@ -284,8 +286,11 @@ for i=1:L
     rr=RR(:,:,i);
     t = T_NONLINEAR(:,i);
     t_end=T_END(i);
+
+    
+
     [rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
-        checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i)));
+        checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, floor(ds(i)));
     
     
     functional_cont = Jt_cont(end);
@@ -294,11 +299,13 @@ for i=1:L
     %Неправильное число витков влияет на затраты массы
     if M_cont(i)-M(i) > 10
         [rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
-            checkContinuation(t_start, t_end, t, case_traj,planet_end,eta, floor(ds(i))+1);
+            checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, floor(ds(i))+1);
         functional_cont = Jt_cont(end);
         m_cont=massLP(Jt_cont, m0, N);
         M_cont(i)=m_cont(1)-m_cont(end);
     end
+
+    z0=[pv0(1,:),-pr0(1,:)];
     CONV_CONT(i)=C_cont;
     T_cont(i) = evaluation_time_cont;
     figure(1);
@@ -309,10 +316,10 @@ for i=1:L
     
     rr_old = arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', rr(:, 1),rr(:, 2),rr(:, 3),'UniformOutput',false);
     rr_old = cell2mat(rr_old')';
-    plot3(rr_old(:, 1), rr_old(:, 2), rr_old(:, 3), 'r', 'LineWidth', 2.5);
+    plot3(rr_old(:, 1), rr_old(:, 2), rr_old(:, 3), 'k', 'LineWidth', 1.5,'DisplayName','Семейство 2');
 
-    plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
-    plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
+    plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO','HandleVisibility','off')
+    %plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO','HandleVisibility','off')
     
     hold off;
     
@@ -346,7 +353,25 @@ for i=1:L
     THETA(i)=traj2TrueAnomaly(rr_old);
 end
 
+figure(3);
+plot(S,THETA-S,'.')
+set(gca,'FontSize',14)
+grid on
+xlabel("Фиктивное время, 2\pi радиан")
+ylabel("Разность \theta и s, 2\pi радиан")
+xlim([0 6.5])
+%ylim([0 6.5])
+
 figure(4);
+plot(S,THETA,'.')
+set(gca,'FontSize',14)
+grid on
+xlabel("Фиктивное время, 2\pi радиан")
+ylabel("Угловая дальность, 2\pi радиан")
+xlim([0 6.5])
+ylim([0 6.5])
+
+figure(5);
 plot(S,THETA,'.')
 xlabel("Фиктивное время, 2pi радиан")
 ylabel("Угловая дальность, 2pi радиан")
@@ -354,18 +379,20 @@ xlim([0 6.5])
 ylim([0 6.5])
 
 figure(6);
-plot(S,M,'O')
+plot(THETA,M,'Ob','DisplayName','Предлагаемый метод')
 hold on;
-plot(S,M_cont,'+')
-plot([0, 6.5],[m0, m0],'k')
+%plot(THETA,M_cont,'+k','DisplayName','Метод продолжения')
+plot([0, 6.5],[m0, m0],'k','HandleVisibility','off')
 
 xlim([0 6.5])
-
-xlabel("Фиктивное время, 2pi радиан")
-%ylabel("Угловая дальность, 2pi радиан")
-ylabel("Расход топлива, dm, кг")
+legend;
+%xlabel("Фиктивное время, 2\pi радиан")
+xlabel("Угловая дальность, 2\pi радиан")
+ylabel("Расход топлива, кг")
 set(gca,'FontSize',14)
 text(3,380,'Начальная масса КА','FontSize',14)
+grid on;
+plot(THETA(93:169),M(93:169),'.k','HandleVisibility','off')
 hold off;
 
 figure(10);
@@ -411,27 +438,27 @@ hold off;
 
 %рисуем числа обусловленности
 figure(8);
-semilogy(S(pareto),CONV(pareto),'O')
+semilogy(THETA,CONV,'O','DisplayName','Предлагаемый метод')
 hold on;
-semilogy(S(pareto),CONV_CONT(pareto),'+')
-
+semilogy(THETA,CONV_CONT,'+','DisplayName','Метод продолжения')
+legend;
 xlim([0 6.5])
-
-xlabel("Фиктивное время, число витков")
-ylabel("Числа обусловленности")
+grid on;
+xlabel("Угловая дальность, 2\pi радиан")
+ylabel("Число обусловленности")
 set(gca,'FontSize',14)
 hold off;
 
 %рисуем время работы
 figure(9);
-plot(S(pareto),T(pareto),'O')
+plot(THETA,T,'O','DisplayName','Предлагаемый метод')
 hold on;
-plot(S(pareto),T_cont(pareto),'+')
-
+plot(THETA,T_cont,'+','DisplayName','Метод продолжения')
+legend;
 xlim([0 6.5])
-
-xlabel("Фиктивное время, число витков")
-ylabel("Время работы с")
+grid on;
+xlabel("Угловая дальность, 2\pi радиан")
+ylabel("Время работы, с")
 set(gca,'FontSize',14)
 hold off;
 

@@ -47,8 +47,8 @@ s_b = psi+rad;
 lb = -[1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
 ub = -lb;
 
-lb(9) = s_a;
-ub(9) = s_b;
+lb(9) = s_a/(2*pi);
+ub(9) = s_b/(2*pi);
 
 
 if strcmp(UorR,'u') || strcmp(UorR,'r')
@@ -121,13 +121,40 @@ elseif terminal_state == 't'
 end
 %»нтегрируем, использу€ сопр€женные переменные из fmincon
 
-dydy0=reshape(eye(17),[1 289]);
+ddeltady0=zeros([8,8]);
 if calculate_condition == 1
-    [s,Y] = ode113(@(s,y) integrateTraectoryWithVariations(s,y),int_s0sf,[y0, dydy0], options);
-    y=Y(:,1:17);
+    step_h=1e-4;
+    for i=9:16
+        
+        
+        y0_delta=zeros([1,17]);
+        y0_delta(i)=step_h;
+        [s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf,y0+y0_delta, options);
+        u_end=y(end,1:4)';
+        w_end=y(end,5:8)';
+        px_end=y(end,9:16)';
+        g=get_target_g(u_end,w_end);
+        ortdgduv=get_ortdgduv(u_end,w_end);
+        tr=[px_end'*ortdgduv]';
+        p_plus=[g;tr];
+
+        [s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf,y0-y0_delta, options);
+        u_end=y(end,1:4)';
+        w_end=y(end,5:8)';
+        px_end=y(end,9:16)';
+        g=get_target_g(u_end,w_end);
+        ortdgduv=get_ortdgduv(u_end,w_end);
+        tr=[px_end'*ortdgduv]';
+        p_minus=[g;tr];
+        partial=(p_plus-p_minus)/(2*step_h);
+        ddeltady0(:,i-8)=partial;
+    end
+    C=cond(ddeltady0);
 else
-    [s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf,y0, options);
+    C=1;
 end
+
+[s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf,y0, options);
 %Jt = integrateFunctional(s, y, eta, h0);
 %functional = Jt(end);
 %на случай, если всЄ сломаетс€
@@ -196,13 +223,13 @@ mars_v_f=rotmZYX*mars_v_f'*1e+03;
 dr=norm(ae*rr(end, 1:3)-mars_r_f(1:3)');
 dv=norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)');
 
-if calculate_condition == 1
-    dfdy0 = reshape(Y(end,18:306),[17 17]);
-    dfdz0 = dfdy0(9:16,1:8);
-    C=cond(dfdz0);
-else
-    C=1;
-end
+% if calculate_condition == 1
+%     dfdy0 = reshape(Y(end,18:306),[17 17]);
+%     dfdz0 = dfdy0(9:16,1:8);
+%     C=cond(dfdz0);
+% else
+%     C=1;
+% end
 
 
 %C=1;
