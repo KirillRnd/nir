@@ -3,9 +3,9 @@
 %5if exist('symF','var') ~= 1
 %    symbolic_Jacob
 %end
-t_start = juliandate(2022,1,1);
-orbits='Ephemeris';
-
+%t_start = juliandate(2022,1,1);
+t_start=0;
+orbits='Flat';
 N=1350;
 m0=367;
 eta=0.45;
@@ -39,24 +39,30 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=2;
-angle=0.5;
-delta_s=(n+angle)*2*pi;
-
+n=6;
+angle=0.0;
+%delta_s=(n+angle)*2*pi;
+j=169;
+delta_s=ds(j)*2*pi;
 x0=zeros([1, 10]);
 %x0(12)=x0(11)/2;
 %modifier_p=1e-08;
 modifier_p=10^(-4-sqrt(delta_s));
 modifier_f=1e+10;
 integration_acc=1e-10;
+
 %Одиночный запуск метода и получение всех необходимых для графиков
 %переменных
 display = 1;
 terminal_state = 's';
 UorR = 'u_hat';
-rad=1/8;
+rad=0;
+x0(9)=ds(j);
+omega = -pi;
+%x0(9)=n+angle+rad/2;
+x0(1:8)=PXevery(1,j,:,4);
 calculate_condition=1;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits);
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
 % 
 if terminal_state == 's'
     x0_sec = [px s_f/(2*pi) phi/(2*pi)];
@@ -70,16 +76,16 @@ end
 rad=0;
 % decreaseNonPsysical=0;
 calculate_condition=0;
-%[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
-%evaluation_time=evaluation_time+evaluation_time_2;
+% [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,n+angle,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
+% evaluation_time=evaluation_time+evaluation_time_2;
 
 %Коррекция фи для графика
 phi=atan2(uu(end,4),uu(end,1));
 phi0=atan2(uu(1,4),uu(1,1));
 functional = Jt(end);
 z0=zeros([1, 6]);
-[rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
-    checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, n, orbits);
+%[rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
+%    checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, n, orbits);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);
@@ -122,14 +128,26 @@ hold on;
 
 t0 = t_start;
 t_orbit = linspace(t0,t0+T_earth/(24*3600), 1000);
-earth_traj = planetModel(t_orbit','Earth',orbits);
+
+st.t = t_orbit';
+st.planet = 'Earth';
+st.mode = orbits;
+st.delta_omega = omega;
+
+earth_traj = planetModel(st);
 earth_traj=earth_traj*1e+03/ae;
 %Для KS
 earth_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', earth_traj(:, 1),earth_traj(:, 2),earth_traj(:, 3),'UniformOutput',false);
 earth_traj_New = cell2mat(earth_traj_New')';
 
 t_orbit = linspace(t0,t0+T_mars/(24*3600), 1000);
-mars_traj = planetModel(t_orbit',planet_end,orbits);
+
+st.t = t_orbit';
+st.planet = planet_end;
+st.mode = orbits;
+st.delta_omega = omega;
+
+mars_traj = planetModel(st);
 mars_traj=mars_traj*1e+03/ae;
 
 %Для KS
@@ -137,9 +155,14 @@ mars_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', mars_traj(:, 1),mars_traj(:
 mars_traj_New = cell2mat(mars_traj_New')';
 
 plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
-plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
+plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'k')
 
-[mars_r_f, mars_v_f]=planetModel([t_start, t_end],planet_end,orbits);
+st.t = [t_start, t_end];
+st.planet = planet_end;
+st.mode = orbits;
+st.delta_omega = omega;
+
+[mars_r_f, mars_v_f]=planetModel(st);
 mars_r_f=mars_r_f'*1e+03;
 mars_v_f=mars_v_f'*1e+03;
 
@@ -150,7 +173,7 @@ VV_old = arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', VV(:, 1),VV(:, 2),VV(:, 3),'U
 VV_old = cell2mat(VV_old')';
 
 
-plot3(rr_old(:, 1), rr_old(:, 2), rr_old(:, 3), 'b', 'LineWidth', 2.5);
+plot3(rr_old(:, 1), rr_old(:, 2), rr_old(:, 3), 'cyan', 'LineWidth', 1);
 
 
 a_ks_old= arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', a_ks(:, 1),a_ks(:, 2),a_ks(:, 3),'UniformOutput',false);
@@ -163,7 +186,8 @@ idxes=1;
 for i=1:ceil(t(end)/d)
     ix = find(t>d*i*10, 1);
     idxes=[idxes, ix];
-end    
+end   
+%тяга
 for i = idxes
     plot3([rr_old(i, 1), rr_old(i, 1)+a_scale*a_ks_old(i, 1)], [rr_old(i, 2), rr_old(i, 2)+...
         a_scale*a_ks_old(i, 2)],[rr_old(i, 3), rr_old(i, 3)+a_scale*a_ks_old(i, 3)],'k')
@@ -172,7 +196,7 @@ end
 plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
 plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
 
-plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
+%plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
 %эти две точки должны находиться рядом
 %plot3(rr_cont(500, 1)/ae, rr_cont(500, 2)/ae, rr_cont(500, 3)/ae, 'gO', 'LineWidth', 2.5);
 %plot3(rr_old(500, 1), rr_old(500, 2), rr_old(500, 3), 'bO', 'LineWidth', 2.5);

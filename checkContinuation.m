@@ -1,4 +1,4 @@
-function [rr_cont, Jt, C, evaluation_time, dr, dV,PR,PV, t_cont] = checkContinuation(t0, dt, t_nonlinear,z0, case_traj,planet_end, eta,n)
+function [rr_cont, Jt, C, evaluation_time, dr, dV,PR,PV, t_cont] = checkContinuation(t0, dt, t_nonlinear,z0, case_traj,planet_end, eta,n, orbits)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
@@ -13,11 +13,11 @@ mug=1;
 
 tf=t0+dt;
 
-eul = [0 pi/4 0];
+eul = [pi/12 pi/4 pi/12];
 rotmZYX = eul2rotm(eul);
 
-[r0, V0] = planetEphemeris(t0,'SolarSystem','Earth','430');
-[rf, Vf] = planetEphemeris(tf,'SolarSystem',planet_end,'430');
+[r0, V0] = planetModel(t0,'Earth',orbits);
+[rf, Vf] = planetModel(tf,planet_end,orbits);
 r0=rotmZYX*r0'/ae*1e+03;
 V0=rotmZYX*V0'/V_unit*1e+03;
 rf=rotmZYX*rf'/ae*1e+03;
@@ -119,7 +119,7 @@ elseif case_traj == 2
 end
 C = cond(dfdz);
 
-[mars_r_f, mars_v_f]=planetEphemeris(tf,'SolarSystem',planet_end,'430');
+[mars_r_f, mars_v_f]=planetModel(tf,planet_end,orbits);
 mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
 dr = norm(ae*rr_cont(end, :)'-mars_r_f);

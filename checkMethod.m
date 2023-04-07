@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,decreaseNonPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc, calculate_condition)
+function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,psi,rad, UorR,decreaseNonPsysical,modifier_p,modifier_f, x0, eta, case_traj,planet_end,display,terminal_state,integration_acc, calculate_condition, orbits, omega)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -21,9 +21,15 @@ r_unit=ae;
 V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
 planet_start = 'Earth';
-[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
 
-eul = [0 pi/4 0];
+st.t = t_start;
+st.planet = planet_start;
+st.mode = orbits;
+st.delta_omega = omega;
+
+[r0, V0] = planetModel(st);
+
+eul = [pi/12 pi/4 pi/12];
 rotmZYX = eul2rotm(eul);
 
 r0 = [rotmZYX*r0'/ae; 0]*1e+03;
@@ -39,7 +45,7 @@ modifier_b=1e+13;
 
 %s_a = psi-rad;
 s_a = psi;
-s_b = psi+rad;
+s_b = psi+rad*2*pi;
 
 %x0(11)=psi;
 
@@ -62,8 +68,20 @@ elseif strcmp(UorR,'u_hat')
 end
 %домножаем на коэффициент 1е-12, чтобы fmincon работал с более крупными
 %величинами и не выдавал лишних ворнингов
+st_f2m.case_traj = case_traj;
+st_f2m.t_start = t_start;
+st_f2m.r0 = r0;
+st_f2m.V0 = V0;
+st_f2m.planet_end = planet_end;
+st_f2m.modifier_f = modifier_f;
+st_f2m.UorR = UorR;
+st_f2m.decreaseNonPsysical = decreaseNonPsysical;
+st_f2m.terminal_state = terminal_state;
+st_f2m.integration_acc = integration_acc;
+st_f2m.orbits = orbits;
+st_f2m.omega = omega;
 tic;
-fun=@(x)fun2min([x(1:8)*modifier_p, x(9), x(10)], case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state,integration_acc);
+fun=@(x)fun2min([x(1:8)*modifier_p, x(9), x(10)], st_f2m);
 
 options = optimoptions('fmincon','UseParallel', true);
 if display == 1
@@ -123,10 +141,8 @@ end
 
 ddeltady0=zeros([8,8]);
 if calculate_condition == 1
-    step_h=1e-4;
+    step_h=1e-6;
     for i=9:16
-        
-        
         y0_delta=zeros([1,17]);
         y0_delta(i)=step_h;
         [s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf,y0+y0_delta, options);
@@ -149,6 +165,7 @@ if calculate_condition == 1
         partial=(p_plus-p_minus)/(2*step_h);
         ddeltady0(:,i-8)=partial;
     end
+
     C=cond(ddeltady0);
 else
     C=1;
@@ -216,7 +233,12 @@ elseif terminal_state == 't'
     t_end = t_end_0;
 end
 
-[mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
+st.t = [t_start, t_end];
+st.planet = planet_end;
+st.mode = orbits;
+st.delta_omega = omega;
+
+[mars_r_f, mars_v_f]=planetModel(st);
 mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
 

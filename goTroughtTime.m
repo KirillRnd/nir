@@ -1,5 +1,7 @@
     %Эот скрипт перебирает угловые дальности с заданным радиусом поиска
-t_start = juliandate(2022,1,1);
+%t_start = juliandate(2022,1,1);
+t_start = 0;
+orbits='Flat';
 display=1;
 UorR='u_hat';
 N=1350;
@@ -36,8 +38,8 @@ warning('off');
 planet_start = 'Earth';
 planet_end = 'Mars';
 decreaseNonPsysical = 0;
-skipPoint=zeros([1,L]);
-
+skipPoint=zeros([1,L])+3;
+%%
 px0=zeros([1, 8]);
 phi0=0;
 
@@ -49,25 +51,23 @@ for i=1:L
     %x0=zeros([1, 10]);
     
     x0=[px0 0 phi0/(2*pi)];
-    x0(9)=ds(i);
-    delta_s=ds(i);
+    x0(9)=ds(i)+rad/2;
+    delta_s=ds(i)*2*pi;
 
-    integration_acc=1e-10;
+    integration_acc=1e-12;
     %Одиночный запуск метода и получение всех необходимых для графиков
     %переменных
     n = floor(delta_s);
     modifier_p=10^(-4-sqrt(delta_s));
-    display = 0;
+    display = 1;
     terminal_state = 's';
     UorR = 'u_hat';
     
-    %delta_s=1.23*(n+angle)-0.24;
-    %delta_s=1.2*(n+angle)-0.2;
-    %delta_s=n+angle;
     evaluation_time=0;
     if rad > 0
         calculate_condition=0;
-        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] =...
+            checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,orbits);
         % 
         if terminal_state == 's'
             x0_sec = [px s_f/(2*pi) phi/(2*pi)];
@@ -78,7 +78,8 @@ for i=1:L
     rad=0;
     % decreaseNonPsysical=0;
     calculate_condition=1;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] =...
+        checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition,orbits);
     evaluation_time=evaluation_time+evaluation_time_2;
     %Неудачное интегрирование
     if length(t) < 1000
@@ -98,12 +99,14 @@ for i=1:L
         x0(9)=ds(i);
 
         calculate_condition=0;
-        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] =...
+            checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits);
         x0_sec = [px s_f/(2*pi) phi/(2*pi)];
 
         rad=0;
         calculate_condition=1;
-        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time_2] =...
+            checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits);
         evaluation_time=evaluation_time+evaluation_time_2;
         
         if length(t) == 1000 && dr < 10000
@@ -113,6 +116,11 @@ for i=1:L
         end
 
         
+    end
+    if length(t) == 1000 && dr < 10000
+        skipPoint(i)=0;
+    else
+        continue
     end
     px0=px;
     phi0=phi;
@@ -133,11 +141,11 @@ for i=1:L
     M(i)=m(1)-m(end);
     RR(:,:,i)=rr(:,1:3);
 end
-
+%%
 px_new=zeros([1, 8]);
 phi_new=0;
 
-for i=1:1:169
+for i=L:-1:1
     if skipPoint(i) < 1
         px_new=PX(:,i)';
         phi_new=PHI(i);
@@ -145,7 +153,7 @@ for i=1:1:169
     end
     i
     ds(i)
-    delta_s=ds(i);
+    delta_s=ds(i)*2*pi;
     modifier_p=10^(-4-sqrt(delta_s));
     integration_acc=1e-12;
     %Одиночный запуск метода и получение всех необходимых для графиков
@@ -158,18 +166,19 @@ for i=1:1:169
     x0_sec = [px_new delta_s/(2*pi) phi_new/(2*pi)];
     rad=0;
     calculate_condition=1;
-    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition);
+    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = ...
+        checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits);
     %evaluation_time=evaluation_time+evaluation_time_2;
 
-%     if dr < 10000
-%         skipPoint(i)=-1;
-%         px_new=px;
-%         phi_new=phi;
-%         s_f_new=s_f;
-%         t_end_new=t_end;
-%     else
-%         continue
-%     end
+    if dr < 10000
+        skipPoint(i)=-1;
+        px_new=px;
+        phi_new=phi;
+        s_f_new=s_f;
+        t_end_new=t_end;
+    else
+        continue
+    end
     T_NONLINEAR(:,i) = t;
     T(i)=evaluation_time;
     %S(i)=s(end);
@@ -185,12 +194,12 @@ for i=1:1:169
     M(i)=m(1)-m(end);
     RR(:,:,i)=rr(:,1:3);
 end
-
+%%
 %нанесём получивщиеся траектории
 
 
 %t_end=t(end);
-eul = [0 pi/4 0];
+eul = [pi/12 pi/4 pi/12];
 rotmZYX = eul2rotm(eul);
 %Проверка "на глаз"
 figure(1);
@@ -212,14 +221,14 @@ ae = 149597870700;
 T_mars=T_earth*1.8808476;
 T_earth = 365.256363004*3600*24;
 t_orbit = linspace(t0,t0+T_earth/(24*3600), 1000);
-earth_traj = planetEphemeris(t_orbit','SolarSystem','Earth','430');
+earth_traj = planetModel(t_orbit','Earth',orbits);
 earth_traj=earth_traj*1e+03/ae;
 
 earth_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', earth_traj(:, 1),earth_traj(:, 2),earth_traj(:, 3),'UniformOutput',false);
 earth_traj_New = cell2mat(earth_traj_New')';
 
 t_orbit = linspace(t0,t0+T_mars/(24*3600), 1000);
-mars_traj = planetEphemeris(t_orbit','SolarSystem','Mars','430');
+mars_traj = planetModel(t_orbit','Mars',orbits);
 mars_traj=mars_traj*1e+03/ae;
 
 mars_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', mars_traj(:, 1),mars_traj(:, 2),mars_traj(:, 3),'UniformOutput',false);
@@ -272,13 +281,14 @@ hold off;
 % box off;
 % hold off;
 
-[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
+[r0, V0] = planetModel(t_start,planet_start,orbits);
 
-eul = [0 pi/4 0];
+eul = [pi/12 pi/4 pi/12];
 rotmZYX = eul2rotm(eul);
 %i=95 точка бифуркации
 z0=zeros([1, 6]);
 disp('--------------------')
+%%
 for i=1:L
     if skipPoint(i)>0
         continue
@@ -290,7 +300,7 @@ for i=1:L
     
 
     [rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
-        checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, floor(ds(i)));
+        checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, floor(ds(i)),orbits);
     
     
     functional_cont = Jt_cont(end);
@@ -299,7 +309,7 @@ for i=1:L
     %Неправильное число витков влияет на затраты массы
     if M_cont(i)-M(i) > 10
         [rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
-            checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, floor(ds(i))+1);
+            checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, floor(ds(i))+1, orbits);
         functional_cont = Jt_cont(end);
         m_cont=massLP(Jt_cont, m0, N);
         M_cont(i)=m_cont(1)-m_cont(end);
@@ -310,7 +320,7 @@ for i=1:L
     T_cont(i) = evaluation_time_cont;
     figure(1);
     hold on;
-    [mars_r_f, mars_v_f]=planetEphemeris([t_start, t_end],'SolarSystem',planet_end,'430');
+    [mars_r_f, mars_v_f]=planetModel([t_start, t_end],planet_end,orbits);
     mars_r_f=mars_r_f'*1e+03;
     mars_v_f=mars_v_f'*1e+03;
     
@@ -343,7 +353,7 @@ for i=1:L
     disp(['Число обусловленности в методе продолжения ', num2str(CONV_CONT(i),'%10.2e\n')])
     disp('--------------------')
 end
-
+%%
 
 THETA=zeros([1,L]);
 for i=1:L
@@ -379,12 +389,13 @@ xlim([0 6.5])
 ylim([0 6.5])
 
 figure(6);
-plot(THETA,M,'Ob','DisplayName','Предлагаемый метод')
+%plot(THETA,M,'Ob','DisplayName','Предлагаемый метод')
+plot(1:L,M,'Ob','DisplayName','Предлагаемый метод')
 hold on;
 %plot(THETA,M_cont,'+k','DisplayName','Метод продолжения')
-plot([0, 6.5],[m0, m0],'k','HandleVisibility','off')
+%plot([0, 6.5],[m0, m0],'k','HandleVisibility','off')
 
-xlim([0 6.5])
+%xlim([0 6.5])
 legend;
 %xlabel("Фиктивное время, 2\pi радиан")
 xlabel("Угловая дальность, 2\pi радиан")
@@ -392,7 +403,8 @@ ylabel("Расход топлива, кг")
 set(gca,'FontSize',14)
 text(3,380,'Начальная масса КА','FontSize',14)
 grid on;
-plot(THETA(93:169),M(93:169),'.k','HandleVisibility','off')
+%plot(THETA(1:L),M(1:L),'.k','HandleVisibility','off')
+plot(1:L,M(1:L),'.k','HandleVisibility','off')
 hold off;
 
 figure(10);

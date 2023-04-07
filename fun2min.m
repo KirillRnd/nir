@@ -1,4 +1,4 @@
-function [c, ceq] = fun2min(x, case_traj, t_start, r0, V0, planet_end, modifier_f, UorR,decreaseNonPsysical,terminal_state, integration_acc)
+function [c, ceq] = fun2min(x, st_f2m)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -12,46 +12,46 @@ T_unit = T_earth/(2*pi);
 
 %Переходим к едининой гравитационной постоянной
 mug=1;
-
+%st_f2m.case_traj, st_f2m.t_start, st_f2m.r0, st_f2m.V0, st_f2m.planet_end, st_f2m.modifier_f, st_f2m.UorR,st_f2m.decreaseNonPsysical,st_f2m.terminal_state, st_f2m.integration_acc, st_f2m.orbits, st_f2m.omega
 %Задаём начальные условия на левом конце 
 pu_0=x(1:4)';
 pw_0=x(5:8)';
 %ph_0=x(9);
-if terminal_state == 's'
+if st_f2m.terminal_state == 's'
     s_f=x(9)*2*pi;
-elseif terminal_state == 't'
+elseif st_f2m.terminal_state == 't'
     s_f=15*x(9)*2*pi;
 end
 t_end_0=x(9)*365.256363004;
 phi=x(10)*2*pi;
 %phi0=0;
 phi0=phi;
-u_0 = rToU(r0, phi0);
+u_0 = rToU(st_f2m.r0, phi0);
 u_b0=[u_0(4); -u_0(3);u_0(2);-u_0(1)];
-h_0 = (norm(V0)^2)/2-mug/norm(r0);
-w_0 = vFromV(V0,r0,mug, phi0);
+h_0 = (norm(st_f2m.V0)^2)/2-mug/norm(st_f2m.r0);
+w_0 = vFromV(st_f2m.V0,st_f2m.r0,mug, phi0);
 %Условия трансверсальности на левом конце
 f_left=get_target_g(u_0,w_0);
-f_right=[r0(1:3);V0(1:3)];
+f_right=[st_f2m.r0(1:3);st_f2m.V0(1:3)];
 f_ortdgduv=get_ortdgduv(u_0,w_0);
 dis_p_tr_left=[[pu_0;pw_0]'*f_ortdgduv]';
-%h0=-mug/(u0'*u0+4*v0'*v0)
-%t0 = getEccentricAnomaly(r0(1:3),V0(1:3),mug);
+%h0=-mug/(u0'*u0+4*st_f2m.V0'*st_f2m.V0)
+%t0 = getEccentricAnomaly(st_f2m.r0(1:3),st_f2m.V0(1:3),mug);
 %tau0=0;
-tau0=2*u_0'*w_0/sqrt(-2*h_0);
+tau0=1+2*u_0'*w_0/sqrt(-2*h_0);
 y0 = cat(1, u_0, w_0, pu_0, pw_0, tau0)';
-%t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
+%st_f2m.t_start_fix=T_unit*(y0(10)-2*(y0(1:4)*y0(5:8)')/sqrt(-2*(y0(9)')))/(24*60*60);
 %Определяем параметры для оптимизатора
 time0 = tic;
 %acc=1e-14;
-options = odeset('AbsTol',integration_acc);
-options = odeset(options,'RelTol',integration_acc);
+options = odeset('AbsTol',st_f2m.integration_acc);
+options = odeset(options,'RelTol',st_f2m.integration_acc);
 options = odeset(options,'NonNegative', 17);
 %максимальное время интегрирования
 maxtime=10;
-if terminal_state == 's'
+if st_f2m.terminal_state == 's'
     options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0,maxtime));
-elseif terminal_state == 't'
+elseif st_f2m.terminal_state == 't'
     options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0));
 end
 
@@ -62,10 +62,10 @@ int_s0sf = linspace(0, s(end), 100);
 % time0 = tic;
 % %максимальное время интегрирования
 % maxtime=10;
-% if terminal_state == 's'
+% if st_f2m.terminal_state == 's'
 %     options = odeset(options, 'Events',@(s, y) eventIntegrationTraj(s, y, time0,maxtime));
-% elseif terminal_state == 't'
-%     options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0, h0, t_start_fix));
+% elseif st_f2m.terminal_state == 't'
+%     options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopTime(s, y, time0,maxtime, t_end_0, h0, st_f2m.t_start_fix));
 % end
 % 
 % [s,y] = ode113(@(s,y) integrateTraectory(s, y, h0), int_s0sf, y0, options);
@@ -81,7 +81,7 @@ u_b_end=[u_end(4); -u_end(3);u_end(2);-u_end(1)];
 w_end=y(end, 5:8)';
 %h_end=y(end, 9)';
 h_end=-mug/(u_end'*u_end+4*w_end'*w_end);
-tau_end=y(end, 17)';
+tau_end=y(end, 17)'-1;
 pu_end=y(end, 9:12)';
 pw_end=y(end, 13:16)';
 %ph_end=y(end, 19)';
@@ -100,21 +100,26 @@ V_end = 2*sqrt(-2*h_end)*L_end*w_end/(norm(u_end)^2);
 
 %Получаем координату и скорость планеты в эфемеридах и поворачиваем систеу
 %координат
-if terminal_state == 's'
-    [rf, Vf] = planetEphemeris(t_start+t_end,'SolarSystem',planet_end,'430');
-elseif terminal_state == 't'
-    [rf, Vf] = planetEphemeris(t_start+t_end_0,'SolarSystem',planet_end,'430');
+st.planet = st_f2m.planet_end;
+st.mode = st_f2m.orbits;
+st.delta_omega = st_f2m.omega;
+if st_f2m.terminal_state == 's'
+    st.t = st_f2m.t_start+t_end;
+    [rf, Vf] = planetModel(st);
+elseif st_f2m.terminal_state == 't'
+    st.t = st_f2m.t_start+t_end_0;
+    [rf, Vf] = planetModel(st);
 end
 
 
 
-eul = [0 pi/4 0];
+eul = [pi/12 pi/4 pi/12];
 rotmZYX = eul2rotm(eul);
 rf = [rotmZYX*rf'; 0]/ae*1e+03;
 Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 
 %Положение и скорость Земли для отладки
-% [rf_e, Vf_e] = planetEphemeris(t_start+t_end,'SolarSystem','Earth','430');
+% [rf_e, Vf_e] = planetEphemeris(st_f2m.t_start+t_end,'SolarSystem','Earth','430');
 % rf_e = [rotmZYX*rf_e'; 0]/ae*1e+03;
 % Vf_e = [rotmZYX*Vf_e'; 0]/V_unit*1e+03;
 
@@ -122,11 +127,11 @@ Vf = [rotmZYX*Vf'; 0]/V_unit*1e+03;
 uf=rToU(rf, phi);
 wf=vFromV(Vf,rf,mug,phi);
 hf=norm(Vf)^2/2-mug/norm(rf);
-if case_traj == 1
+if st_f2m.case_traj == 1
     g_left=get_target_g_u(u_end);
     g_right=rf(1:3);
     ortdgdu=get_ortdgdu(u_end);
-elseif case_traj == 2
+elseif st_f2m.case_traj == 2
     g_left=get_target_g(u_end,w_end);
     g_right=[rf(1:3);Vf(1:3)];
     ortdgduv=get_ortdgduv(u_end,w_end);
@@ -134,40 +139,40 @@ end
 
 %Оптимизриуем по параметрическим координатам или по физическим
 
-if strcmp(UorR,'u_hat')
+if strcmp(st_f2m.UorR,'u_hat')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
-    if case_traj == 1
+    if st_f2m.case_traj == 1
         dis_p_eqs = g_left-g_right;
         dis_p_tr = [pu_end'*ortdgdu; pw_end; ph_end];
         dis_p = [dis_p_eqs; dis_p_tr;];
-    elseif case_traj == 2
+    elseif st_f2m.case_traj == 2
         dis_p_eqs_right = g_left-g_right;
         %dis_p_eqs_left = f_left-f_right;
         dis_p_tr_right=[[pu_end;pw_end]'*ortdgduv]';
         dis_p=[dis_p_eqs_right;dis_p_tr_left];  
         %dis_p=dis_p_eqs_right;
     end
-elseif  strcmp(UorR,'u')
+elseif  strcmp(st_f2m.UorR,'u')
         %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
     %direction - выбор положительного или отрицательного семейства
-    if case_traj == 1
+    if st_f2m.case_traj == 1
         dis_p = [uf-u_end; pw_end];
-    elseif case_traj == 2   
+    elseif st_f2m.case_traj == 2   
         dis_p = [uf-u_end; wf-w_end;dis_p_tr_left];
         %dis_p = [uf-u_end; wf-w_end];
     end
-elseif  strcmp(UorR,'r')
+elseif  strcmp(st_f2m.UorR,'r')
     %ЗАДАЧА ПРОЛЁТА или ЗАДАЧА СОПРОВОЖДЕНИЯ
-    if case_traj == 1
+    if st_f2m.case_traj == 1
         dis_p = [rf-r_end; pw_end;];
-    elseif case_traj == 2
+    elseif st_f2m.case_traj == 2
         dis_p = [rf-r_end; Vf-V_end;];
     end
 end
-%Сумма квадратов невязок, modifier_f влияет на сходимость
-%dis = modifier_f*norm(dis_p)^2;
+%Сумма квадратов невязок, st_f2m.modifier_f влияет на сходимость
+%dis = st_f2m.modifier_f*norm(dis_p)^2;
    
-ceq = modifier_f*[dis_p;];
+ceq = st_f2m.modifier_f*[dis_p;];
 end
 
