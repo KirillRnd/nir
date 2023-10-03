@@ -27,9 +27,11 @@ dpvdz=cat(2,dpvdpr,dpvdpv);
 ddpvdzdt=y(67:84);
 
 res(1:3)=V;
-res(4:6)=(mu_t/mug)*dUdr(r)+pv;
+%res(4:6)=(mu_t/mug)*dUdr(r)+pv;%РИТЭГ
+res(4:6)=(mu_t/mug)*dUdr(r)+pv/(norm(r)^2);
 res(7:9)=dpvdt;
-res(10:12)=(mu_t/mug)*ddUdrdr(r)*pv;
+%res(10:12)=(mu_t/mug)*ddUdrdr(r)*pv;%РИТЭГ
+res(10:12)=(mu_t/mug)*ddUdrdr(r)*pv-r*norm(pv)^2/norm(r)^4;
 res(13:30)=ddrdzdt;
 res(49:66)=ddpvdzdt;
 

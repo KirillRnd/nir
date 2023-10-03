@@ -61,8 +61,8 @@ Mevery(1,163:169, 4)=M(163:169);
 
 %%
 F=4;
-for i = 1:L1
-    for j = 159:L2%50:L2
+for i = 1:L1%L1:-1:350
+    for j = L2:-1:150%50:L2
         [skip, i_nearest, j_nearest] = checkNear(skipGrid, i, j, F);
         if skip>1
             px_new=reshape(PXevery(i_nearest,j_nearest,:,F),[1,8]);
@@ -78,7 +78,7 @@ for i = 1:L1
             modifier_p=10^(-4-sqrt(delta_s));
             px=px_new;
             homotopy_steps = linspace(0,1,5);
-            for k = 2:1%2:4
+            for k = 2:4%2:4
                 delta_s=(ds(j_nearest)+(ds(j)-ds(j_nearest))*homotopy_steps(k))*2*pi;
                 %modifier_p=10^(-4-sqrt(delta_s));
                 integration_acc=1e-12;
@@ -133,6 +133,8 @@ for i = 1:L1
             CONDevery(i,j, F)=C;
             PXevery(i,j,:,F)=px;
             PHIevery(i,j, F)=phi;
+            T_end = t(end)/(24*60*60); %в днях
+            Tevery(i,j, F)=T_end;
         end
     end
 end
@@ -165,7 +167,7 @@ for i = 1:L1
     end
 end
 %% оптимальные поверхности
-Mevery_fix = Jevery;
+Mevery_fix = Mevery;
 Mevery_fix(Mevery_fix==0)=nan;
 figure(11);
 M1 = Mevery_fix(1:L1, 1:L2,1)';
@@ -277,6 +279,8 @@ set(gca,'zscale','log')
 hold off;
 xlim([-180, 180])
 legend;
+figure(19);
+close;
 %% числа обусловленности
 CONDevery_fix = CONDevery;
 CONDevery_fix(CONDevery_fix==1)=nan;

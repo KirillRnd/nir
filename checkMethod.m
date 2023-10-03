@@ -34,7 +34,7 @@ rotmZYX = eul2rotm(eul);
 
 r0 = [rotmZYX*r0'/ae; 0]*1e+03;
 V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
-
+%V0 = V0 + 2700*V0/norm(V0)/V_unit;%гип избыток
 %nonlcon = @(x)ubOrtPv(x, rToU(r0, 0));
 nonlcon=[];
 mug=1;

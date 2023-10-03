@@ -57,10 +57,10 @@ display = 1;
 terminal_state = 's';
 UorR = 'u_hat';
 rad=0;
-x0(9)=ds(j);
 omega = -pi;
 %x0(9)=n+angle+rad/2;
-x0(1:8)=PXevery(1,j,:,4);
+x0(1:8)=PXevery(1,j,:,3);
+x0(9)=delta_s/(2*pi);
 calculate_condition=1;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
 % 

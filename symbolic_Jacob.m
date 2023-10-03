@@ -25,7 +25,7 @@ Lambda=L*(-(u2)*pw/(4*h) - w*(1/h)*(pw'*w));
 m=Lambda(4)/u2;
 LambdaTilde=Lambda-m*L*bil(u);
 LambdaTilde=simplify(LambdaTilde);
-a=LambdaTilde/k;
+a=(LambdaTilde/k);
 
 g=bil(u)'*L'*a;
 %a(4)=0;
@@ -37,7 +37,7 @@ dtauds=(mug+4*(u'*w)*dhds+u2*u'*(L'*a))/((-2*h)^(3/2));
 %H=-k*(a'*a)/2+pu'*duds+pw'*dwds-m*g;
 %H_opt=simplify(H/dtds);
 H_opt=(LambdaTilde'*LambdaTilde/(dtds*2)+pu'*w-pw'*u/4)/dtds;
-%H_opt=simplify(H_opt,'Steps',10);
+H_opt=simplify(H_opt,'Steps',10);
 %a_solved = solve(gradient(H,a)==0,a);
 %a_S=simplify([a_solved.a1;a_solved.a2;a_solved.a3;a_solved.a4;]);
 %a_S(4)=0;
@@ -61,9 +61,9 @@ f = [duds', dwds', dpuds', dpwds',dtauds]';
 f = simplify(f,'Steps',10);
 symF = matlabFunction(f,'File','symF','Optimize',true, 'Vars', {u,w,pu,pw});
 
-J = jacobian(f, y);
-J = simplify(J,'Steps',10);
-symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,w,pu,pw});
+% J = jacobian(f, y);
+% J = simplify(J,'Steps',10);
+% symJ = matlabFunction(J,'File','symJ','Optimize',true, 'Vars', {u,w,pu,pw});
 
 %y = 2*(u(1)*u(2)-u(3)*u(4));
 %z = 2*(u(1)*u(3)+u(2)*u(4));

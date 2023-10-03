@@ -3,21 +3,18 @@
 %5if exist('symF','var') ~= 1
 %    symbolic_Jacob
 %end
-t_start = juliandate(2022,1,1);
+t_start = juliandate(2026,10,08);
 orbits='Ephemeris';
 
-N=1350;
-m0=367;
-eta=0.45;
+N=550;
+m0=100;
+eta=1.0;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
 case_traj=2;
 %Выбор сходимости по физическим координатам ('r') или по параметрическим ('u')
 decreaseNonPsysical = 0;
 %Начальные условия
-%x0(1:8)=PX(:,41)';
-%x0(1:8)=[-0.081312208804168  -0.165241434409968  -0.137910347360105  -0.029456685044885  -0.151663938192582  -0.306939705835856  -0.241150551359049  -0.080582966706315];
-%x0=[0.0103    0.0048    0.0046    0.0048   -0.0036    0.0065    0.0162    0.0104    1.7770         0];
 A = [];
 b = [];
 Aeq = [];
@@ -39,11 +36,13 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=2;
-angle=0.5;
+n=0;
+angle=0.90465;
 delta_s=(n+angle)*2*pi;
 
 x0=zeros([1, 10]);
+x0=[0.0076    0.0077   -0.0116    0.0088    0.0081   -0.0078    0.0083   -0.0007    0.9046         0];
+%x0(1:8)=[-0.2889   -0.2479    0.0922   -0.0941   -0.5281   -0.4274    0.1720   -0.1609];
 %x0(12)=x0(11)/2;
 %modifier_p=1e-08;
 modifier_p=10^(-4-sqrt(delta_s));
@@ -54,9 +53,10 @@ integration_acc=1e-10;
 display = 1;
 terminal_state = 's';
 UorR = 'u_hat';
-rad=1/8;
+rad=0;
 calculate_condition=1;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits);
+omega = 0;
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits,omega);
 % 
 if terminal_state == 's'
     x0_sec = [px s_f/(2*pi) phi/(2*pi)];
@@ -79,7 +79,7 @@ phi0=atan2(uu(1,4),uu(1,1));
 functional = Jt(end);
 z0=zeros([1, 6]);
 [rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
-    checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, n, orbits);
+    checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, n, orbits,omega);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);
@@ -122,14 +122,26 @@ hold on;
 
 t0 = t_start;
 t_orbit = linspace(t0,t0+T_earth/(24*3600), 1000);
-earth_traj = planetModel(t_orbit','Earth',orbits);
+
+st.t = t_orbit';
+st.planet = 'Earth';
+st.mode = orbits;
+st.delta_omega = omega;
+
+earth_traj = planetModel(st);
 earth_traj=earth_traj*1e+03/ae;
 %Для KS
 earth_traj_New = arrayfun(@(x,y,z)rotmZYX*[x, y, z]', earth_traj(:, 1),earth_traj(:, 2),earth_traj(:, 3),'UniformOutput',false);
 earth_traj_New = cell2mat(earth_traj_New')';
 
 t_orbit = linspace(t0,t0+T_mars/(24*3600), 1000);
-mars_traj = planetModel(t_orbit',planet_end,orbits);
+
+st.t = t_orbit';
+st.planet = planet_end;
+st.mode = orbits;
+st.delta_omega = omega;
+
+mars_traj = planetModel(st);
 mars_traj=mars_traj*1e+03/ae;
 
 %Для KS
@@ -139,7 +151,12 @@ mars_traj_New = cell2mat(mars_traj_New')';
 plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
 plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'r')
 
-[mars_r_f, mars_v_f]=planetModel([t_start, t_end],planet_end,orbits);
+st.t = [t_start, t_end];
+st.planet = planet_end;
+st.mode = orbits;
+st.delta_omega = omega;
+
+[mars_r_f, mars_v_f]=planetModel(st);
 mars_r_f=mars_r_f'*1e+03;
 mars_v_f=mars_v_f'*1e+03;
 
@@ -172,7 +189,7 @@ end
 plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
 plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
 
-plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
+%plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
 %эти две точки должны находиться рядом
 %plot3(rr_cont(500, 1)/ae, rr_cont(500, 2)/ae, rr_cont(500, 3)/ae, 'gO', 'LineWidth', 2.5);
 %plot3(rr_old(500, 1), rr_old(500, 2), rr_old(500, 3), 'bO', 'LineWidth', 2.5);
