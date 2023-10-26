@@ -18,6 +18,7 @@ L2 = length(ds);
 %время старта, угловое расстояние, сопряжённая переменная, семейство
 PXevery=zeros(L1,L2, 8, 4);
 Mevery=zeros(L1,L2, 4);
+Jevery=zeros(L1,L2, 4);
 PHIevery = zeros(L1,L2, 4);
 CONDevery = ones(L1,L2, 4);
 Tevery = zeros(L1,L2, 4);
@@ -58,13 +59,15 @@ PHIevery(1,163:169, 4)=PHI(163:169);
 skipGrid(1,163:169, 4)=skipPoint(163:169);
 skipGrid(skipGrid==-1)=0;
 Mevery(1,163:169, 4)=M(163:169);
-
 %%
-F=4;
+Mevery(skipGrid>0)=0;
+%%
+F=2;
+apply_homotopy = true;
 for i = 1:L1%L1:-1:350
-    for j = L2:-1:150%50:L2
+    for j = L2:-1:1%50:L2
         [skip, i_nearest, j_nearest] = checkNear(skipGrid, i, j, F);
-        if skip>1
+        if skip>0
             px_new=reshape(PXevery(i_nearest,j_nearest,:,F),[1,8]);
             if skip > 1 && norm(px_new) == 0
                 continue
@@ -74,39 +77,51 @@ for i = 1:L1%L1:-1:350
             %ds(j)
             disp([i,j])
 
-            delta_s=ds(j)*2*pi;
-            modifier_p=10^(-4-sqrt(delta_s));
             px=px_new;
-            homotopy_steps = linspace(0,1,5);
-            for k = 2:4%2:4
-                delta_s=(ds(j_nearest)+(ds(j)-ds(j_nearest))*homotopy_steps(k))*2*pi;
-                %modifier_p=10^(-4-sqrt(delta_s));
-                integration_acc=1e-12;
-                %Одиночный запуск метода и получение всех необходимых для графиков
-                %переменных
-                display = 1;
-                terminal_state = 's';
-                UorR = 'u_hat';
-                
-                x0_sec = [px delta_s/(2*pi) phi_new/(2*pi)];
-                rad=0;
-                calculate_condition=1;
-                omega=omega_space(i_nearest)+(omega_space(i)-omega_space(i_nearest))*homotopy_steps(k);
-                %delta_t=dt(i_nearest)+(dt(i)-dt(i_nearest))*homotopy_steps(k);
-                try 
-                    [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] =...
-                        checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
-                    disp(C);
-                    if k > 2
-                        disp(['Величина шага продолжения: ', num2str(norm(rr_old - rr(end,:)),'%10.2e\n'), ' а.е.'])
+            homotopy_fail = false;
+            if apply_homotopy
+                delta_s=ds(j)*2*pi;
+                modifier_p=10^(-4-sqrt(delta_s));
+                homotopy_steps = linspace(0,1,5);
+                for k = 2:4%2:4
+                    if homotopy_fail
+                        continue;
                     end
-                    rr_old = rr(end,:);
-                catch
-                    skipGrid(i,j, F)=2; 
-                    continue
+                    delta_s=(ds(j_nearest)+(ds(j)-ds(j_nearest))*homotopy_steps(k))*2*pi;
+                    %modifier_p=10^(-4-sqrt(delta_s));
+                    integration_acc=1e-12;
+                    %Одиночный запуск метода и получение всех необходимых для графиков
+                    %переменных
+                    display = 1;
+                    terminal_state = 's';
+                    UorR = 'u_hat';
+                    
+                    x0_sec = [px delta_s/(2*pi) phi_new/(2*pi)];
+                    rad=0;
+                    calculate_condition=1;
+                    omega=omega_space(i_nearest)+(omega_space(i)-omega_space(i_nearest))*homotopy_steps(k);
+                    %delta_t=dt(i_nearest)+(dt(i)-dt(i_nearest))*homotopy_steps(k);
+                    try 
+                        [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] =...
+                            checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
+                        disp(C);
+                        if k > 2
+                            disp(['Величина шага продолжения: ', num2str(norm(rr_old - rr(end,:)),'%10.2e\n'), ' а.е.'])
+                        end
+                        rr_old = rr(end,:);
+                    catch
+                        skipGrid(i,j, F)=2; 
+                        continue
+                    end
+                    if dr >= 10000 || length(t)~=1000
+                        homotopy_fail = true;
+                    end
                 end
             end
-
+            if homotopy_fail
+                skipGrid(i,j, F)=2;
+                continue
+            end
             delta_s=ds(j)*2*pi;
             omega=omega_space(i);
             modifier_p=10^(-4-sqrt(delta_s));
@@ -143,7 +158,7 @@ F=4;
 for i = 1:L1
     for j = 1:L2
         [skip, i_nearest, j_nearest] = checkNear(skipGrid, i, j, F);
-        if skip <= 1 && i_nearest>0 && j_nearest>0
+        if skip <= 0 && i_nearest>0 && j_nearest>0
             px_new=reshape(PXevery(i_nearest,j_nearest,:,F),[1,8]);
             %неважен phi
             phi_new=PHIevery(i_nearest,j_nearest, F);
@@ -156,18 +171,19 @@ for i = 1:L1
             modifier_p=10^(-4-sqrt(delta_s));
             x0_sec = [px delta_s/(2*pi) phi/(2*pi)];
             integration_acc=1e-12;
-            calculate_condition=1;
+            calculate_condition=0;
 
             [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = calculateTimeKS(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
             
 
             T_end = t(end)/(24*60*60); %в днях
             Tevery(i,j, F)=T_end;
+            Jevery(i,j, F)=Jt(end)*eta;
         end
     end
 end
 %% оптимальные поверхности
-Mevery_fix = Mevery;
+Mevery_fix = Jevery;
 Mevery_fix(Mevery_fix==0)=nan;
 figure(11);
 M1 = Mevery_fix(1:L1, 1:L2,1)';
@@ -711,7 +727,7 @@ function [skip, i_nearest, j_nearest] = checkNear(arr, i, j, F)
     s = size(arr);
     if arr(i,j,F)==0
         %уже есть решение
-        skip = 1;
+        skip = 0;
         i_nearest = i;
         j_nearest = j;
     else
@@ -741,7 +757,7 @@ function [skip, i_nearest, j_nearest] = checkNear(arr, i, j, F)
 %             end
 %         end
         %нет соседних решений
-        skip = 0;
+        skip = -1;
         i_nearest = 0;
         j_nearest = 0;
     end

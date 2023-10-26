@@ -33,7 +33,7 @@ for i = 1:length(uu)
 end
 %eta=0.45;
 a_vec=vecnorm(a_ks(:,1:3), 2, 2).^2;
-nr = vecnorm(rr(:,1:3),2,2);
-Jt = cumtrapz(t, a_vec.*(nr.^2))/(2*eta);
+%nr = vecnorm(rr(:,1:3),2,2);
+Jt = cumtrapz(t, a_vec)/(2*eta);
 %Jt = cumtrapz(t, a_vec)/(2*eta);
 end
