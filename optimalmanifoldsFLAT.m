@@ -61,11 +61,12 @@ skipGrid(skipGrid==-1)=0;
 Mevery(1,163:169, 4)=M(163:169);
 %%
 Mevery(skipGrid>0)=0;
+Jevery(skipGrid>0)=0;
 %%
-F=2;
+F=5;
 apply_homotopy = true;
-for i = 1:L1%L1:-1:350
-    for j = L2:-1:1%50:L2
+for i = L1:-1:180%L1:-1:350
+    for j = 1:L2%50:L2
         [skip, i_nearest, j_nearest] = checkNear(skipGrid, i, j, F);
         if skip>0
             px_new=reshape(PXevery(i_nearest,j_nearest,:,F),[1,8]);
@@ -150,35 +151,38 @@ for i = 1:L1%L1:-1:350
             PHIevery(i,j, F)=phi;
             T_end = t(end)/(24*60*60); %в днях
             Tevery(i,j, F)=T_end;
+            Jevery(i,j, F)=Jt(end)*eta;
         end
     end
 end
-%% заполнить время
-F=4;
-for i = 1:L1
-    for j = 1:L2
-        [skip, i_nearest, j_nearest] = checkNear(skipGrid, i, j, F);
-        if skip <= 0 && i_nearest>0 && j_nearest>0
-            px_new=reshape(PXevery(i_nearest,j_nearest,:,F),[1,8]);
-            %неважен phi
-            phi_new=PHIevery(i_nearest,j_nearest, F);
-            %ds(j)
-            disp([i,j])
-            px=px_new;
-
-            delta_s=ds(j)*2*pi;
-            omega=omega_space(i);
-            modifier_p=10^(-4-sqrt(delta_s));
-            x0_sec = [px delta_s/(2*pi) phi/(2*pi)];
-            integration_acc=1e-12;
-            calculate_condition=0;
-
-            [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = calculateTimeKS(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
-            
-
-            T_end = t(end)/(24*60*60); %в днях
-            Tevery(i,j, F)=T_end;
-            Jevery(i,j, F)=Jt(end)*eta;
+%% заполнить время И угловое расстояние
+ANevery = zeros(361, 169, 5);
+for F=1:5
+    for i = 1:L1
+        for j = 1:L2
+            [skip, i_nearest, j_nearest] = checkNear(skipGrid, i, j, F);
+            if skip <= 0 && i_nearest>0 && j_nearest>0
+                px_new=reshape(PXevery(i_nearest,j_nearest,:,F),[1,8]);
+                %неважен phi
+                phi_new=PHIevery(i_nearest,j_nearest, F);
+                %ds(j)
+                disp([i,j])
+                px=px_new;
+    
+                delta_s=ds(j)*2*pi;
+                omega=omega_space(i);
+                modifier_p=10^(-4-sqrt(delta_s));
+                x0_sec = [px delta_s/(2*pi) phi/(2*pi)];
+                integration_acc=1e-12;
+                calculate_condition=0;
+    
+                [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = calculateTimeKS(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
+                
+                ANevery(i,j, F) = calculate_angular_distance(rr(:,1:3));
+                T_end = t(end)/(24*60*60); %в днях
+                Tevery(i,j, F)=T_end;
+                Jevery(i,j, F)=Jt(end)*eta;
+            end
         end
     end
 end
@@ -202,6 +206,7 @@ T1 = Tevery_fix(1:L1, 1:L2,1)';
 T2 = Tevery_fix(1:L1, 1:L2,2)';
 T3 = Tevery_fix(1:L1, 1:L2,3)';
 T4 = Tevery_fix(1:L1, 1:L2,4)';
+T5 = Tevery_fix(1:L1, 1:L2,5)';
 figure(19);
 s_contour = contour3(180*omega_space(1:L1)/pi,ds(1:L2),T1,(1:10)*365);
 figure(11)
@@ -285,6 +290,29 @@ while K_contours<length(s_contour)
     %disp(K_contours)
 end
 
+M5 = Mevery_fix(1:L1, 1:L2,5)';
+%Mscaled4 = 100*M4/m0;
+
+Mscaled5 = M5;
+s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled5,'DisplayName','Семейство 5', 'FaceColor','green');
+s.EdgeColor = 'none';
+
+figure(19);
+s_contour = contour3(180*omega_space(1:L1)/pi,ds(1:L2),T4,(1:10)*365);
+hold off;
+figure(11)
+K_contours = 1;
+while K_contours<length(s_contour)
+    H_contours = s_contour(1,K_contours);
+    N_contours = s_contour(2,K_contours);
+    X_contours = s_contour(1,K_contours+1:K_contours+N_contours);
+    Y_contours = s_contour(2,K_contours+1:K_contours+N_contours);
+    Z_contours = interp2(X_axis,Y_axis,Mscaled5, X_contours, Y_contours);
+    K_contours = K_contours+N_contours+1;
+    plot3(X_contours, Y_contours,Z_contours,'black','HandleVisibility','off')
+    %disp(K_contours)
+end
+
 %colormap(s,spring)
 xlabel('Разность фаз, градусов')
 ylabel('Угловая дальность, витков')
@@ -295,6 +323,10 @@ set(gca,'zscale','log')
 hold off;
 xlim([-180, 180])
 legend;
+dcm = datacursormode;
+dcm.Enable = 'on';
+dcm.UpdateFcn = @(obj,event_obj)datatipWithSubscript(obj,event_obj);
+
 figure(19);
 close;
 %% числа обусловленности
@@ -333,7 +365,7 @@ ylabel('Угловая дальность, витков')
 zlabel('Число обусловленности')
 hold off;
 %% цилиндр
-Mevery_fix = Mevery;
+Mevery_fix = Jevery;
 Mevery_fix(Mevery_fix==0)=nan;
 ax = figure(20);
 M1 = Mevery_fix(1:L1, 1:L2,1)';
@@ -342,7 +374,10 @@ M1 = Mevery_fix(1:L1, 1:L2,1)';
 %C1 = rescale(M1,0,255);
 %mixed_cmap = cat(1,cmap1, cmap2);
 %colormap(ax,mixed_cmap);
-Mscaled1 = 100*M1/m0;
+%Mscaled1 = 100*M1/m0;
+M_transform = @(x)x;
+%M_transform = @(x)x;
+Mscaled1 = M_transform(M1);
 z = repmat(ds(1:L2), L1,1)';
 x = Mscaled1.*cos(omega_space(1:L1));
 y = Mscaled1.*sin(omega_space(1:L1));
@@ -367,7 +402,8 @@ while K_contours<length(s_contour)
 end
 %C2 = rescale(M1,256,511);
 M2 = Mevery_fix(1:L1, 1:L2,2)';
-Mscaled2 = 100*M2/m0;
+%Mscaled2 = 100*M2/m0;
+Mscaled2 = M_transform(M2);
 z = repmat(ds(1:L2), L1,1)';
 x = Mscaled2.*cos(omega_space(1:L1));
 y = Mscaled2.*sin(omega_space(1:L1));
@@ -389,7 +425,8 @@ while K_contours<length(s_contour)
 end
 % 
 M3 = Mevery_fix(1:L1, 1:L2,3)';
-Mscaled3 = 100*M3/m0;
+Mscaled3 = M_transform(M3);
+%Mscaled3 = 100*M3/m0;
 z = repmat(ds(1:L2), L1,1)';
 x = Mscaled3.*cos(omega_space(1:L1));
 y = Mscaled3.*sin(omega_space(1:L1));
@@ -411,7 +448,8 @@ while K_contours<length(s_contour)
 end
 % 
 M4 = Mevery_fix(1:L1, 1:L2,4)';
-Mscaled4 = 100*M4/m0;
+%Mscaled4 = 100*M4/m0;
+Mscaled4 = M_transform(M4);
 z = repmat(ds(1:L2), L1,1)';
 x = Mscaled4.*cos(omega_space(1:L1));
 y = Mscaled4.*sin(omega_space(1:L1));
@@ -480,11 +518,11 @@ dFdX = get_dgduv(u0,w0);
 %%
 cosineDistEvery=zeros(L1,L2);
 cosineSimEvery=zeros(L1,L2);
-PVevery=zeros(L1,L2, 3, 4);
-PRevery=zeros(L1,L2, 3, 4);
+PVevery=zeros(L1,L2, 3, 5);
+PRevery=zeros(L1,L2, 3, 5);
 for i = 1:L1
     for j = 1:L2
-        for F = 1:4
+        for F = 1:5
             vecPX1 = reshape(PXevery(i,j,:,F), [1,8]);
             vecPV_cartesian = a_reactive(u0,w0,vecPX1(1:4)',vecPX1(5:8)');
             b = vecPX1'-dFdX' * [0; 0; 0; vecPV_cartesian(1:3)]; %TODO переписать в символьных
@@ -617,30 +655,35 @@ PV_1 = squeeze(PVevery_fix(:,:,1:2,1));
 PV_2 = squeeze(PVevery_fix(:,:,1:2,2));
 PV_3 = squeeze(PVevery_fix(:,:,1:2,3));
 PV_4 = squeeze(PVevery_fix(:,:,1:2,4));
+PV_5 = squeeze(PVevery_fix(:,:,1:2,5));
 
 z = repmat(ds(1:L2), L1,1);
-s = surf(PV_1(:,:,1),PV_1(:,:,2),z,'DisplayName','Семейство 1', 'FaceColor','cyan');
+s = surf(PV_1(:,:,1),PV_1(:,:,2),z,'DisplayName','Семейство 1', 'FaceColor','cyan','FaceAlpha',0.2);
 s.EdgeColor = 'none';
 hold on;
-s = surf(PV_2(:,:,1),PV_2(:,:,2),z,'DisplayName','Семейство 2', 'FaceColor','red');
+s = surf(PV_2(:,:,1),PV_2(:,:,2),z,'DisplayName','Семейство 2', 'FaceColor','red','FaceAlpha',0.2);
 s.EdgeColor = 'none';
-s = surf(PV_3(:,:,1),PV_3(:,:,2),z,'DisplayName','Семейство 3', 'FaceColor','magenta');
+s = surf(PV_3(:,:,1),PV_3(:,:,2),z,'DisplayName','Семейство 3', 'FaceColor','magenta','FaceAlpha',0.2);
 s.EdgeColor = 'none';
-s = surf(PV_4(:,:,1),PV_4(:,:,2),z,'DisplayName','Семейство 4', 'FaceColor','green');
+s = surf(PV_4(:,:,1),PV_4(:,:,2),z,'DisplayName','Семейство 4', 'FaceColor','green','FaceAlpha',0.2);
+s.EdgeColor = 'none';
+s = surf(PV_5(:,:,1),PV_5(:,:,2),z,'DisplayName','Семейство 0', 'FaceColor','green','FaceAlpha',0.2);
 s.EdgeColor = 'none';
 %фиксированная разность фаз
-for i = 1:36:L1
-    plot3(PV_1(i,:,1), PV_1(i,:,2), ds(1:L2), 'black', 'HandleVisibility','off')
-end
-for i = 1:36:L1
-    plot3(PV_2(i,:,1), PV_2(i,:,2), ds(1:L2), 'black', 'HandleVisibility','off')
-end
-for i = 1:36:L1
-    plot3(PV_3(i,:,1), PV_3(i,:,2), ds(1:L2), 'black', 'HandleVisibility','off')
-end
-for i = 1:36:L1
-    plot3(PV_4(i,:,1), PV_4(i,:,2), ds(1:L2), 'black', 'HandleVisibility','off')
-end
+% for i = 1:36:L1
+%     plot3(PV_1(i,:,1), PV_1(i,:,2), ds(1:L2), 'black', 'HandleVisibility','off')
+% end
+% for i = 1:36:L1
+%     plot3(PV_2(i,:,1), PV_2(i,:,2), ds(1:L2), 'black', 'HandleVisibility','off')
+% end
+% for i = 1:36:L1
+%     plot3(PV_3(i,:,1), PV_3(i,:,2), ds(1:L2), 'black', 'HandleVisibility','off')
+% end
+% for i = 1:36:L1
+%     plot3(PV_4(i,:,1), PV_4(i,:,2), ds(1:L2), 'black', 'HandleVisibility','off')
+% end
+% 
+
 
 hold off;
 xlabel('Базис-вектор, X')
@@ -721,7 +764,56 @@ zlabel('Время перелёта, дни')
 hold off;
 xlim([-180, 180])
 legend;
-%%
+%%%
+function txt = displayCoordinates(~,info)
+    x = info.Position(1);
+    y = info.Position(2);
+    txt = ['(' num2str(x) ', ' num2str(y) ')'];
+end
+
+
+function output_txt = datatipWithSubscript(obj,event_obj)
+% Display the position of the data cursor with index/subscript information
+%
+% obj          Currently not used (empty)
+% event_obj    Handle to event object
+% output_txt   Data cursor text string (string or cell array of strings).
+%
+% A simple datatip text update function that additionally displays the
+% linear index or the subscripts of an object's selected point.
+pos = get(event_obj,'Position');
+output_txt = {['X: ',num2str(pos(1),4)],...
+              ['Y: ',num2str(pos(2),4)]};
+% If there is a Z-coordinate in the position, display it as well. Also get
+% the size of the object.
+if length(pos) > 2
+    output_txt{end+1} = ['Z: ',num2str(pos(3),4)];
+    dataSize  = size(get(get(event_obj,'Target'),'ZData'));
+else
+    dataSize  = size(get(get(event_obj,'Target'),'YData'));
+end
+% Get the linear index
+dataIndex = get(event_obj,'DataIndex');
+if sum(dataSize>1)>1
+    % display subscripts for data with more than 1 dimension
+   
+    S = cell(1,numel(dataSize));
+    %global i_one j_one;
+    [i_one, j_one] = cell2mat(S);
+    F_one = 1;
+    %plotTrajectoryCallback(i_one, j_one, F_one, PXevery, PHIevery)
+    [S{:}] = ind2sub(dataSize,dataIndex);
+    
+    subsString = sprintf('%i,',cell2mat(S));
+
+    %plotOneTrajectoryFlat;
+    output_txt{end+1} = ['@ (', subsString(1:end-1), ')'];
+else
+    % display linear index for vector data
+    output_txt{end+1} = ['@ ',num2str(dataIndex)];
+end
+end
+
 function [skip, i_nearest, j_nearest] = checkNear(arr, i, j, F)
     % checkNear
     s = size(arr);

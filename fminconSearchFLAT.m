@@ -39,11 +39,11 @@ planet_end = 'Mars';
 
 mug=1;
 
-n=6;
-angle=0.0;
-%delta_s=(n+angle)*2*pi;
+n=0;
+angle=0.75;
+delta_s=(n+angle)*2*pi;
 j=169;
-delta_s=ds(j)*2*pi;
+%delta_s=ds(j)*2*pi;
 x0=zeros([1, 10]);
 %x0(12)=x0(11)/2;
 %modifier_p=1e-08;
@@ -59,7 +59,7 @@ UorR = 'u_hat';
 rad=0;
 omega = -pi;
 %x0(9)=n+angle+rad/2;
-x0(1:8)=PXevery(1,j,:,3);
+%x0(1:8)=PXevery(1,j,:,3);
 x0(9)=delta_s/(2*pi);
 calculate_condition=1;
 [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
@@ -84,8 +84,8 @@ phi=atan2(uu(end,4),uu(end,1));
 phi0=atan2(uu(1,4),uu(1,1));
 functional = Jt(end);
 z0=zeros([1, 6]);
-%[rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
-%    checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, n, orbits);
+[rr_cont, Jt_cont, C_cont, evaluation_time_cont, dr_cont, dV_cont, pr0, pv0] =...
+    checkContinuation(t_start, t_end, t,z0, case_traj,planet_end,eta, n, orbits, omega);
 functional_cont = Jt_cont(end);
 m_cont=massLP(Jt_cont, m0, N);
 %t_end=t(end);
