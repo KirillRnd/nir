@@ -1,4 +1,4 @@
-function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(checkMethod_params)
+function checkMethod_results = checkMethod_ver2(checkMethod_params_INPUT)
 %UNTITLED9 Summary of this function goes here
 %   Вычисляет невязку в зависимости от входных параметров
 %условия на fmincon
@@ -6,7 +6,7 @@ function [dr,dv, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_
 
 %Начальные условия
 %x0=zeros([1, 11]);
-
+checkMethod_params = checkMethod_params_INPUT;
 t_start = checkMethod_params.t_start;
 psi = checkMethod_params.delta_s;
 rad = checkMethod_params.rad;
@@ -163,6 +163,11 @@ delta_hi = x(11);
 %options = optimoptions(options, 'Algorithm', 'sqp');
 phi0=phi;
 %phi0=0;
+if strcmp(UorR,'u_hat_v_hyp')
+    hi = st_f2m.hi + delta_hi;
+    dV_add = st_f2m.dV_value*st_f2m.rotmZYX*[cos(hi), sin(hi), 0]';
+    V0 = st_f2m.V0+[dV_add; 0];
+end
 h0=(norm(V0)^2)/2-mug/norm(r0);
 
 u0 = rToU(r0, phi0);
@@ -307,5 +312,22 @@ dv=norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)');
 
 %C=1;
 %C=norm(x)*norm(grad)/fval;
+checkMethod_results = struct();
+checkMethod_results.dr = dr;
+checkMethod_results.dv = dv;
+checkMethod_results.C = C;
+checkMethod_results.px = px;
+checkMethod_results.s_f = s_f;
+checkMethod_results.phi = phi;
+checkMethod_results.t_end = t_end;
+checkMethod_results.s = s;
+checkMethod_results.uu = uu;
+checkMethod_results.rr = rr;
+checkMethod_results.VV = VV;
+checkMethod_results.t = t;
+checkMethod_results.Jt = Jt;
+checkMethod_results.a_ks = a_ks;
+checkMethod_results.evaluation_time = evaluation_time;
+checkMethod_results.hi_opt = st_f2m.hi+delta_hi;
 end
 

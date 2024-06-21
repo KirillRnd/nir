@@ -25,6 +25,14 @@ end
 t_end_0=x(9)*365.256363004;
 phi=x(10)*2*pi;
 %phi0=0;
+
+if strcmp(st_f2m.UorR,'u_hat_v_hyp')
+     hi = st_f2m.hi + x(11);
+     dV_add = st_f2m.dV_value*st_f2m.rotmZYX*[cos(hi), sin(hi), 0]';
+     st_f2m.V0 = st_f2m.V0+[dV_add; 0];
+end
+
+
 phi0=phi;
 u_0 = rToU(st_f2m.r0, phi0);
 u_b0=[u_0(4); -u_0(3);u_0(2);-u_0(1)];
@@ -33,8 +41,28 @@ w_0 = vFromV(st_f2m.V0,st_f2m.r0,mug, phi0);
 %Условия трансверсальности на левом конце
 f_left=get_target_g(u_0,w_0);
 f_right=[st_f2m.r0(1:3);st_f2m.V0(1:3)];
-f_ortdgduv=get_ortdgduv(u_0,w_0);
-dis_p_tr_left=[[pu_0;pw_0]'*f_ortdgduv]';
+
+if strcmp(st_f2m.UorR,'u_hat_v_hyp')
+     vecPV_cartesian = a_reactive(u_0,w_0,pu_0,pw_0);
+     if norm(vecPV_cartesian) > 0 && norm(dV_add)>0
+         u_hat_v_hyp_left = 1e-09*cross(vecPV_cartesian(1:3)/norm(vecPV_cartesian(1:3)), dV_add(1:3)/norm(dV_add(1:3)));
+     else
+         u_hat_v_hyp_left = [0;0;0];
+     end
+end
+
+
+
+%     ortdgduv_left=get_ortdgduv_Vhyp(u_0,w_0, st_f2m.Vp);
+%     ortdgduv_left(1:4,1:4) = ortdgduv_left(1:4,1:4)*1e-13;
+% else
+%     ortdgduv_left=get_ortdgduv(u_0,w_0);
+% end
+ortdgduv_left=get_ortdgduv(u_0,w_0);
+dis_p_tr_left=[[pu_0;pw_0]'*ortdgduv_left]';
+
+
+
 %h0=-mug/(u0'*u0+4*st_f2m.V0'*st_f2m.V0)
 %t0 = getEccentricAnomaly(st_f2m.r0(1:3),st_f2m.V0(1:3),mug);
 %tau0=0;
@@ -103,6 +131,7 @@ V_end = 2*sqrt(-2*h_end)*L_end*w_end/(norm(u_end)^2);
 st.planet = st_f2m.planet_end;
 st.mode = st_f2m.orbits;
 st.delta_omega = st_f2m.omega;
+st.a_rel = st_f2m.a_rel;
 if st_f2m.terminal_state == 's'
     st.t = st_f2m.t_start+t_end;
     [rf, Vf] = planetModel(st);
@@ -134,8 +163,9 @@ if st_f2m.case_traj == 1
 elseif st_f2m.case_traj == 2
     g_left=get_target_g(u_end,w_end);
     g_right=[rf(1:3);Vf(1:3)];
-    ortdgduv=get_ortdgduv(u_end,w_end);
+    ortdgduv_right=get_ortdgduv(u_end,w_end);
 end
+
 
 %Оптимизриуем по параметрическим координатам или по физическим
 
@@ -149,7 +179,7 @@ if strcmp(st_f2m.UorR,'u_hat')
     elseif st_f2m.case_traj == 2
         dis_p_eqs_right = g_left-g_right;
         %dis_p_eqs_left = f_left-f_right;
-        dis_p_tr_right=[[pu_end;pw_end]'*ortdgduv]';
+        dis_p_tr_right=[[pu_end;pw_end]'*ortdgduv_right]';
         dis_p=[dis_p_eqs_right;dis_p_tr_left];  
         %dis_p=dis_p_eqs_right;
     end
@@ -168,6 +198,17 @@ elseif  strcmp(st_f2m.UorR,'r')
         dis_p = [rf-r_end; pw_end;];
     elseif st_f2m.case_traj == 2
         dis_p = [rf-r_end; Vf-V_end;];
+    end
+elseif  strcmp(st_f2m.UorR,'u_hat_v_hyp')
+    if st_f2m.case_traj == 1
+        dis_p_eqs = g_left-g_right;
+        dis_p_tr = [pu_end'*ortdgdu; pw_end; ph_end];
+        dis_p = [dis_p_eqs; dis_p_tr;];
+    elseif st_f2m.case_traj == 2
+        dis_p_eqs_right = g_left-g_right;
+        %dis_p_eqs_left = f_left-f_right;
+        dis_p=[dis_p_eqs_right;dis_p_tr_left;u_hat_v_hyp_left];  
+        %dis_p=dis_p_eqs_right;
     end
 end
 %Сумма квадратов невязок, st_f2m.modifier_f влияет на сходимость

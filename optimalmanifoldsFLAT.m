@@ -130,8 +130,27 @@ for i = L1:-1:180%L1:-1:350
             integration_acc=1e-12;
             calculate_condition=1;
 
+
+            checkMethod_params.t_start = t_start;
+            checkMethod_params.delta_s = delta_s;
+            checkMethod_params.rad = rad;
+            checkMethod_params.UorR = UorR;
+            checkMethod_params.decreaseNonPsysical = decreaseNonPsysical;
+            checkMethod_params.modifier_p = modifier_p;
+            checkMethod_params.modifier_f = modifier_f;
+            checkMethod_params.x0_sec = x0_sec;
+            checkMethod_params.eta = eta;
+            checkMethod_params.case_traj = case_traj;
+            checkMethod_params.planet_end = planet_end;
+            checkMethod_params.display = display;
+            checkMethod_params.terminal_state = terminal_state;
+            checkMethod_params.integration_acc = integration_acc;
+            checkMethod_params.calculate_condition = calculate_condition;
+            checkMethod_params.orbits = orbits;
+            checkMethod_params.omega = omega;
+
             try 
-                [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
+                [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(checkMethod_params);
             catch
                 skipGrid(i,j, F)=2;
                 continue
@@ -176,7 +195,9 @@ for F=1:5
                 integration_acc=1e-12;
                 calculate_condition=0;
     
-                [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = calculateTimeKS(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
+                [dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = calculateTimeKS(t_start, ...
+                    delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0_sec,eta, case_traj,planet_end, ...
+                    display,terminal_state,integration_acc,calculate_condition, orbits, omega);
                 
                 ANevery(i,j, F) = calculate_angular_distance(rr(:,1:3));
                 T_end = t(end)/(24*60*60); %в днях
