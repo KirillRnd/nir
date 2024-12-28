@@ -171,6 +171,20 @@ for i = 1:L2
         PRevery_Vhyp(i,j,:) = vecPR_cartesian';
     end
 end
+%%
+%vhyp_best_minimum_line = zeros(6,size(Tevery_Vhyp,1));
+
+for i = 100:105
+    j_local = Jevery_Vhyp(i,2:end);
+    j_min = min(j_local,[],'all');
+    j_min = find(j_local==j_min);
+    j_min = j_min+1;
+    vhyp_best_minimum_line(:,i) = [Tevery_Vhyp(i, j_min), ANevery_Vhyp(i, j_min),...
+        Mevery_Vhyp(i, j_min), CONDevery_Vhyp(i, j_min), Jevery_Vhyp(i, j_min), dV_range(j_min)];
+
+end
+%%
+
 %% выводим результат
 
 figure(35);
@@ -179,15 +193,42 @@ Jevery_Vhyp_fix(Jevery_Vhyp_fix==0)=nan;
 
 FaceAlpha = 0.4;
 
-[X, Y] = meshgrid(ds, dV_range);
-s = surf(X, Y, Jevery_Vhyp_fix', 'FaceAlpha',FaceAlpha);
+%[X, Y] = meshgrid(ANevery_Vhyp(1:105,2)', dV_range);
+[X, Y] = meshgrid(ds(1:105), dV_range);
+s = surf(X, Y, Jevery_Vhyp_fix(1:105,:)', 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
 s.EdgeColor = 'none';
 hold on;
-%contour3(repmat(da, L2,1), ANevery_V/(2*pi), Jevery_V_fix,'ShowText','on', 'HandleVisibility','off');
+contour3(X, Y, Jevery_Vhyp_fix(1:105,:)','ShowText','on', 'HandleVisibility','off');
+plot3(ds(1:105), vhyp_best_minimum_line(6,1:105),vhyp_best_minimum_line(5,1:105), 'r', 'LineWidth', 1.5,'DisplayName','Глобальный минимум')
 hold off;
-xlabel('Угловая дальность')
-ylabel('Величина скорости')
+
+xlim([0.75,4])
+xlabel('Угловая дальность, витки')
+ylabel('Гиперболический избыток скорости, м/с')
 zlabel('Значение функционала, безразм.')
+legend;
+%% выводим результат
+
+figure(35);
+Jevery_Vhyp_fix = HIevery_Vhyp-pi/2;
+Jevery_Vhyp_fix(Jevery_Vhyp_fix==0)=nan;
+
+FaceAlpha = 0.4;
+
+%[X, Y] = meshgrid(ANevery_Vhyp(1:105,2)', dV_range);
+[X, Y] = meshgrid(ds(1:105), dV_range(2:end));
+s = surf(X, Y, Jevery_Vhyp_fix(1:105,2:end)', 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
+s.EdgeColor = 'none';
+hold on;
+contour3(X, Y, Jevery_Vhyp_fix(1:105,2:end)','ShowText','on', 'HandleVisibility','off');
+plot3(ds(1:105), vhyp_best_minimum_line(6,1:105),vhyp_best_minimum_line(5,1:105), 'r', 'LineWidth', 1.5,'DisplayName','Глобальный минимум')
+hold off;
+
+xlim([0.75,4])
+xlabel('Угловая дальность, витки')
+ylabel('Гиперболический избыток скорости, м/с')
+zlabel('Значение функционала, безразм.')
+legend;
 %%
 figure(35);
 [X, Y] = meshgrid(ds, dV_range);

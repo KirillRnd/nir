@@ -40,7 +40,7 @@ planet_end = 'Mars';
 mug=1;
 
 n=0;
-angle=0.75;
+angle=0.7496;
 delta_s=(n+angle)*2*pi;
 j=169;
 %delta_s=ds(j)*2*pi;
@@ -57,12 +57,33 @@ display = 1;
 terminal_state = 's';
 UorR = 'u_hat';
 rad=0;
-omega = -pi;
+omega = 1.2257;
 %x0(9)=n+angle+rad/2;
-%x0(1:8)=PXevery(1,j,:,3);
+x0(1:8)=PXevery_a(1,113,:);
 x0(9)=delta_s/(2*pi);
 calculate_condition=1;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits, omega);
+
+checkMethod_params.t_start = t_start;
+checkMethod_params.delta_s = delta_s;
+checkMethod_params.rad = rad;
+checkMethod_params.UorR = 'u_hat';
+checkMethod_params.decreaseNonPsysical = decreaseNonPsysical;
+checkMethod_params.modifier_p = modifier_p;
+checkMethod_params.modifier_f = modifier_f;
+checkMethod_params.x0_sec = x0;
+checkMethod_params.eta = eta;
+checkMethod_params.case_traj = case_traj;
+checkMethod_params.planet_start = planet_start;
+checkMethod_params.planet_end = planet_end;
+checkMethod_params.display = display;
+checkMethod_params.terminal_state = terminal_state;
+checkMethod_params.integration_acc = integration_acc;
+checkMethod_params.calculate_condition = calculate_condition;
+checkMethod_params.orbits = orbits;
+checkMethod_params.omega = omega;
+checkMethod_params.a_rel = 1.52;
+
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(checkMethod_params);
 % 
 if terminal_state == 's'
     x0_sec = [px s_f/(2*pi) phi/(2*pi)];
@@ -196,7 +217,7 @@ end
 plot3(rr_old(end, 1), rr_old(end, 2), rr_old(end, 3),'bO')
 plot3(mars_r_f(1)/ae, mars_r_f(2)/ae,mars_r_f(3)/ae,'rO')
 
-%plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
+plot3(rr_cont(:, 1)/ae, rr_cont(:, 2)/ae, rr_cont(:, 3)/ae, 'g', 'LineWidth', 2.5);
 %эти две точки должны находиться рядом
 %plot3(rr_cont(500, 1)/ae, rr_cont(500, 2)/ae, rr_cont(500, 3)/ae, 'gO', 'LineWidth', 2.5);
 %plot3(rr_old(500, 1), rr_old(500, 2), rr_old(500, 3), 'bO', 'LineWidth', 2.5);

@@ -39,11 +39,11 @@ skipGrid(skipGrid==-1)=0;
 Mevery(1,63:100, 2)=M(63:100);
 F=2;
 %%
-for i = 1:L1
-    for j = 63:-1:40
+for i = 181:181
+    for j = 100:100
         [skip, i_nearest, j_nearest] = checkNear(skipGrid, i, j, F);
         %[skip, px_new] = approximateNear(skipGrid, PXevery,dt, ds, i, j, F,step);
-        if skip>1
+        if skip==1
             px_new=reshape(PXevery(i_nearest,j_nearest,:,F),[1,8]);
             if skip > 1 && norm(px_new) == 0
                 continue
@@ -216,8 +216,8 @@ function [skip, i_nearest, j_nearest] = checkNear(arr, i, j, F)
 %         i_range = i-1:i+1;
 %         j_range = j-1:j+1;
         
-        i_j_range = [i,i-1,i,i+1,i-1,i-1,j+1,j+1;
-                    j-1,j,j+1,j,j-1,j+1,j+1,j-1];
+        i_j_range = [i, i-1,i,  i+1,i-1,i-1,j+1,j+1;
+                    j-1,j,  j+1,j,  j-1,j+1,j+1,j-1];
 %         i_j_range = [i-1,i,i+1,i,i-1,i-1,j+1,j+1;
 %                      j,j-1,j,j+1,j-1,j+1,j+1,j-1];
         for k=1:8

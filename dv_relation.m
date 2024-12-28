@@ -162,16 +162,17 @@ Jevery_V_fix(Jevery_V_fix==0)=nan;
 rad_dV_range_cos_sin = [cos(rad_dV_range); sin(rad_dV_range)];
 
 dV_circle = repmat(reshape(dV_range, 1, 1, L4), 2, L5, 1).*repmat(rad_dV_range_cos_sin, 1, 1, L4);
-X = dV_range'*cos(rad_dV_range);
-Y = dV_range'*sin(rad_dV_range);
-Z_slice = 105;
+X = dV_range'*cos(rad_dV_range)/1000;
+Y = dV_range'*sin(rad_dV_range)/1000;
+Z_slice = 1;
 Z = reshape(Jevery_V_fix(Z_slice,:,:), L4, 65);
 minimum = min(min(Z));
 [i_idx,j_idx]=find(Z==minimum);
-s = surf(X, Y, Z, 'FaceAlpha',FaceAlpha);
+s = surf(X, Y, Z, 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
 s.EdgeColor = 'none';
 hold on;
-contour3(X, Y, Z,linspace(0, 3,31), 'ShowText','on', 'HandleVisibility','off');
+contour3(X, Y, Z,linspace(0, 0.3,11), 'ShowText','on', 'HandleVisibility','off', 'LabelSpacing', 150);
+contour3(X, Y, Z,linspace(0.5, 3,11), 'ShowText','on', 'HandleVisibility','off', 'LabelSpacing', 150);
 % plot3(X(i_idx, j_idx),Y(i_idx, j_idx),Z(i_idx, j_idx), 'r*')
 % %contour3(repmat(da, L2,1), ANevery_V/(2*pi), Jevery_V_fix,'ShowText','on', 'HandleVisibility','off');
 
@@ -193,8 +194,9 @@ scaler = 1500*1e+2;
 
 Jevery_Vhyp_fix = Jevery_Vhyp;
 Jevery_Vhyp_fix(Jevery_Vhyp_fix==0)=nan;
-dV_circle_best_angle_Vhyp = [dV_range.*cos(HIevery_Vhyp(Z_slice,:)); dV_range.*sin(HIevery_Vhyp(Z_slice,:))];
-plot3(dV_circle_best_angle_Vhyp(1,:),dV_circle_best_angle_Vhyp(2,:), Jevery_Vhyp_fix(Z_slice,:), 'g','LineWidth',3)
+dV_circle_best_angle_Vhyp = [dV_range.*cos(HIevery_Vhyp(Z_slice,:)); dV_range.*sin(HIevery_Vhyp(Z_slice,:))]/1000;
+plot3(dV_circle_best_angle_Vhyp(1,:),dV_circle_best_angle_Vhyp(2,:), Jevery_Vhyp_fix(Z_slice,:), 'g','LineWidth',3,'DisplayName','Локальный минимум')
+plot3(dV_circle_best_angle_Vhyp(1,32),dV_circle_best_angle_Vhyp(2,32), Jevery_Vhyp_fix(Z_slice,32)+0.1, 'r*','LineWidth',3,'DisplayName','Глобальный минимум')
 
 dcm = datacursormode;
 dcm.Enable = 'on';
@@ -208,10 +210,11 @@ set(dcm,'UpdateFcn',@datatipWithSubscript);
 % 
 % end
 hold off;
-%axis equal;
+axis equal;
+legend('Location', 'best')
 zlabel('Значение функционала, безразм.')
-xlabel('Гип. избыток скорости X, м/с')
-ylabel('Гип. избыток скорости Y, м/с')
+xlabel('X компонента отлётной скорости, км/с')
+ylabel('Y компонента отлётной скорости, км/с')
 %% выводим результат
 figure(34);
 Jevery_V_fix = Jevery_V;
@@ -219,7 +222,7 @@ Jevery_V_fix(Jevery_V_fix==0)=nan;
 
 
 [X, Y] = meshgrid(rad_dV_range, dV_range);
-s = surf(X, Y, reshape(Jevery_V_fix(1,:,:), 6, 65), 'FaceAlpha',FaceAlpha);
+s = surf(X, Y, reshape(Jevery_V_fix(1,:,:), 46, 65), 'FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 hold on;
 %contour3(repmat(da, L2,1), ANevery_V/(2*pi), Jevery_V_fix,'ShowText','on', 'HandleVisibility','off');

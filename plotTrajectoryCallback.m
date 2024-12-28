@@ -7,9 +7,15 @@ function [] = plotTrajectoryCallback(i_one, j_one, F_one, mega_st)
 %global i_one j_one;
 % F_one = 2;
 fig_number = 2;
-px=reshape(mega_st.PXevery(i_one,j_one,:,F_one),[1,8]);
-%неважен phi
-phi_new=mega_st.PHIevery(i_one,j_one, F_one);
+if F_one>=0
+    px=reshape(mega_st.PXevery(i_one,j_one,:,F_one),[1,8]);
+    %неважен phi
+    phi_new=mega_st.PHIevery(i_one,j_one, F_one);
+else
+    px=reshape(mega_st.PXevery(i_one,j_one,:),[1,8]);
+    %неважен phi
+    phi_new=mega_st.PHIevery(i_one,j_one);
+end
 %ds(j)
 disp([i_one,j_one])
 delta_s=mega_st.ds(j_one)*2*pi;

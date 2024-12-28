@@ -1,4 +1,4 @@
-function [c, ceq] = fun2min(x, st_f2m)
+function [c, ceq] = fun2min_ver3(x, st_f2m)
 %UNTITLED Summary of this function goes here
 % Функция расстояния до Марса, в квадратах координаты-скорости.
 % Зависит от сопряжённых переменных в начальный момент времени
@@ -9,7 +9,55 @@ ae = 149597870700;
 V_unit=sqrt(mug_0/ae);
 T_earth = 365.256363004*3600*24;
 T_unit = T_earth/(2*pi);
+delta_omega = x(12);
 
+ae = 149597870700;
+mug_0 = 132712.43994*(10^6)*(10^(3*3));
+T_earth = 365.256363004*3600*24;
+
+r_unit=ae;
+V_unit=sqrt(mug_0/ae);
+T_unit = T_earth/(2*pi);
+planet_start = 'Earth';
+
+st.t = st_f2m.t_start;
+st.planet = planet_start;
+st.mode = st_f2m.orbits;
+st.delta_omega = st_f2m.omega+delta_omega;
+st.a_rel = st_f2m.a_rel;
+
+[r0, V0] = planetModel(st);
+
+eul = [pi/12 pi/4 pi/12];
+rotmZYX = eul2rotm(eul);
+
+if isfield(st_f2m,'dV_add')
+    V0 = V0+st_f2m.dV_add*1e-03; %добавляем гип. избыток в км/с
+elseif isfield(st_f2m,'dV_value')
+    hi = st_f2m.hi;
+    %dV_add = checkMethod_params.dV_value*[cos(hi), sin(hi), 0]*1e-03;
+    st_f2m.hi = hi;
+%     st_f2m.dV_add = [dV_add'/V_unit]*1e+03;
+    st_f2m.dV_value = st_f2m.dV_value/V_unit;
+    st_f2m.Vp = [rotmZYX*V0'/V_unit]*1e+03;
+    st_f2m.rotmZYX = rotmZYX;
+    %V0 = V0+dV_add; %добавляем гип. избыток в км/с
+elseif isfield(st_f2m,'dV_value_end')
+    hi = st_f2m.hi;
+    %dV_add = checkMethod_params.dV_value*[cos(hi), sin(hi), 0]*1e-03;
+    st_f2m.hi = hi;
+%     st_f2m.dV_add = [dV_add'/V_unit]*1e+03;
+    st_f2m.dV_value = st_f2m.dV_value_end/V_unit;
+    st_f2m.Vp = [rotmZYX*V0'/V_unit]*1e+03;
+    st_f2m.rotmZYX = rotmZYX;
+    %V0 = V0+dV_add; %добавляем гип. избыток в км/с
+end
+
+r0 = [rotmZYX*r0'/ae; 0]*1e+03;
+V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
+
+st_f2m.r0 = r0;
+st_f2m.V0 = V0;
 %Переходим к едининой гравитационной постоянной
 mug=1;
 %st_f2m.case_traj, st_f2m.t_start, st_f2m.r0, st_f2m.V0, st_f2m.planet_end, st_f2m.modifier_f, st_f2m.UorR,st_f2m.decreaseNonPsysical,st_f2m.terminal_state, st_f2m.integration_acc, st_f2m.orbits, st_f2m.omega

@@ -3,11 +3,14 @@
 %5if exist('symF','var') ~= 1
 %    symbolic_Jacob
 %end
-t_start = juliandate(2026,10,08);
+t_start = juliandate(2030,01,01);
 orbits='Ephemeris';
 
-N=550;
-m0=100;
+% N=550;
+% m0=100;
+
+N=713;%марсианин
+m0=153.8-20;%марсианин
 eta=1.0;
 %условия на fmincon
 %ЗАДАЧА ПРОЛЁТА case_traj=1; ЗАДАЧА сопровождения case_traj=2;
@@ -31,17 +34,19 @@ rotmZYX = eul2rotm(eul);
 r_unit=ae;
 V_unit=sqrt(mug_0/ae);
 T_unit = T_earth/(2*pi);
-planet_start = 'Earth';
-planet_end = 'Mars';
+% planet_start = 'Earth';
+% planet_end = 'Asteroid2015RE36';
 
+planet_end = 'Earth';
+planet_start = 'Asteroid2015RE36';
 mug=1;
 
-n=0;
-angle=0.90465;
+n=1;
+angle=0.25;
 delta_s=(n+angle)*2*pi;
 
 x0=zeros([1, 10]);
-x0=[0.0076    0.0077   -0.0116    0.0088    0.0081   -0.0078    0.0083   -0.0007    0.9046         0];
+%x0=[0.0076    0.0077   -0.0116    0.0088    0.0081   -0.0078    0.0083   -0.0007    0.9046         0];
 %x0(1:8)=[-0.2889   -0.2479    0.0922   -0.0941   -0.5281   -0.4274    0.1720   -0.1609];
 %x0(12)=x0(11)/2;
 %modifier_p=1e-08;
@@ -53,10 +58,33 @@ integration_acc=1e-10;
 display = 1;
 terminal_state = 's';
 UorR = 'u_hat';
-rad=0;
+rad=0.25;
 calculate_condition=1;
 omega = 0;
-[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(t_start,delta_s,rad,UorR,decreaseNonPsysical,modifier_p,modifier_f,x0,eta, case_traj,planet_end, display,terminal_state,integration_acc,calculate_condition, orbits,omega);
+hi = 0;
+checkMethod_params = struct();
+checkMethod_params.t_start = t_start;
+checkMethod_params.delta_s = delta_s;
+checkMethod_params.rad = rad;
+checkMethod_params.UorR = UorR;
+checkMethod_params.decreaseNonPsysical = decreaseNonPsysical;
+checkMethod_params.modifier_p = modifier_p;
+checkMethod_params.modifier_f = modifier_f;
+checkMethod_params.x0_sec = x0;
+checkMethod_params.eta = eta;
+checkMethod_params.case_traj = case_traj;
+checkMethod_params.planet_end = planet_end;
+checkMethod_params.planet_start = planet_start;
+checkMethod_params.display = display;
+checkMethod_params.terminal_state = terminal_state;
+checkMethod_params.integration_acc = integration_acc;
+checkMethod_params.calculate_condition = calculate_condition;
+checkMethod_params.orbits = orbits;
+checkMethod_params.omega = omega;
+checkMethod_params.hi = hi;
+checkMethod_params.a_rel = 1.52;
+checkMethod_params.dV_parallel = 0;%км/с
+[dr, dV, C, px, s_f, phi, t_end, s, uu, rr, VV, t, Jt, a_ks, evaluation_time] = checkMethod(checkMethod_params);
 % 
 if terminal_state == 's'
     x0_sec = [px s_f/(2*pi) phi/(2*pi)];
@@ -124,7 +152,7 @@ t0 = t_start;
 t_orbit = linspace(t0,t0+T_earth/(24*3600), 1000);
 
 st.t = t_orbit';
-st.planet = 'Earth';
+st.planet = planet_start;
 st.mode = orbits;
 st.delta_omega = omega;
 
@@ -265,5 +293,6 @@ disp(['Невязка скорости ', num2str((norm(V_unit*VV_old(end, 1:3)-mars_v_f(1:3)')
 % относительное число обусловленности
 disp(['Число обусловленности в KS-переменных ', num2str(C,'%10.2e\n')])
 disp(['Число обусловленности в методе продолжения ', num2str(C_cont,'%10.2e\n')])
+disp(['Время перелёта ', num2str(t_end,'%10.2e\n')])
 % абсолютное число обусловленности
 %disp(['Абсолютное число обусловленности ', num2str(1/norm(grad),'%10.2e\n')])

@@ -9,8 +9,12 @@ ae = 149597870700;
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
 
 V_unit=sqrt(mug_0/ae);
-planet_start = 'Earth';
-[r0, V0] = planetEphemeris(t_start,'SolarSystem',planet_start,'430');
+st.t = t_start;
+st.planet = 'Earth';
+st.mode = 'Flat';
+st.delta_omega = 0;
+
+[r0, V0] = planetModel(st);
 
 eul = [0 pi/4 0];
 rotmZYX = eul2rotm(eul);

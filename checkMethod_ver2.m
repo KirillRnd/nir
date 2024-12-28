@@ -63,6 +63,15 @@ elseif isfield(checkMethod_params,'dV_value')
     st_f2m.Vp = [rotmZYX*V0'/V_unit]*1e+03;
     st_f2m.rotmZYX = rotmZYX;
     %V0 = V0+dV_add; %добавляем гип. избыток в км/с
+elseif isfield(checkMethod_params,'dV_value_end')
+    hi = checkMethod_params.hi;
+    %dV_add = checkMethod_params.dV_value*[cos(hi), sin(hi), 0]*1e-03;
+    st_f2m.hi = hi;
+%     st_f2m.dV_add = [dV_add'/V_unit]*1e+03;
+    st_f2m.dV_value = checkMethod_params.dV_value_end/V_unit;
+    st_f2m.Vp = [rotmZYX*V0'/V_unit]*1e+03;
+    st_f2m.rotmZYX = rotmZYX;
+    %V0 = V0+dV_add; %добавляем гип. избыток в км/с
 end
 
 r0 = [rotmZYX*r0'/ae; 0]*1e+03;
@@ -72,20 +81,20 @@ V0 = [rotmZYX*V0'/V_unit; 0]*1e+03;
 %nonlcon = @(x)ubOrtPv(x, rToU(r0, 0));
 %nonlcon=[];
 mug=1;
-x0(1:8)=x0(1:8)/modifier_p;
+%x0(1:8)=x0(1:8)/modifier_p;
 % modifier_p=1e-04;
 % modifier_f=1e+04;
-modifier_b=1e+13;
+modifier_b=1e-1;
 
 %s_a = psi-rad;
 s_a = psi;
 s_b = psi+rad*2*pi;
 
 %x0(11)=psi;
-
-
-lb = -[1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
-ub = -lb;
+box_initial_point = [x0(1:8), 0, 0];
+box_restrictions = [1, 1, 1, 1, 1, 1, 1, 1, 0, 0]*modifier_b;
+lb = box_initial_point-box_restrictions;
+ub = box_initial_point+box_restrictions;
 
 lb(9) = s_a/(2*pi);
 ub(9) = s_b/(2*pi);
@@ -103,6 +112,14 @@ elseif strcmp(UorR,'u_hat')
 %     lb(10) = 0.0;
 %     ub(10) = 1.0;
 elseif strcmp(UorR,'u_hat_v_hyp')
+    lb(10) = x0(10);
+    ub(10) = x0(10);
+     lb(11) = -pi;
+     ub(11) = pi;
+     x0(11) = pi/64;
+%     lb(10) = 0.0;
+%     ub(10) = 1.0;
+elseif strcmp(UorR,'u_hat_v_hyp_end')
     lb(10) = x0(10);
     ub(10) = x0(10);
      lb(11) = -pi;
@@ -128,7 +145,7 @@ st_f2m.orbits = orbits;
 st_f2m.omega = omega;
 st_f2m.a_rel = checkMethod_params.a_rel;
 tic;
-fun=@(x)fun2min([x(1:8)*modifier_p, x(9), x(10), x(11)], st_f2m);
+fun=@(x)fun2min([x(1:8), x(9), x(10), x(11)], st_f2m);
 
 options = optimoptions('fmincon','UseParallel', true);
 if display == 1
@@ -141,15 +158,15 @@ options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
 options = optimoptions(options, 'StepTolerance', 1e-10);
 options = optimoptions(options, 'ConstraintTolerance', 1e-10);
 options = optimoptions(options, 'MaxIterations', 250);
-options = optimoptions(options, 'FiniteDifferenceType', 'central');
-options = optimoptions(options, 'EnableFeasibilityMode', true);
+%options = optimoptions(options, 'FiniteDifferenceType', 'central');
+%options = optimoptions(options, 'EnableFeasibilityMode', true);
 %options = optimoptions(options, 'Algorithm', 'sqp');
 
 options = optimoptions(options,'OutputFcn',@myoutput);
 
 [x,fval,exitflag,output,lambda,grad,hessian] = fmincon(@(x)1, x0, A, b, Aeq, beq, lb, ub, fun, options);
 evaluation_time = toc;
-px = x(1:8)*modifier_p;
+px = x(1:8);
 if terminal_state == 's'
     s_f=x(9)*2*pi;
 elseif terminal_state == 't'
@@ -206,7 +223,7 @@ if calculate_condition == 1
         px_end=y(end,9:16)';
         g=get_target_g(u_end,w_end);
         ortdgduv=get_ortdgduv(u_end,w_end);
-        tr=[px_end'*ortdgduv]';
+        tr=(px_end'*ortdgduv)';
         p_plus=[g;tr];
 
         [s,y] = ode113(@(s,y) integrateTraectory(s,y),int_s0sf,y0-y0_delta, options);
@@ -215,7 +232,7 @@ if calculate_condition == 1
         px_end=y(end,9:16)';
         g=get_target_g(u_end,w_end);
         ortdgduv=get_ortdgduv(u_end,w_end);
-        tr=[px_end'*ortdgduv]';
+        tr=(px_end'*ortdgduv)';
         p_minus=[g;tr];
         partial=(p_plus-p_minus)/(2*step_h);
         ddeltady0(:,i-8)=partial;
@@ -265,7 +282,7 @@ for i = 1:length(uu)
     pu=y(i, 9:12)';
     pw=y(i, 13:16)';
     f_ortdgduv=get_ortdgduv(u,w);
-    p_tr=[[pu;pw]'*f_ortdgduv]';
+    p_tr=([pu;pw]'*f_ortdgduv)';
     %ph=y(i, 19)';
     %ptau=y(i, 20)';
     dtds=u2/sqrt(-2*h);
@@ -297,6 +314,12 @@ st.a_rel = checkMethod_params.a_rel;
 [mars_r_f, mars_v_f]=planetModel(st);
 mars_r_f=rotmZYX*mars_r_f'*1e+03;
 mars_v_f=rotmZYX*mars_v_f'*1e+03;
+
+if strcmp(st_f2m.UorR,'u_hat_v_hyp_end')
+     hi = st_f2m.hi + delta_hi;
+     dV_add = st_f2m.dV_value*st_f2m.rotmZYX*[cos(hi), sin(hi), 0]';
+     mars_v_f = mars_v_f+dV_add;
+end
 
 dr=norm(ae*rr(end, 1:3)-mars_r_f(1:3)');
 dv=norm(V_unit*VV(end, 1:3)-mars_v_f(1:3)');
