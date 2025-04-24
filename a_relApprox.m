@@ -1,3 +1,4 @@
+% -*- coding: utf-8 -*-
 %внешние константы
 ae = 149597870700;
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
@@ -45,9 +46,10 @@ T_a  = @(a, a_rel)(a_rel-a_rel*B*log(a_rel))*a+(a_rel*B^2*log(a_rel));
 a_OM = @(OM, a_rel,k)(OM+k+A*exp(-a_rel)*log(a_rel)*log(a_rel))/(A*(1+exp(-a_rel))*log(a_rel));
 OM_a = @(a, a_rel)A*(a*(exp(a_rel)+1)-log(a_rel))*exp(-a_rel)*log(a_rel);
 
-%% перебираем разные дальности
+% + magic_args="\u043f\u0435\u0440\u0435\u0431\u0438\u0440\u0430\u0435\u043c \u0440\u0430\u0437\u043d\u044b\u0435 \u0434\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0438"
 step = 1/32;
 ds = 3/4:step:12/2; %угловая дальность
+% -
 
 step2 = 0.01;
 da = 0.4:step2:2.5; %соотношение полуосей
@@ -56,6 +58,7 @@ L3 = length(da);
 
 k_true = zeros(L2,L3);
 k_preds = zeros(L2,L3);
+%%
 for i = 1:L2 
     disp([num2str(i), '/', num2str(L2)])
     for j = 1:L3 
@@ -64,6 +67,7 @@ for i = 1:L2
         a_rel = da(j);
 
         T_i = 2*pi*T_a(AN_i, a_rel);
+        %T_i = 2*pi*Tevery_a(i,j)/365.2569;
         K = calculateKMatrix_ver2(a_rel,AN_i,1);
         d_coef = 1;
         [pr_0,pv_0] = get_initial_adjoint(AN_i,a_rel,d_coef);
@@ -80,21 +84,21 @@ for i = 1:L2
 
         k_true(i,j) = a_rel;
         k_preds(i,j) = a;
+        save('a_rel_approx_5.mat')
     end
 end
 
 
-%%
-figure(1)
+figure(2)
 [X, Y] = meshgrid(ds, da);
 k_preds_fix = k_preds';
-%k_preds_fix(abs(k_preds_fix)>4) = nan;
+k_preds_fix(abs(k_preds_fix)>4) = nan;
 k_diff = k_preds_fix-Y;
-s = surf(X,Y,k_diff-1, 'FaceColor','blue','FaceAlpha',0.4);
+s = surf(X,Y,k_diff, 'FaceColor','blue','FaceAlpha',0.4);
 s.EdgeColor = 'none';
 hold on;
-k_diff_contour3 = [-0.1,-0.01,0,0.1,0.3];
-s = contour3(X,Y, k_diff,k_diff_contour3,'ShowText','on', 'Color', 'k');
+%k_diff_contour3 = [-0.1,-0.01,0,0.1,0.3];
+%s = contour3(X,Y, k_diff,k_diff_contour3,'ShowText','on', 'Color', 'k');
 hold off;
 %Y_forapprox = reshape(Y.',1,[]);
 %A_forapprox = reshape(AN_MARS_real_fix'.',1,[]);
@@ -228,9 +232,12 @@ k2=1.52;
 %prx
 p1 = pr_x_V(a,d);
 p2 = pr_x_M(a,d);
-f = (p1/log(k1)-(k2/k1)*p2/log(k2))/(1-k2/k1);
-g = p2*k2/log(k2)-f*k2;
-pr_x = @(k)(log(k)*(f*k+g)/k);
+% f = (p1/log(k1)-(k2/k1)*p2/log(k2))/(1-k2/k1);
+% g = p2*k2/log(k2)-f*k2;
+% pr_x = @(k)(log(k)*(f*k+g)/k);
+g = (p2*power(k2,1/4)/log(k2) - p1*k1*power(k2,-3/4)/log(k1))/(1-power(k1/k2,3/4));
+f = p1*k1/log(k1)-g*power(k1,3/4);
+pr_x = @(k)(log(k)*(f/k+g*power(k,-1/4)));
 %pry
 p1 = pr_y_V(a,d);
 p2 = pr_y_M(a,d);
@@ -246,9 +253,12 @@ pv_x = @(k)(log(k)*(f/k+g/(k^(3/2))));
 %pvy
 p1 = pv_y_V(a,d);
 p2 = pv_y_M(a,d);
-f = (p1/log(k1)-(k2/k1)*p2/log(k2))/(1-k2/k1);
-g = p2*k2/log(k2)-f*k2;
-pv_y = @(k)(log(k)*(f*k+g)/k);
+% f = (p1/log(k1)-(k2/k1)*p2/log(k2))/(1-k2/k1);
+% g = p2*k2/log(k2)-f*k2;
+% pv_y = @(k)(log(k)*(f*k+g)/k);
+g = (p2*power(k2,1/4)/log(k2) - p1*k1*power(k2,-3/4)/log(k1))/(1-power(k1/k2,3/4));
+f = p1*k1/log(k1)-g*power(k1,3/4);
+pv_y = @(k)(log(k)*(f/k+g*power(k,-1/4)));
 
 pr_0 = [pr_x(k);pr_y(k);0.];
 pv_0 = [pv_x(k);pv_y(k);0.]; 

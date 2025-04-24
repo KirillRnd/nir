@@ -86,7 +86,7 @@ st.delta_omega = omega;
 [mars_r_f, ~]=planetModel(st);
 mars_r_f=mars_r_f'*1e+03;
 %mars_v_f=mars_v_f'*1e+03;
-
+disp(t_end)
 rr_old = arrayfun(@(x,y,z)rotmZYX^(-1)*[x, y, z]', rr(:, 1),rr(:, 2),rr(:, 3),'UniformOutput',false);
 rr_old = cell2mat(rr_old')';
 

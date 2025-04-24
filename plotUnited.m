@@ -136,13 +136,13 @@ s = surf(T4,AN4,M4,'DisplayName','Семейство 5', 'FaceColor','green','Fa
 s.EdgeColor = 'none';
 
 
-glob_min_line = plot3(global_minimum_line(1,:),global_minimum_line(2,:),global_minimum_line(3,:),'black', 'LineWidth', 1.5,'DisplayName','Глобальный минимум');
+glob_min_line = plot3(global_minimum_line(1,:),global_minimum_line(2,:),global_minimum_line(3,:),'black', 'LineWidth', 2,'DisplayName','Глобальный минимум');
 
 s_contour = contour3(T_united,AN_united,M_united,round(logspace(-2,3,11),2),'ShowText','on', 'HandleVisibility','off');
 
-plot3(T1(1:70,1),AN1(1:70,1),M1(1:70,1),'b', 'LineWidth', 2,'DisplayName','Парето-Фронт')
-plot3(T2(102:end,1),AN2(102:end,1),M2(102:end,1),'b', 'LineWidth', 2, 'HandleVisibility','off')
-plot3([T2(102,1), T2(102,1)],[AN1(70,1), AN2(102,1)],[M1(70,1),M2(102,1)],'b--', 'LineWidth', 2, 'HandleVisibility','off')
+plot3(T1(1:70,1),AN1(1:70,1),M1(1:70,1),'k--', 'LineWidth', 2,'DisplayName','Парето-Фронт')
+plot3(T2(102:end,1),AN2(102:end,1),M2(102:end,1),'k--', 'LineWidth', 2, 'HandleVisibility','off')
+%plot3([T2(102,1), T2(102,1)],[AN1(70,1), AN2(102,1)],[M1(70,1),M2(102,1)],'b--', 'LineWidth', 2, 'HandleVisibility','off')
 hold off;
 zlabel('Значение функционала, безразм.')
 xlabel('Длительность перелёта, безразм.')
@@ -268,6 +268,26 @@ for j = 1:L2
     PVevery_mars(j,:) = vecPV_cartesian';
     PRevery_mars(j,:) = vecPR_cartesian';
 end
+%% high sensitivity point
+phi0 = PHI_united(1258,158);
+%phi0 = PHI_united(385,158);
+R0 = [rotmZYX*r0'/ae; 0]*1e+00;
+V0 = [rotmZYX*v0'/V_unit; 0]*1e+03;
+u0 = rToU(R0, phi0);
+w0 = vFromV(V0,R0,1,phi0);
+ortdgduv = get_ortdgduv(u0,w0);
+dFdX = get_dgduv(u0,w0);
+vecPX1 = reshape(PX_united(1258,158,:), [1,8]);
+%vecPX1 = reshape(PX_united(385,158,:), [1,8]);
+vecPV_cartesian = a_reactive(u0,w0,vecPX1(1:4)',vecPX1(5:8)');
+b = vecPX1'-dFdX' * [0; 0; 0; vecPV_cartesian(1:3)]; %TODO переписать в символьных
+vecPR_cartesian = dFdX(1:3,:)'\b;
+
+vecPV_cartesian = rotmZYX^(-1)*vecPV_cartesian(1:3);%/(ae/sqrt(mug_0)).^2;
+vecPR_cartesian = rotmZYX^(-1)*vecPR_cartesian;%/(ae/sqrt(mug_0)).^2;
+
+T_point = T_united(158,1258);
+%T_point = T_united(158, 385);
 %%
 
 PVevery_fix = PVevery;

@@ -208,8 +208,10 @@ for F=1:5
     end
 end
 %% одна поверхность
-Jevery_fix = Jevery;
+J_unit =  176.6255; %есть в plotUnited.m
+Jevery_fix = Jevery/J_unit;
 Jevery_fix(Jevery_fix==0)=nan;
+
 figure(11);
 J1 = Jevery_fix(1:L1, 1:L2,1)';
 drop1Fam_j = 1:10;
@@ -226,17 +228,18 @@ end
 X_axis = 180*omega_space(1:L1)/pi;
 Y_axis = ds(1:L2);
 FaceAlpha=0.4;
-s = surf(X_axis,Y_axis,J1,'DisplayName','Семейство 1', 'FaceColor','cyan','FaceAlpha',FaceAlpha);
+s = surf(X_axis,Y_axis,J1-0.01,'DisplayName','Семейство 1', 'FaceColor','cyan','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 hold on;
-J1_isolines = round(logspace(-4,-0.7328,101),3);
-s_contour = contour3(X_axis,Y_axis,J1,J1_isolines(1:2:end),'ShowText','on', 'Color', 'k', 'LabelSpacing', 450);
-J1_isolines = round(logspace(-0.5850,3,11),3);
+J1_isolines = round(logspace(-4,-0.7328,101)/J_unit,5);
+s_contour = contour3(X_axis,Y_axis,J1,J1_isolines(2:2:end),'ShowText','on', 'Color', 'k', 'LabelSpacing', 450);
+J1_isolines = round(logspace(-0.5850,3,11)/J_unit,5);
 s_contour = contour3(X_axis,Y_axis,J1,J1_isolines(1:2:end),'ShowText','on', 'Color', 'k', 'LabelSpacing', 300);
+plot3(X_axis(1),Y_axis(1),J1(1,1),'r*')
 hold off;
-ylabel('Угловая дальность')
-xlabel('Начальная разность фаз')
-set(gca, 'ZScale', 'log')
+ylabel('Angular distance, revolutions')
+xlabel('Initial synodic phase')
+%set(gca, 'ZScale', 'log')
 %set(gca,'ColorScale','log')
 grid;
 view(0,90)
@@ -280,7 +283,7 @@ Mscaled5 = 100*M5/m0;
 %Mscaled1 = M1;
 
 FaceAlpha=0.4;
-s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled5,'DisplayName','Семейство 1', 'FaceColor','blue','FaceAlpha',FaceAlpha);
+s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled5,'DisplayName','Family 0', 'FaceColor','blue','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
 hold on;
@@ -318,13 +321,13 @@ while K_contours<length(s_contour)
     %  plot3(PVevery_a(1:pos_i,j,1), PVevery_a(1:pos_i,j,2), ANevery_a(1:pos_i,j)/(2*pi), 'black', 'HandleVisibility','off')
     %  plot3(PVevery_a(pos_i+3:end,j,1), PVevery_a(pos_i+3:end,j,2), ANevery_a(pos_i+3:end,j)/(2*pi), 'black', 'HandleVisibility','off')
     text_label = num2str(H_contours/365);
-    h = text((X_contours(pos_i)+X_contours(pos_i))/2, (Y_contours(pos_i)+Y_contours(pos_i))/2, (Z_contours(pos_i)+Z_contours(pos_i))/2, text_label,'HorizontalAlignment','center',...
+    h = text((X_contours(pos_i+pos_shift)+X_contours(pos_i))/2, (Y_contours(pos_i+pos_shift)+Y_contours(pos_i))/2, (Z_contours(pos_i+pos_shift)+Z_contours(pos_i))/2, text_label,'HorizontalAlignment','center',...
      'VerticalAlignment','Bottom','FontName','consolas','FontSize',9); 
     %disp(K_contours)
 end
 
 Mscaled1 = 100*M1/m0;
-s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled1,'DisplayName','Семейство 2', 'FaceColor','cyan','FaceAlpha',FaceAlpha);
+s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled1,'DisplayName','Family 1', 'FaceColor','cyan','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
 figure(19);
@@ -354,7 +357,7 @@ end
 Mscaled2 = 100*M2/m0;
 
 %Mscaled2 = M2;
-s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled2,'DisplayName','Семейство 3', 'FaceColor','red','FaceAlpha',FaceAlpha);
+s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled2,'DisplayName','Family 2', 'FaceColor','red','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 figure(19);
 hold on;
@@ -388,7 +391,7 @@ end
 Mscaled3 = 100*M3/m0;
 
 %Mscaled3 = M3;
-s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled3,'DisplayName','Семейство 4', 'FaceColor','magenta','FaceAlpha',FaceAlpha);
+s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled3,'DisplayName','Family 3', 'FaceColor','magenta','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
 figure(19);
@@ -419,7 +422,7 @@ end
 Mscaled4 = 100*M4/m0;
 
 %Mscaled4 = M4;
-s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled4,'DisplayName','Семейство 5', 'FaceColor','green','FaceAlpha',FaceAlpha);
+s = surf(180*omega_space(1:L1)/pi,ds(1:L2),Mscaled4,'DisplayName','Family 4', 'FaceColor','green','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
 figure(19);
@@ -455,9 +458,9 @@ end
 %xlabel('Разность фаз, градусов')
 xticks([X_axis(1) (X_axis(1)+X_axis(end))/2 X_axis(end)])
 xticklabels({'-\pi','0','\pi'})
-xlabel('Начальная разность фаз')
-ylabel('Угловая дальность, витков')
-zlabel('Затраты топлива, %')
+xlabel('Initial synodic phase')
+ylabel('Angular distance, revolutions')
+zlabel('Propellant consumption, %')
 %zlabel('J')
 
 %set(gca,'zscale','log')

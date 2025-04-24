@@ -217,6 +217,46 @@ xlabel('Соотношение полуосей')
 ylabel('Угловая дальность, безразм.')
 %%
 figure(26);
+da_mesh = repmat(da, L2,1);
+s = surf(PRevery_a(:,:,1), PVevery_a(:,:,2), da_mesh, 'FaceColor','cyan', 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
+s.EdgeColor = 'none';
+hold on;
+for i = [1,41,169]
+     pos_j = 20;
+     plot3(PRevery_a(i,1:pos_j,1), PVevery_a(i,1:pos_j,2), da_mesh(i,1:pos_j), 'black', 'HandleVisibility','off')
+     plot3(PRevery_a(i,pos_j+3:end,1), PVevery_a(i,pos_j+3:end,2), da_mesh(i,pos_j+3:end), 'black', 'HandleVisibility','off')
+     text_label = num2str(ds(i));
+     h = text((PRevery_a(i,pos_j,1)+PRevery_a(i,pos_j+3,1))/2, (PVevery_a(i,pos_j,2)+PVevery_a(i,pos_j+3,2))/2, (da_mesh(i,pos_j)+da_mesh(i,pos_j+3))/2, text_label,'HorizontalAlignment','center',...
+    'VerticalAlignment','Bottom','FontName','consolas','FontSize',11); 
+     
+end
+hold off;
+xlabel('Pr x')
+ylabel('Pv y')
+zlabel('Radii ratio')
+%%
+figure(27);
+da_mesh = repmat(da, L2,1);
+s = surf(PRevery_a(:,:,2), PVevery_a(:,:,1), da_mesh, 'FaceColor','cyan', 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
+s.EdgeColor = 'none';
+hold on;
+for i = [1,41,169]
+     pos_j = 20;
+     plot3(PRevery_a(i,1:pos_j,2), PVevery_a(i,1:pos_j,1), da_mesh(i,1:pos_j), 'black', 'HandleVisibility','off')
+     plot3(PRevery_a(i,pos_j+3:end,2), PVevery_a(i,pos_j+3:end,1), da_mesh(i,pos_j+3:end), 'black', 'HandleVisibility','off')
+     text_label = num2str(ds(i));
+     h = text((PRevery_a(i,pos_j,2)+PRevery_a(i,pos_j+3,2))/2, (PVevery_a(i,pos_j,1)+PVevery_a(i,pos_j+3,1))/2, (da_mesh(i,pos_j)+da_mesh(i,pos_j+3))/2, text_label,'HorizontalAlignment','center',...
+    'VerticalAlignment','Bottom','FontName','consolas','FontSize',11); 
+     
+end
+hold off;
+xlabel('Pr y')
+xlim([-0.15,0.02])
+ylim([-0.15,0.02])
+ylabel('Pv x')
+zlabel('Radii ratio')
+%%
+figure(26);
 
 s = surf(PVevery_a(:,:,1), PVevery_a(:,:,2), ANevery_a/(2*pi), 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
 s.EdgeColor = 'none';
@@ -250,7 +290,7 @@ ylabel('Pv y')
 %%
 figure(27);
 
-s = surf(PRevery_a(:,:,1), PRevery_a(:,:,2), ANevery_a/(2*pi), 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
+s = surf(PRevery_a(:,:,1), PRevery_a(:,:,2), ANevery_a/(2*pi),'FaceColor', 'cyan', 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
 s.EdgeColor = 'none';
 hold on;
 for j = 1:20:61

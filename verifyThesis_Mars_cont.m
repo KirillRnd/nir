@@ -155,6 +155,7 @@ colorbar;
 grid;
 %set(gca,'ColorScale','log')
 view(0,90)
+
 %%
 a_unit=(ae/sqrt(mug_0)).^2;
 J_GOC_ephemeris = zeros(N_count,1);
@@ -233,20 +234,24 @@ criteria = abs(AN_diff)>1e-3; %1-sum(sum(criteria))/(N_count*N_count_2)
 AN_diff(AN_diff>3)=3;
 AN_diff(AN_diff<-3)=-3;
 %r_error_opt_fix(criteria)=nan;
-s = surf(T_MARS_test/T_earth_days,t_start_MARS_test-t_start_MARS_test(1), AN_diff','HandleVisibility','off');
+x = T_MARS_test/T_earth_days;
+y = t_start_MARS_test-t_start_MARS_test(1);
+s = surf(x,y, AN_diff','HandleVisibility','off');
 s.EdgeColor = 'none';
 hold on;
-plot3(T_MARS_test(1:36)/T_earth_days,t_start_GOC_ephemeris(1:36),J_GOC_ephemeris(1:36),'r', 'DisplayName', 'Оптимум по дате старта')
-plot3(T_MARS_test(37:191)/T_earth_days,t_start_GOC_ephemeris(37:191),J_GOC_ephemeris(37:191),'r','HandleVisibility','off')
-plot3(T_MARS_test(192:end)/T_earth_days,t_start_GOC_ephemeris(192:end),J_GOC_ephemeris(192:end),'r','HandleVisibility','off')
+plot3(x(1:36),t_start_GOC_ephemeris(1:36),J_GOC_ephemeris(1:36),'r', 'DisplayName', 'Оптимум по дате старта')
+plot3(x(37:191),t_start_GOC_ephemeris(37:191),J_GOC_ephemeris(37:191),'r','HandleVisibility','off')
+plot3(x(192:end),t_start_GOC_ephemeris(192:end),J_GOC_ephemeris(192:end),'r','HandleVisibility','off')
 
-plot3(T_optimal_pred(1:19,1),t_start_MARS_test(1:19)-t_start_MARS_test(1),T_optimal_pred(1:19,1)*0+3,'k', 'DisplayName', 'Предсказанный оптимум')
+plot3(T_optimal_pred(1:19,1),t_start_MARS_test(1:19)-t_start_MARS_test(1),T_optimal_pred(1:19,1)*0+3,'k-.', 'DisplayName', 'Предсказанный оптимум')
 plot3([T_optimal_pred(1:19,2);T_optimal_pred(20:end,1)],...
     [t_start_MARS_test(1:19),t_start_MARS_test(20:end)]-t_start_MARS_test(1),...
-    [T_optimal_pred(1:19,1);T_optimal_pred(20:end,1)]*0+3,'k','HandleVisibility','off')
+    [T_optimal_pred(1:19,1);T_optimal_pred(20:end,1)]*0+3,'k-.','HandleVisibility','off')
 
-plot3(T_optimal_pred(20:end,2),t_start_MARS_test(20:end)-t_start_MARS_test(1),T_optimal_pred(20:end,2)*0+3,'k','HandleVisibility','off')
+plot3(T_optimal_pred(20:end,2),t_start_MARS_test(20:end)-t_start_MARS_test(1),T_optimal_pred(20:end,2)*0+3,'k-.','HandleVisibility','off')
 xlim([T_MARS_test(1), T_MARS_test(end)]/T_earth_days)
+J_min_contour_lines = [1.1, 1.1];
+contour3(x,y,J_MARS_cont_scaled'/J_min,J_min_contour_lines, 'k--', 'DisplayName', '10% отличия функционала')
 %plot3(,-t_start_MARS_test(1),*0+3,'k')
 hold off;
 grid;
@@ -275,6 +280,26 @@ xlabel('Время, годы.')
 ylabel('Время оптимизации, сек.')
 title('Время оптимизации')
 %legend('Location','best');
+%%
+figure(6)
+J_scale = repmat(J_GOC_ephemeris,1,N_count_2);
+J_MARS_cont_scaled = J_MARS_cont./J_scale;
+J_min = min(min(J_MARS_cont_scaled));
+s = surf(x,y,J_MARS_cont_scaled'/J_min,'HandleVisibility','off');
+s.EdgeColor = 'none';
+hold on;
+J_min_contour_lines = [1.1, 1.1];
+contour3(x,y,J_MARS_cont_scaled'/J_min-0.0001,J_min_contour_lines, 'k--','HandleVisibility','off')
+hold off;
+grid;
+%legend('Location','best');
+xlabel('Время, годы.')
+ylabel('Дата старта')
+zlabel('Невязка на правом конце')
+%set(gca, 'ZScale', 'log')
+%title('Невязка на правом конце')
+yticks([0 (t_start_MARS_test(end)-t_start_MARS_test(1))/2 t_start_MARS_test(end)-t_start_MARS_test(1)])
+yticklabels({'01.01.2026','26.01.2027','20.02.2028'})
 %%
 function res = fsolve_traj(z,y0,yf,t0,t_end)
 %UNTITLED Summary of this function goes here

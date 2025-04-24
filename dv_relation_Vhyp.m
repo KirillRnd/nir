@@ -42,11 +42,11 @@ HIevery_Vhyp(:,1) = 1.4322; %надо добыть из pv
 %%
 load('D:\MATLAB\ipm\mat-files\16-Jun-2024.mat')
 display = 0;
-
-for i=137:L2%L2 %угловая дальность
-    for j=1:L4%L4 %величина скорости
+%%
+for i=18:23%L2 %угловая дальность
+    for j=39:42%L4 %величина скорости
         [skip, i_nearest, j_nearest] = checkNear(skipGrid_Vhyp, i, j);
-        if skip==0
+        if skip>=0
             px_new=reshape(PXevery_Vhyp(i_nearest,j_nearest,:),[1,8]);
             if skip > 1 && norm(px_new) == 0
                 continue
@@ -118,7 +118,7 @@ for i=137:L2%L2 %угловая дальность
                 HIevery_Vhyp(i,j)=checkMethod_results.hi_opt;
                 skipGrid_Vhyp(i,j)=0; %set status only in the end
                 savefilename = join(['mat-files/',date]);
-                save(savefilename);
+                %save(savefilename);
                 disp('OK')
             else
                 skipGrid_Vhyp(i,j)=2;
@@ -172,41 +172,51 @@ for i = 1:L2
     end
 end
 %%
-%vhyp_best_minimum_line = zeros(6,size(Tevery_Vhyp,1));
-
-for i = 100:105
+vhyp_best_minimum_line = zeros(7,105);
+PR_best_minimum_line = zeros(105,3);
+PV_best_minimum_line = zeros(105,3);
+for i = 1:105
     j_local = Jevery_Vhyp(i,2:end);
     j_min = min(j_local,[],'all');
     j_min = find(j_local==j_min);
     j_min = j_min+1;
-    vhyp_best_minimum_line(:,i) = [Tevery_Vhyp(i, j_min), ANevery_Vhyp(i, j_min),...
-        Mevery_Vhyp(i, j_min), CONDevery_Vhyp(i, j_min), Jevery_Vhyp(i, j_min), dV_range(j_min)];
-
+    vhyp_best_minimum_line(:,i) = [Tevery_Vhyp(i, j_min),
+        ANevery_Vhyp(i, j_min),        
+        Mevery_Vhyp(i, j_min),
+        CONDevery_Vhyp(i, j_min),
+        Jevery_Vhyp(i, j_min),
+        dV_range(j_min),
+        OMevery_Vhyp(i, j_min),
+        
+        ];
+    PR_best_minimum_line(i,:) = PRevery_Vhyp(i,j_min,:);
+    PV_best_minimum_line(i,:) = PVevery_Vhyp(i,j_min,:);
 end
 %%
 
 %% выводим результат
 
 figure(35);
-Jevery_Vhyp_fix = Jevery_Vhyp;
+J_unit = 176.62545106129272;
+Jevery_Vhyp_fix = Jevery_Vhyp/J_unit;
 Jevery_Vhyp_fix(Jevery_Vhyp_fix==0)=nan;
 
 FaceAlpha = 0.4;
 
 %[X, Y] = meshgrid(ANevery_Vhyp(1:105,2)', dV_range);
-[X, Y] = meshgrid(ds(1:105), dV_range);
+[X, Y] = meshgrid(ds(1:105), dV_range/V_unit);
 s = surf(X, Y, Jevery_Vhyp_fix(1:105,:)', 'FaceAlpha',FaceAlpha, 'HandleVisibility','off');
 s.EdgeColor = 'none';
 hold on;
 contour3(X, Y, Jevery_Vhyp_fix(1:105,:)','ShowText','on', 'HandleVisibility','off');
-plot3(ds(1:105), vhyp_best_minimum_line(6,1:105),vhyp_best_minimum_line(5,1:105), 'r', 'LineWidth', 1.5,'DisplayName','Глобальный минимум')
+plot3(ds(1:105), vhyp_best_minimum_line(6,1:105)/V_unit,vhyp_best_minimum_line(5,1:105)/J_unit, 'r', 'LineWidth', 1.5,'DisplayName','Глобальный минимум')
 hold off;
 
 xlim([0.75,4])
 xlabel('Угловая дальность, витки')
-ylabel('Гиперболический избыток скорости, м/с')
+ylabel('Гиперболический избыток скорости, ,безразм.')
 zlabel('Значение функционала, безразм.')
-legend;
+legend('Location','best');
 %% выводим результат
 
 figure(35);

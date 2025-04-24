@@ -3,6 +3,7 @@ ae = 149597870700;
 mug_0 = 132712.43994*(10^6)*(10^(3*3));
 T_earth = 365.256363004*3600*24;
 T_mars=T_earth*1.8808476;
+T_earth_days = 365.256363004;
 T_mars_days = 365.256363004*1.8808476;
 
 r_unit=ae;
@@ -48,6 +49,7 @@ OM_a = @(a, a_rel)A*(a*(exp(a_rel)+1)-log(a_rel))*exp(-a_rel)*log(a_rel);
 % PVevery_a_MARS_true = PVevery_a(:,113,:); %a = 1.52, Mars
 % PRevery_a_MARS_true = PRevery_a(:,113,:); %a = 1.52, Mars
 Tevery_a_MARS_true = Tevery_a(:,113);
+Jevery_a_MARS_true = Jevery_a(:,113);
 ANevery_a_MARS_true = ANevery_a(:,113);
 % OMevery_a_MARS_true = OMevery_a(:,113);
 % pr_x = @(a)(0.169249523878027)/(6.62725658086578*a-0.5425599+sin(6.40040102352653*a+0.380350602447347/a)); %OK
@@ -73,25 +75,66 @@ for i = 1:169
     PRevery_a_MARS_approx(i,1,:) = [pr_x(AN_i,d_coef),pr_y(AN_i,d_coef),0];
     PVevery_a_MARS_approx(i,1,:) = [pv_x(AN_i,d_coef),pv_y(AN_i,d_coef),0];
 end
+
+PVevery_a_MARS_approx_noD = zeros([169,1,3]); %a = 1.52, Mars
+PRevery_a_MARS_approx_noD = zeros([169,1,3]); %a = 1.52, Mars
+
+for i = 1:169
+    %AN_i = ANevery_a_MARS_true(i)/(2*pi);
+    B=0.2721831;
+    a_rel=1.52;
+    T_i = 3600*24*Tevery_a_MARS_true(i)/(T_unit*2*pi);
+    %AN_i = (T_i-0.03939635)/1.34784702;
+    AN_i = (T_i-a_rel*B^2*log(a_rel))/(a_rel-a_rel*B*log(a_rel));
+    %AN_i = AN_MARS_test(i);
+    AN_i = ANevery_a_MARS_true(i)/(2*pi);
+    d_coef = 0;
+    PRevery_a_MARS_approx_noD(i,1,:) = [pr_x(AN_i,d_coef),pr_y(AN_i,d_coef),0];
+    PVevery_a_MARS_approx_noD(i,1,:) = [pv_x(AN_i,d_coef),pv_y(AN_i,d_coef),0];
+end
+%%
+figure(1)
+J_unit = 176.62545106129272;
+J_ak = @(a,k)(log(k)*(4.747336E-3+1.044802E-2./k-1.517055E-2/(k^2)))./(a+2.020210E-1*(sin(2*pi*a+2.236760-1./a)-a).*exp(-a));
+Jevery_a_MARS_pred = J_ak(ANevery_a_MARS_true/(2*pi),1.52);
+plot(ANevery_a_MARS_true/(2*pi), Jevery_a_MARS_true/J_unit, 'LineWidth', 1.0, 'DisplayName', 'target functional')
+hold on;
+plot(ANevery_a_MARS_true/(2*pi), Jevery_a_MARS_pred, '--', 'LineWidth', 1.0, 'DisplayName', 'approximation')
+hold off;
+
+grid;
+legend;
+
+xlabel('Angular distance, revolutions')
+ylabel('Functional, dimensionless')
+
+figure(4)
+plot(ANevery_a_MARS_true/(2*pi), Jevery_a_MARS_pred-Jevery_a_MARS_true/J_unit, 'LineWidth', 1.0, 'DisplayName', 'target functional')
+
+xlabel('Angular distance, revolutions')
+ylabel('Approximation error')
+grid;
 %%
 figure(2)
-plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_true(:,1,1), 'DisplayName', 'p_r_x orig')
+plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_true(:,1,1),'LineWidth', 1.0, 'DisplayName', 'p_r_x numerical optimization')
 hold on;
-plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_true(:,1,2), 'DisplayName', 'p_r_y orig')
-plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_true(:,1,1), 'DisplayName', 'p_v_x orig')
-plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_true(:,1,2), 'DisplayName', 'p_v_y orig')
-plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_approx(:,1,1),'--', 'DisplayName', 'p_r_x approx')
+plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_true(:,1,2),'LineWidth', 1.0, 'DisplayName', 'p_r_y numerical optimization')
+plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_true(:,1,1),'LineWidth', 1.0, 'DisplayName', 'p_v_x numerical optimization')
+plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_true(:,1,2),'LineWidth', 1.0, 'DisplayName', 'p_v_y numerical optimization')
+plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_approx(:,1,1),'--','LineWidth', 1.0, 'DisplayName', 'p_r_x approximation')
 
-plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_approx(:,1,2),'--', 'DisplayName', 'p_r_y approx')
+plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_approx(:,1,2),'--','LineWidth', 1.0, 'DisplayName', 'p_r_y approximation')
 
-plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_approx(:,1,1),'--', 'DisplayName', 'p_v_x approx')
+plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_approx(:,1,1),'--','LineWidth', 1.0, 'DisplayName', 'p_v_x approximation')
 
-plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_approx(:,1,2),'--', 'DisplayName', 'p_v_y approx')
+plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_approx(:,1,2),'--','LineWidth', 1.0, 'DisplayName', 'p_v_y approximation')
 hold off;
 
 legend;
 grid;
-xlabel('Угловая дальность, витки.')
+xlabel('Angular distance, revolutions')
+ylabel('Initial value of adjoint variable, dimensionless')
+
 % figure(3)
 % plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_true(:,1,1), 'DisplayName', 'p_r_x orig')
 % hold on;
@@ -106,18 +149,18 @@ xlabel('Угловая дальность, витки.')
 % xlabel('Угловая дальность, витки.')
 
 figure(5)
-plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_approx(:,1,1)-PRevery_a_MARS_true(:,1,1), 'DisplayName', 'p_r_x error')
+plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_approx(:,1,1)-PRevery_a_MARS_true(:,1,1),'LineWidth', 1.0, 'DisplayName', 'p_r_x error')
 hold on;
 
-plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_approx(:,1,2)-PRevery_a_MARS_true(:,1,2), 'DisplayName', 'p_r_y error')
-plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_approx(:,1,1)-PVevery_a_MARS_true(:,1,1), 'DisplayName', 'p_v_x error')
-plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_approx(:,1,2)-PVevery_a_MARS_true(:,1,2), 'DisplayName', 'p_v_y error')
+plot(ANevery_a_MARS_true/(2*pi), PRevery_a_MARS_approx(:,1,2)-PRevery_a_MARS_true(:,1,2),'LineWidth', 1.0, 'DisplayName', 'p_r_y error')
+plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_approx(:,1,1)-PVevery_a_MARS_true(:,1,1),'LineWidth', 1.0, 'DisplayName', 'p_v_x error')
+plot(ANevery_a_MARS_true/(2*pi), PVevery_a_MARS_approx(:,1,2)-PVevery_a_MARS_true(:,1,2),'LineWidth', 1.0, 'DisplayName', 'p_v_y error')
 hold off;
 
 legend;
 grid;
-xlabel('Угловая дальность, витки')
-ylabel('Ошибка')
+xlabel('Angular distance, revolutions')
+ylabel('Approximation error, dimensionless ')
 disp('Errors');
 disp(sqrt(mse(PRevery_a_MARS_approx(:,1,1),PRevery_a_MARS_true(:,1,1))))
 disp(sqrt(mse(PRevery_a_MARS_approx(:,1,2),PRevery_a_MARS_true(:,1,2))))
@@ -157,6 +200,8 @@ end
 %% перебираем разные дальности с фиксироваными T и OM
 r_error_approx = zeros(L2,1);
 v_error_approx = zeros(L2,1);
+r_error_approx_noD = zeros(L2,1);
+v_error_approx_noD = zeros(L2,1);
 r_opt_error = zeros(L2,1);
 v_opt_error = zeros(L2,1);
 for i = 1:169 
@@ -194,49 +239,88 @@ for i = 1:169
     r_error_approx(i) = res_r_f;
     v_error_approx(i) = res_v_f;
 
-    yf = [mars_r_f;mars_v_f]';
-    opt_type = 'fsolve';
-    p0 = [pr_0,pv_0]';
-    if strcmp(opt_type,'fsolve')
-
-        fsolve_traj_fun=@(z)fsolve_traj(z,y0,yf,t0,t_end);
-        options = optimoptions('fsolve','Display','off');
-        options = optimoptions(options,'UseParallel', true);
-        options = optimoptions(options, 'OptimalityTolerance', 1e-10);
-        options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
-        options = optimoptions(options, 'StepTolerance', 1e-10);
-        options = optimoptions(options, 'Algorithm', 'levenberg-marquardt');
-        
-        p0 = fsolve(fsolve_traj_fun, p0, options);
-    end
-
-    y0 = cat(2,start_pos,start_vel,p0(1:3)',p0(4:6)')';
+    pr_0 = reshape(PRevery_a_MARS_approx_noD(i,1,:), [1, 3]);
+    %pr_0(1) = PRevery_a_MARS_true(i,1,1);
+    %pr_0(2) = PRevery_a_MARS_true(i,1,2);
+    pv_0 = reshape(PVevery_a_MARS_approx_noD(i,1,:), [1, 3]);
+    %pv_0(1) = PVevery_a_MARS_true(i,1,1);
+    %pv_0(2) = PVevery_a_MARS_true(i,1,2);
+    y0 = cat(2,start_pos,start_vel,pr_0,pv_0)';
     
-    options = odeset('AbsTol',1e-10);
-    options = odeset(options,'RelTol',1e-10);   
-    %options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopR(s, y, 1.52));
     [t,y] = ode113(@(t,y) internalIntegration3D(t,y), tspan,y0,options);
-
+    
+    st.t = [t_start, Tevery_a_MARS_true(i)];
+    st.planet = planet_end;
+    st.mode = orbits;
+    st.delta_omega = OMevery_a_MARS_true(i);
+    
+    [mars_r_f, mars_v_f]=planetModel(st);
+    mars_r_f=mars_r_f'*1e+03/r_unit;
+    mars_v_f=mars_v_f'*1e+03/V_unit;
     res_r_f = norm(y(end, 1:3)-mars_r_f');
     res_v_f = norm(y(end, 4:6)-mars_v_f');
-    r_opt_error(i) = res_r_f;
-    v_opt_error(i) = res_v_f;
+
+    r_error_approx_noD(i) = res_r_f;
+    v_error_approx_noD(i) = res_v_f;
+
+    % yf = [mars_r_f;mars_v_f]';
+    % opt_type = 'fsolve';
+    % p0 = [pr_0,pv_0]';
+    % if strcmp(opt_type,'fsolve')
+    % 
+    %     fsolve_traj_fun=@(z)fsolve_traj(z,y0,yf,t0,t_end);
+    %     options = optimoptions('fsolve','Display','off');
+    %     options = optimoptions(options,'UseParallel', true);
+    %     options = optimoptions(options, 'OptimalityTolerance', 1e-10);
+    %     options = optimoptions(options, 'MaxFunctionEvaluations', 1e+10);
+    %     options = optimoptions(options, 'StepTolerance', 1e-10);
+    %     options = optimoptions(options, 'Algorithm', 'levenberg-marquardt');
+    % 
+    %     p0 = fsolve(fsolve_traj_fun, p0, options);
+    % end
+    % 
+    % y0 = cat(2,start_pos,start_vel,p0(1:3)',p0(4:6)')';
+    % 
+    % options = odeset('AbsTol',1e-10);
+    % options = odeset(options,'RelTol',1e-10);   
+    % %options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopR(s, y, 1.52));
+    % [t,y] = ode113(@(t,y) internalIntegration3D(t,y), tspan,y0,options);
+    % 
+    % res_r_f = norm(y(end, 1:3)-mars_r_f');
+    % res_v_f = norm(y(end, 4:6)-mars_v_f');
+    % r_opt_error(i) = res_r_f;
+    % v_opt_error(i) = res_v_f;
 end
 %%
 figure(1)
-plot(ANevery_a_MARS_true/(2*pi), r_error_orig, 'DisplayName', 'Невязка положения точное решение')
+plot(ANevery_a_MARS_true/(2*pi), r_error_orig, 'k', 'LineWidth', 1.0,'DisplayName', 'Numerical optimization')
 hold on;
-plot(ANevery_a_MARS_true/(2*pi), v_error_orig, 'DisplayName', 'Невязка скорости точное решение')
-plot(ANevery_a_MARS_true/(2*pi), r_error_approx,'--', 'DisplayName', 'Невязка положения аппроксимация')
-plot(ANevery_a_MARS_true/(2*pi), v_error_approx,'--', 'DisplayName', 'Невязка скорости аппроксимация')
-plot(ANevery_a_MARS_true/(2*pi), r_opt_error,'--', 'DisplayName', 'Невязка положения новое решение')
-plot(ANevery_a_MARS_true/(2*pi), v_opt_error,'--', 'DisplayName', 'Невязка скорости новое решение')
+plot(ANevery_a_MARS_true/(2*pi), r_error_approx,'b--', 'LineWidth', 1.0,'DisplayName', 'Approximation with D coefficients')
+plot(ANevery_a_MARS_true/(2*pi), r_error_approx_noD,'r-.','LineWidth', 1.0, 'DisplayName', 'Approximation without D coefficients')
+%plot(ANevery_a_MARS_true/(2*pi), r_opt_error,'--', 'DisplayName', 'Невязка положения новое решение')
+%plot(ANevery_a_MARS_true/(2*pi), v_opt_error,'--', 'DisplayName', 'Невязка скорости новое решение')
 hold off
 legend('Location','best');
 grid;
-xlabel('Угловая дальность, витки.')
-ylabel('Невязка на правом конце')
+xlabel('Angular distance, revolutions')
+ylabel('Residual of position, dimensionless')
 set(gca, 'YScale', 'log')
+set(gca, 'FontSize', 11)
+
+figure(2)
+plot(ANevery_a_MARS_true/(2*pi), v_error_orig,'k', 'LineWidth', 1.0, 'DisplayName', 'Numerical optimization')
+hold on;
+plot(ANevery_a_MARS_true/(2*pi), v_error_approx,'b--','LineWidth', 1.0, 'DisplayName', 'Approximation with D coefficients')
+plot(ANevery_a_MARS_true/(2*pi), v_error_approx_noD,'r-.','LineWidth', 1.0, 'DisplayName', 'Approximation without D coefficients')
+%plot(ANevery_a_MARS_true/(2*pi), r_opt_error,'--', 'DisplayName', 'Невязка положения новое решение')
+%plot(ANevery_a_MARS_true/(2*pi), v_opt_error,'--', 'DisplayName', 'Невязка скорости новое решение')
+hold off
+legend('Location','best');
+grid;
+xlabel('Angular distance, revolutions')
+ylabel('Residual of velocity, dimensionless')
+set(gca, 'YScale', 'log')
+set(gca, 'FontSize', 11)
 %% перебираем разные дальности
 N_count = 197;
 r_error_approx = zeros(N_count,1);
@@ -368,6 +452,34 @@ xlabel('Угловая дальность, витки.')
 ylabel('Функционал')
 
 %%
+
+vecPV_cartesian =[
+
+  -0.017828836330895
+  -0.069754179573323
+  -0.000000000000005];
+
+
+vecPR_cartesian = [
+  -0.083400848307302
+  -0.014320246933389
+  -0.000000000000004];
+T_point =   3.138140048076477;
+T_point_2 = 1.146426831543537e+03;
+
+
+% T_point =   7.668293435690914;
+% 
+% vecPV_cartesian =[
+%    0.000120968372462
+%    0.004782528163732
+%   -0.000000000000000];
+% 
+% vecPR_cartesian =[
+%    0.004694925114471
+%    0.000109525174757
+%   -0.000000000000000];
+
 %интегрируем
 %options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopR(s, y, 1.52));
 t0 = t_start;
@@ -379,14 +491,14 @@ i = 5;
 AN_i = 10;
 
 B=0.2721831;
-%a_rel=1.52;
+a_rel=1.52;
 %T_i = 2*pi*(AN_i*(a_rel-a_rel*B*log(a_rel))+a_rel*B^2*log(a_rel));
 start_vel_2 = start_vel;
 start_pos_2 = start_pos;
 %start_vel_2(1) = 0.4;
 %start_pos_2(1) = 1.2;
 %start_vel_2(2) = sqrt(1/start_pos_2(1));
-a_rel = 0.387;
+%a_rel = 0.387;
 T_i = 2*pi*T_a(AN_i, a_rel);
 %T_i = 2*pi*(AN_i*1.35036912+0.02855872);
 %OM_i = 2*pi*(0.27941185*AN_i-0.01523959);
@@ -415,12 +527,36 @@ pr_0 = K*R_2^(-1)*R^(-1)*[pr_x(AN_i,d_coef);pr_y(AN_i,d_coef);0.00];
 pr_0 = pr_0';
 pv_0 = K*R_2^(-1)*R^(-1)*[pv_x(AN_i,d_coef);pv_y(AN_i,d_coef);0.00]; 
 pv_0 = pv_0';
+
+pr_0 = vecPR_cartesian';
+pv_0 = vecPV_cartesian';
+T_i = T_point*2*pi;
 y0 = cat(2,start_pos_2,start_vel_2,pr_0,pv_0)';
 M = cross(pv_0, start_vel_2)+cross(pr_0, start_pos_2);
 tspan = linspace(t0,t0+T_i, AN_i*400);
 options = odeset('AbsTol',1e-12);
 options = odeset(options,'RelTol',1e-12);   
 %options = odeset(options, 'Events',@(s, y) eventIntegrationTrajStopE0(s, y));
+
+%%
+ddeltady0=zeros([6,6]);
+step_h=sqrt(eps);
+for i=7:12
+    y0_delta=zeros([12,1]);
+    y0_delta(i)=step_h;
+    
+    [t,y] = ode113(@(t,y) internalIntegration3D(t,y), tspan,y0+y0_delta,options);
+    p_plus=y(end,1:6);
+
+    [t,y] = ode113(@(t,y) internalIntegration3D(t,y), tspan,y0-y0_delta,options);
+    p_minus=y(end,1:6);
+    partial=(p_plus-p_minus)/(2*step_h);
+    ddeltady0(:,i-6)=partial;
+end
+
+C=cond(ddeltady0);
+
+%%
 [t,y] = ode113(@(t,y) internalIntegration3D(t,y), tspan,y0,options);
 
 st.t = [t_start, T_i*T_unit/(3600*24)];
@@ -445,7 +581,8 @@ st.mode = orbits;
 st.delta_omega = omega;
 
 earth_traj = planetModel(st);
-earth_traj=1e+3*earth_traj/ae;
+%earth_traj=1e+3*earth_traj/ae;
+earth_traj=earth_traj/ae;
 
 t_orbit = linspace(t0,t0+T_mars/(24*3600), 1000);
 
@@ -455,7 +592,8 @@ st.mode = orbits;
 st.delta_omega = 0;
 
 mars_traj = planetModel(st);
-mars_traj=1e+3*mars_traj/ae;
+%mars_traj=1e+3*mars_traj/ae;
+mars_traj=mars_traj/ae;
 y0 = cat(2,start_pos_2,start_vel_2,[0,0,0],[0,0,0])';
 [t,orbit_initial] = ode113(@(t,y) internalIntegration3D(t,y), tspan,y0,options);
 y0 = cat(2,y(end, 1:3),y(end, 4:6),[0,0,0],[0,0,0])';
@@ -468,11 +606,11 @@ plot3(0, 0, 0, 'k--o');
 set(gca,'FontSize',14);
 hold on;
 
-plot3(y(:, 1), y(:, 2), y(:, 3), 'cyan', 'LineWidth', 1);
-plot3(orbit_initial(:, 1), orbit_initial(:, 2), orbit_initial(:, 3), 'k');
-plot3(orbit_final(:, 1), orbit_final(:, 2), orbit_final(:, 3), 'r');
-%plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
-%plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'k')
+plot3(y(:, 1), y(:, 2), y(:, 3), 'cyan', 'LineWidth', 2);
+%plot3(orbit_initial(:, 1), orbit_initial(:, 2), orbit_initial(:, 3), 'k');
+%plot3(orbit_final(:, 1), orbit_final(:, 2), orbit_final(:, 3), 'r');
+plot3(earth_traj(:, 1), earth_traj(:, 2), earth_traj(:, 3), 'k')
+plot3(mars_traj(:, 1), mars_traj(:, 2), mars_traj(:, 3), 'k')
 plot3(1.52*[cos(delta_i+pi),cos(delta_i)],1.52*[sin(delta_i+pi),sin(delta_i)],[0,0])
 [a,eMag,i,O,o,nu,truLon,argLat,lonPer,p] = rv2orb(y(end, 1:3)',y(end, 4:6)',1);
 disp(['e=', num2str(eMag)])
