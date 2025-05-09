@@ -4,7 +4,7 @@ ae = 149597870700;
 a_unit=(sqrt(mug_0)/ae).^2;
 T_unit = 365.256363004*3600*24/(2*pi);
 J_unit = T_unit*a_unit^2;
-Mevery_fix = Jevery;%/J_unit;
+Mevery_fix = Jevery/J_unit;
 Mevery_fix(Mevery_fix==0)=nan;
 
 ae = 149597870.700; %км
@@ -117,36 +117,39 @@ FaceAlpha=0.4;
 
 % s = surf(T5,Y_axis,M5,'DisplayName','Семейство 1', 'FaceColor','blue','FaceAlpha',FaceAlpha);
 % s.EdgeColor = 'none';
-s = surf(T5,AN5,M5,'DisplayName','Семейство 1', 'FaceColor','blue','FaceAlpha',FaceAlpha);
+s = surf(T5,AN5,M5/10,'DisplayName','Family 0', 'FaceColor','blue','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
 
 hold on;
 
-s = surf(T1,AN1,M1,'DisplayName','Семейство 2', 'FaceColor','cyan','FaceAlpha',FaceAlpha);
+s = surf(T1,AN1,M1/10,'DisplayName','Family 1', 'FaceColor','cyan','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
-s = surf(T2,AN2,M2,'DisplayName','Семейство 3', 'FaceColor','red','FaceAlpha',FaceAlpha);
+s = surf(T2,AN2,M2/10,'DisplayName','Family 2', 'FaceColor','red','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
-s = surf(T3,AN3,M3,'DisplayName','Семейство 4', 'FaceColor','magenta','FaceAlpha',FaceAlpha);
+s = surf(T3,AN3,M3/10,'DisplayName','Family 3', 'FaceColor','magenta','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
-s = surf(T4,AN4,M4,'DisplayName','Семейство 5', 'FaceColor','green','FaceAlpha',FaceAlpha);
+s = surf(T4,AN4,M4/10,'DisplayName','Family 4', 'FaceColor','green','FaceAlpha',FaceAlpha);
 s.EdgeColor = 'none';
 
 
-glob_min_line = plot3(global_minimum_line(1,:),global_minimum_line(2,:),global_minimum_line(3,:),'black', 'LineWidth', 2,'DisplayName','Глобальный минимум');
+glob_min_line = plot3(global_minimum_line(1,:),global_minimum_line(2,:),global_minimum_line(3,:),'black', 'LineWidth', 2,'DisplayName','Optimal solutions with an optimal start date');
 
-s_contour = contour3(T_united,AN_united,M_united,round(logspace(-2,3,11),2),'ShowText','on', 'HandleVisibility','off');
+[s_contour, s_object] = contour3(T_united,AN_united,M_united,round(logspace(-4,3,8),3),'ShowText','on', 'HandleVisibility','off', 'LabelSpacing',150);
+[s_contour, s_object] = contour3(T_united,AN_united,M_united,round(logspace(-4.5,2.5,8),3),'ShowText','on', 'HandleVisibility','off', 'LabelSpacing',150);
 
-plot3(T1(1:70,1),AN1(1:70,1),M1(1:70,1),'k--', 'LineWidth', 2,'DisplayName','Парето-Фронт')
+plot3(T1(1:70,1),AN1(1:70,1),M1(1:70,1),'k--', 'LineWidth', 2,'DisplayName','Optimal solutions with a fixed start date')
 plot3(T2(102:end,1),AN2(102:end,1),M2(102:end,1),'k--', 'LineWidth', 2, 'HandleVisibility','off')
 %plot3([T2(102,1), T2(102,1)],[AN1(70,1), AN2(102,1)],[M1(70,1),M2(102,1)],'b--', 'LineWidth', 2, 'HandleVisibility','off')
+% Смещение по Z
+
 hold off;
 zlabel('Значение функционала, безразм.')
-xlabel('Длительность перелёта, безразм.')
-ylabel('Угловая дальность, безразм.')
+xlabel("Start body's orbital periods")
+ylabel('Angular distance, revolutions')
 
 
 set(gca,'zscale','log')

@@ -1,3 +1,4 @@
+% -*- coding: utf-8 -*-
 % в этом скрипте изучаем пространственные перелёты с помощью афинных
 % преобразований
 clear;
@@ -7,7 +8,7 @@ load('mat-files/Preprint2024_1_Venus.mat', 't_end_Venus')
 savefilename = 'mat-files/Preprint2024_ecc_3.mat';
 k_coef_range=0.4:0.1:2.5;
 dm_coef_range=-0.10:0.01:0.11;
-o_coef_range=0:pi/15:2*pi;
+o_coef_range=0:pi/60:2*pi;
 N_count_1 = length(k_coef_range);
 N_count_2 = length(dm_coef_range);
 N_count_3 = length(o_coef_range);
@@ -69,7 +70,7 @@ for j1 = 1:N_count_1
         end
     save(savefilename)
     end
-    
+
 end
 
 function res = fsolve_find_i(i_matrix,i_target, start_pos,start_vel,zf,t0,t_end,O_target)

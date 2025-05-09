@@ -37,101 +37,67 @@ OM_a = @(a, a_rel)A*(a*(exp(a_rel)+1)-log(a_rel))*exp(-a_rel)*log(a_rel);
 
 %%
 %интегрируем
-t0 = t_start;
-AN_i = 40;
-d_coef = 1;
-a_rel = 1.5;
-T_i = 2*pi*T_a(AN_i, a_rel);
-OM_i = 2*pi*OM_a(AN_i, a_rel);
+t0 = t_start;                 %дата старта, безразм
+AN_i = 3;                     %угловая дальность, витки
+d_coef = 1;                   %учёт D-коэффициентов, 0 или 1
+a_rel = 1.5;                 %соотношение радиусов
+T_i = 2*pi*T_a(AN_i, a_rel);  %время перелёта
+OM_i = 2*pi*OM_a(AN_i, a_rel);%оптимальная фаза
+
+%новая аппроксимация времени
+%T_i = 2*pi*(AN_i*(0.03772064567906565*a_rel + 1.405055577366462)*log(a_rel + 1)+(0.08297934358955021*a_rel + 0.009838514316752341).*log(a_rel).^2);
+
 
 %пространственный поворот
 n_rot_i = [1; 0; 0];
 %изменение наклонения
-i_target = 0*pi/180;
-O_target = 0*pi/6;
-cos2Om = cos(2*O_target);
+i_target = 0.032260360162307;%0*pi/180; %наклонение в градусах
+O_target = -0.931532105668575;%0*pi/6;   %восходящий узел  в градусах
+e_target = 0.093365361576009;        %эксцентриситет, e_target>0
+o_target = 4.070106678217038;%0*pi/180; %аргумент перицентра  в градусах
 
-a_rel_fix = Ca0fromIK(i_target, a_rel)+ Ca1fromIK(i_target, a_rel)*cos(2*O_target);
+
+
+%a_rel_fix = Ca0fromIK(i_target, a_rel)+ Ca1fromIK(i_target, a_rel)*cos(2*O_target);
 %a_rel_fix = a_rel;
-a_input = a_rel_fix;
-Ci0 = (0.38159616342652647-0.0243395353632856*a_input-0.2767778010385592*exp(-a_input^2))*log(a_input);
-Ci1 = -a_input*exp(-7.8328443*sinh(a_input))+5.5964956*exp(-sinh((1.38935843796911*a_input^2+1.09321695795059)/(0.7103882*a_input^2+0.04272333)));
-delta_i_coef = Ci0+Ci1*cos(2*O_target);
-delta_i = atan(-i_target/delta_i_coef);
-
-%Cia0 = a_rel-(a_rel-0.77791995)*(a_rel*(3.6482353*i_target^2-0.16799407)+0.26759958)*(i_target-a_rel+0.43613818);
-%Cia1 = -i_target*(2.4457328*i_target*a_rel^2*(a_rel-1.0988277)+0.41913363);
-%a_rel_fix = Cia0+Cia1*cos(2*O_target)
-
-%старая аппроксимация времени
-%T_i = 2*pi*T_a(AN_i, a_rel_fix);
-%новая аппроксимация времени
-T_i = 2*pi*(AN_i*(0.03772064567906565*a_rel_fix + 1.405055577366462)*log(a_rel_fix + 1)+(0.08297934358955021*a_rel_fix + 0.009838514316752341).*log(a_rel_fix).^2);
-%T_i = AN_i*a_rel_fix^(2/3)*2*pi;
-j = -i_target/delta_i_coef;
-R_i = [
-    1, 0, 0;
-    0, 1/(1+j^2), -j/(1+j^2);
-    0, j/(1+j^2), 1/(1+j^2);
-    ];
-
-%восходящий узел
-R_rot = [cos(O_target),-sin(O_target),0;
-        sin(O_target),cos(O_target),0;
-        0,0,1];
-R_iO=R_rot*R_i*R_rot';
-
-%настройка эксцентриситета
-theta = 0.642;
-e_target = 0.0;%e_target>0
-o_target = 0*pi/6;
-
-C_ecc_0 = (a_rel-1)*3.565068035759543;
-C_ecc_1 = (a_rel-1)*-2.3261252072805805;
-C_ecc_2 = (a_rel-1)*-0.6264065291171595;
-C_ecc = C_ecc_0 + sin(o_target)*(C_ecc_1*sin(o_target)+C_ecc_2*sin(3*o_target));
-dm = -e_target/C_ecc;
-m = -sin(theta)+dm;%X_rotated
-n = cos(theta); %Y_rotated 
-
-e_param = m*cos(theta)+n*sin(theta);
-a_param = -m*sin(theta)+n*cos(theta);
-
-% ix = 0.0;
-% iy = 0;
-% L  = 0;
-% ey = 0;
-% ex = e_param;
-% p = a_param*(1-ex^2-ey^2);
-% X_2 = equitoctial2decart([p;ex;ey;ix;iy;L], mug);
-%start_pos_3 = X_2(1:3)';
-%start_vel_3 = X_2(4:6)';
-
-%R_e = calculateRotMatrix(start_pos_3,start_vel_3);
-
-R_e = [a_param*(1-e_param), 0, 0;
-    0, (1+e_param)/sqrt(a_param*(1-e_param^2)), 0;
-    0, 0, (1+e_param)/sqrt(a_param*(1-e_param^2))*a_param*(1-e_param)];
-
-o_input = o_target/2+(1/6)*sin(2*o_target)+(1/32)*sin(4*o_target);
-
-R_rot = [cos(o_input),-sin(o_input),0;
-        sin(o_input),cos(o_input),0;
-        0,0,1];
-R_eo=R_rot*R_e*R_rot';
 
 start_vel_2 = start_vel;
 start_pos_2 = start_pos;
-start_vel_2(1) = 0.0;
+start_vel_2(1) = 0.2;
+
+%start_pos_2 =[-0.219180734407367   0.958432854924019  -0.000035371138792];
+
+%start_vel_2 =[-0.991449408028375  -0.226391772095077  -0.000018605485683];
+
+[~,~,~,~,~,~,truLon,~,~,~] = rv2orb(start_pos_2',start_vel_2',1);
+start_an = truLon;
+%start_an = atan2(start_pos_2(2),start_pos_2(1));
+%O_initial = O_target-start_an;
+%o_initial = o_target-start_an;
+R_iO = calculateRiOMatrix(a_rel, i_target,O_target);
+R_eo = calculateReoMatrix(a_rel, e_target,o_target);
 %start_pos_2(1) = 1.2;
 %start_pos_2(2) = 0.2;
 %start_vel_2(2) = 0.7;
 R = calculateRotMatrix(start_pos_2,start_vel_2);
-[pr_0,pv_0] = get_initial_adjoint(AN_i,a_rel_fix,d_coef);
-R_total = R_iO*R_eo*R;
-pr_0 = (R_total^(-1)*pr_0)';
-pv_0 = (R_total^(-1)*pv_0)';
-y0 = cat(2,start_pos_2,start_vel_2,pr_0,pv_0,0,0)';
+% r_norm = start_pos_2/norm(start_pos_2);
+% v_proj = start_vel_2-(start_vel_2*r_norm')*r_norm;
+% v_norm = v_proj/norm(v_proj);
+% R_simple = calculateRotMatrix(r_norm,v_norm);
+%R = R_simple;
+[pr_0,pv_0] = get_initial_adjoint(AN_i,a_rel,d_coef);
+%предварительное интегрирование
+p0 = [pr_0, pv_0];
+[rf,vf,Jf,r_all] = integrate_Rtotal(R, start_pos_2,start_vel_2,p0,t0,T_i);
+
+[a_fix,e_fix,~,~,~,~,~,~,o_fix,~] = rv2orb(rf,vf,1);
+R_eo_2 = calculateReoMatrix(a_fix, e_fix,o_fix+pi-start_an);
+
+R_total = R_eo*R_eo_2*R;
+R_total = R_eo*R_eo_2*R;
+pr = (R_total^(-1)*pr_0)';
+pv = (R_total^(-1)*pv_0)';
+y0 = cat(2,start_pos_2,start_vel_2,pr,pv,0,0)';
 %[a,eMag,i,O,o,nu,truLon,argLat,lonPer,p] = rv2orb(start_pos_2',start_vel_2',1);
 %M = cross(pv_0, start_vel_2)+cross(pr_0, start_pos_2);
 tspan = linspace(t0,t0+T_i, AN_i*400);
@@ -232,11 +198,12 @@ plot3(orbit_final(:, 1), orbit_final(:, 2), orbit_final(:, 3), 'k--');
 [a,eMag,i,O,o,nu,truLon,argLat,lonPer,p] = rv2orb(y(end, 1:3)',y(end, 4:6)',1);
 [p,ex,ey,ix,iy,L] = orb2equintoctial(p,eMag,i,O,lonPer,nu);
 disp(['e=', num2str(eMag)])
-disp(['ex=', num2str(ex)])
+%disp(['ex=', num2str(ex)])
 disp(['a=', num2str(a)])
 disp(['i=', num2str(180*i/pi)])
 disp(['O=', num2str(O)])
 disp(['o=', num2str(lonPer)])
+disp(['AN=', num2str(AN_final)])
 disp('------------')
 plot3(y(end, 1), y(end, 2), y(end, 3),'bO')
 
@@ -246,9 +213,9 @@ hold off;
 axis equal
 
 %title('Траектория КА')
-xlabel('x, AU')
-ylabel('y, AU')
-zlabel('z, AU')
+xlabel('x, DU')
+ylabel('y, DU')
+zlabel('z, DU')
 view(0,90)
 %view(90,0)
 ax = gca;
@@ -320,6 +287,65 @@ e1 = r0;
 e2 = v0;
 e3 = cross(e1,e2);
 R = [e1;e2;e3];
+end
+function R_eo = calculateReoMatrix(k, e_target,omega_target)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+%настройка эксцентриситета
+theta = 0.642;
+
+% C_ecc_0 = (k-1)*3.565068035759543;
+% C_ecc_1 = (k-1)*-2.3261252072805805;
+% C_ecc_2 = (k-1)*-0.6264065291171595;
+
+C_ecc_0 = (k-1)*3.272584669562773;
+C_ecc_1 = (k-1)*-1.9315126322573586;
+C_ecc_2 = (k-1)*-0.4543650380418002;
+C_ecc = C_ecc_0 + sin(omega_target)*(C_ecc_1*sin(omega_target)+C_ecc_2*sin(3*omega_target));
+dm = -e_target/C_ecc;
+m = -sin(theta)+dm;%X_rotated
+n = cos(theta); %Y_rotated 
+
+e_param = m*cos(theta)+n*sin(theta);
+a_param = -m*sin(theta)+n*cos(theta);
+
+R_e = [a_param*(1-e_param), 0, 0;
+    0, (1+e_param)/sqrt(a_param*(1-e_param^2)), 0;
+    0, 0, (1+e_param)/sqrt(a_param*(1-e_param^2))*a_param*(1-e_param)];
+
+o_input = omega_target/2+(1/6)*sin(2*omega_target)+(1/32)*sin(4*omega_target);
+
+R_rot = [cos(o_input),-sin(o_input),0;
+        sin(o_input),cos(o_input),0;
+        0,0,1];
+R_eo=R_rot*R_e*R_rot';
+end
+function R_iO = calculateRiOMatrix(k, i_target,Omega_target)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+
+
+%Ci0 = (0.38159616342652647-0.0243395353632856*k-0.2767778010385592*exp(-k^2))*log(k);
+%Ci1 = -k*exp(-7.8328443*sinh(k))+5.5964956*exp(-sinh((1.38935843796911*k^2+1.09321695795059)/(0.7103882*k^2+0.04272333)));
+Ci0 = (k*(0.12653741 - 0.022551617*k)*(k + 0.8123615) - 0.18755639);
+Ci1 = 0.0012084354*(k-1.4255633)*(k^3-0.99985284);
+delta_i_coef = Ci0+Ci1*cos(2*Omega_target);
+if i_target==0
+    j = 0;
+else
+    j = -i_target/delta_i_coef;
+end
+R_i = [
+    1, 0, 0;
+    0, 1/(1+j^2), -j/(1+j^2);
+    0, j/(1+j^2), 1/(1+j^2);
+    ];
+
+%восходящий узел
+R_rot = [cos(Omega_target),-sin(Omega_target),0;
+        sin(Omega_target),cos(Omega_target),0;
+        0,0,1];
+R_iO=R_rot*R_i*R_rot';
 end
 function [Kr,Kv] = calculateKMatrix(k)
 %UNTITLED Summary of this function goes here
@@ -420,4 +446,25 @@ function out1 = Ca0fromIK(i, k)
 end
 function out1 = Ca1fromIK(i, k)
   out1 = i.^2.*(k + 2.518653).*(0.050697707*k.*(-6.1506586*i + k) - 0.8663172);
+end
+function [rf,vf,Jf,r_all] = integrate_Rtotal(R_total, start_pos,start_vel,p0,t0,t_end)
+p0 = reshape(p0,[6,1]);
+pr = R_total^(-1)*p0(1:3);
+pv = R_total^(-1)*p0(4:6);
+
+mug = 1;
+
+
+y0 = [start_pos,start_vel,pr',pv',0,0];
+tspan = linspace(t0,t0+t_end, 2);
+options = odeset('AbsTol',1e-8);
+options = odeset(options,'RelTol',1e-8);   
+[~,traj] = ode113(@(t,y) internalIntegration3D_withJ_TH(t,y), tspan,y0,options);
+
+rf = traj(end, 1:3)';
+vf = traj(end, 4:6)';
+Jf = traj(end, 13);
+r_all = traj(:, 1:3);
+%[a,eMag,i,O,o,nu,truLon,argLat,lonPer,p] = rv2orb(rf,vf,1);
+%[p,ex,ey,ix,iy,L] = orb2equintoctial(p,eMag,i,O,lonPer,nu);
 end

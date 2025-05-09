@@ -93,7 +93,13 @@ function [ex,ey,p,a] = integrate_iO_equinoctial(R_iO, start_pos,start_vel,zf,t0,
 pr = R_iO^(-1)*zf(1:3);
 pv = R_iO^(-1)*zf(4:6);
 
-load('mat-files/Preprint2024_1_Mars.mat','dxdX');
+%load('mat-files/Preprint2024_1_Mars.mat','dxdX');
+dxdX =[    1.0000   -1.0000         0         0         0         0;
+             0         0         0         0         0    1.0000;
+             0         0         0         0   -2.0000         0;
+             0         0   -1.0000         0         0   -1.0000;
+       -0.5000    1.0000         0         0         0         0;
+             0         0         0    2.0000         0         0;];
 P = dxdX'*[pr;pv];
 y0 = [1;0;0;0;0;0;P];
 tspan = linspace(t0,t0+t_end, 1000);
